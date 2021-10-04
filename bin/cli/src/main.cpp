@@ -79,7 +79,7 @@ struct vote_state {
 
     /// most recent timestamp submitted with a vote
     block_timestamp last_timestamp;
-}
+};
 
 int main(int argc, char *argv[]) {
 
