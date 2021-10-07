@@ -1,0 +1,28 @@
+\section{Ed25519 Circuit}
+\label{section:eddsa}
+To verify a signature $(R,s)$ on message $M$ using public key $A$ and a generator $B$ do:
+\begin{enumerate}
+\item Prove that $s$ in the defined range.
+\item $k ==$ SHA-512$(data||R||A||M)$ //See section \ref{sha512}
+\item $8sB ?=? 8R + 8kA$ //See section \ref{ellcurve}
+
+\end{enumerate}
+
+\subsection{The Arithmetic of Elliptic Curves} \label{ellcurve}
+Variable-base scalar multiplication circuit per bit $b$:
+\begin{enumerate}
+\item $b^2 = b$
+\item $(y_1)  (2b - 1) = (y_2)$
+\item $ (x_2 - x_3)  (\lambda_1) = (y_2 - y_3)$
+\item  $(B\lambda_1)  (\lambda_1) = (A + x_3 + x_2 + x_4)$
+\item $ (x_3 - x_4)  (\lambda_1 + \lambda_2) = (2y_3)$
+\item  $ (B\lambda_2)  (\lambda_2) = (A + x_4 + x_3 + x_5)$
+\item  $ (x_3 - x_5)  (\lambda_2) = (y_5+ y_3)$
+\end{enumerate}
+
+EC Point Addition circuit:
+
+\begin{enumerate}
+\item $(x_2 - x_1)  (y_3 + y_1) - (y_1 - y_2)  (x_1 - x_3) $
+\item $ (x_1 + x_2 + x_3)  (x_1 - x_3)  (x_1 - x_3) - (y_3 + y_1)  (y_3 + y_1)$
+\end{enumerate}

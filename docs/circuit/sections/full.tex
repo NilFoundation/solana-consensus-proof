@@ -1,0 +1,24 @@
+\section{Bringing it all together}
+\label{section:full}
+
+Let blocks-to-prove set be $\{H_{B_{n_1}, ..., H_{B_{n_2}}}\}$.
+The last confirmed block is $H_{B_{L}}$.
+Each positively confirmed block is signed by $M$ validators. 
+
+\begin{enumerate}
+	\item $H_{B_{n_1}} = H_{B_{L}}$ // $ H_{B_{L}}$ is a public input
+	\item Validator set constraints. // see Section \ref{section:validators}
+	\item for $i$ from $n_1 + 1$ to $n_2$:
+	\begin{enumerate}
+		\item $H_{B_i} = \texttt{sha256}(\text{block\_data} || H_{B_{i - 1}})$ // see Section \ref{section:sha256}
+	\end{enumerate}
+	\item for $i$ from $n_2$ to $n_2 + 32$:
+	\begin{enumerate}
+		\item $H_{B_i} = \texttt{sha256}(\text{block\_data} || H_{B_{i - 1}})$ // see Section \ref{section:sha256}. 
+		\item for $j$ from $0$ to $M$:
+		\begin{enumerate}
+			\item Ed25519 constraints for $H_{B_i}$ // see Section \ref{section:eddsa}
+		\end{enumerate}
+	\end{enumerate}
+	\item Merkle tree constraints for the set $\{H_{B_{n_1}}, ..., H_{B_{n_2}}\}$ // see Section \ref{section:merkle}
+\end{enumerate}
