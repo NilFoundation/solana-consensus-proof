@@ -1,7 +1,7 @@
 \section{Merkle Tree Circuit}
 \label{section:merkle}
 
-Merkle Tree generation for set $\{H_{B_{n_1}, ..., H_{B_{n_2}}}\}$.
+Merkle Tree generation for set $\{H_{B_{n_1}}, ..., H_{B_{n_2}}\}$.
 Let $k = \lceil \log(n_2 - n_1) \rceil$
 
 \begin{enumerate}
@@ -20,7 +20,7 @@ Let $k = \lceil \log(n_2 - n_1) \rceil$
 		\item $n = \frac{n}{2}$
 		\item for $j$ from $0$ to $n - 1$:
 		\begin{enumerate}
-			\item $T_i = \texttt{hash}(T_{2 \cdot  i}, T_{2 \cdot i + 1})$. // just notation for simplicity, not a real part of the circuit
+			\item $T_i = T'_i$. // just notation for simplicity, not a real part of the circuit
 		\end{enumerate}
 	\end{enumerate}
 \end{enumerate}
