@@ -4,13 +4,21 @@
 
 ### Introduction
 
-Solana's light client state verification contains 
+Solana's light client state verification contains several components as follows.
 
 ### Documentation 
 
 Documentation contains:
-1. [Light client state proving/verifying circuit definition](@ref circuit_index).
+1. Overview protocol description
+2. [Light client state proving/verifying circuit definition](@ref circuit_index).
 
-### Proof Generator
+### Repositories
 
-### Proof Verificator
+Project repository is https://github.com/nilfoundation/evm-solana-verification.git
+
+### Community
+
+Issue reports are preferred to be done with Github Issues in here: 
+https://github.com/nilfoundation/evm-solana-verification.git.
+
+Usage and development questions a preferred to be asked in a Telegram chat: https:/t.me/nil_crypto3
