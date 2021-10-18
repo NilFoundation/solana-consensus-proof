@@ -17,7 +17,13 @@
     <script type="text/javascript" src="$relpath^dynsections.js"></script>
     $treeview
     $search
-    $mathjax
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+    });
+    </script>
+    <script type="text/javascript" async="async" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
     <link href="$relpath^$stylesheet" rel="stylesheet" type="text/css"/>
     <link href='https://fonts.googleapis.com/css?family=Roboto+Slab' rel='stylesheet' type='text/css'/>
     <link rel="stylesheet" href="$relpath^bootstrap.min.css"/>
