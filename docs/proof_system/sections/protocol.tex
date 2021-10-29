@@ -1,0 +1,133 @@
+\section{RedShift Protocol}
+\label{section:protocol}
+\textbf{WIP}
+
+Notations:
+
+\begin{center}
+\begin{table}[H]
+\begin{tabular}{| l | l |}
+ 	\hline
+	$N_{\texttt{wires}}$ & Number of wires (`advice columns`) \\
+	\hline
+	$N_{\texttt{perm}}$ & Number of wires that are included in the permutation argument \\
+	\hline
+	$N_{\texttt{sel}}$ & Number of selectors used in the circuit \\
+	\hline
+	$N_{\texttt{const}}$ & Number of constant columns  \\
+	\hline
+	$\textbf{f}_i$ & Witness polynomials, $0 \leq i < N_{\texttt{wires}}$  \\
+	\hline
+	$\textbf{f}_{c_i}$ & Constant-related polynomials, $0 \leq i < N_{\texttt{const}}$  \\
+	\hline
+	$\textbf{gate}_i$ & Gate polynomials, $0 \leq i < N_{\texttt{sel}}$  \\
+	\hline
+	$\sigma(\text{col : } i, \text{row : } j) = (\text{col : } i', \text{row : } j')$ & Permutation over the table \\
+	\hline
+\end{tabular}
+\end{table}
+\end{center}
+
+For details on polynomial commitment scheme and polynomial evaluation scheme, we refer the reader to \cite{cryptoeprint:2019:1400}.
+
+\paragraph{Preprocessing:}
+
+
+\begin{algorithm}[h]
+\begin{enumerate}
+	\item $\mathcal{L}' = (\textbf{q}_{0}, ..., \textbf{q}_{N_{\texttt{sel}}})$
+	\item Let $\omega$ be a $2^k$ root of unity
+	\item Let $\delta$ be a $T$ root of unity, where $T \cdot 2^S + 1 = p$ with $T$ odd and $k \leq S$
+	\item Compute $N_{\texttt{perm}}$ permutation polynomials $S_{\sigma_i}(X)$ such that $S_{\sigma_i}(\omega^j) = \delta^{i'} \cdot \omega^{j'}$
+	\item Compute $N_{\texttt{perm}}$ identity permutation polynomials: $S_{id_i}(X)$ such that $S_{id_i}(\omega^j) = \delta^i \cdot \omega^j$
+\end{enumerate}
+\end{algorithm}
+
+\paragraph{Protocol (Prover):}
+\begin{enumerate}
+	\item Choose masking polynomials: 
+	\begin{center}
+		$h_i(x) \leftarrow \mathbb{F}_{<k}[x]$ for $0 \leq i < N_{\texttt{wires}}$
+	\end{center}
+	\item Define new witness polynomials:
+	\begin{center}
+		$f_i(x) = \textbf{f}_{i}(x) + h_i(x)Z(x)$ for $0 \leq i < N_{\texttt{wires}}$
+	\end{center}
+	\item Send commitments to $f_i$ to $\textbf{V}$
+	\item Get $\beta, \gamma \leftarrow \mathbb{F}$ from \textbf{V}
+	\item For $0 \leq j < N_{\texttt{perm}}$
+	\begin{center}
+		$p_j = f_j + \beta \cdot S_{id_j} + \gamma$ \\
+		$q_j = f_j + \beta \cdot S_{\sigma_j} + \gamma$
+	\end{center}
+	\item Define:
+	\begin{center}
+		$p'(X) = \prod\limits_{0 \leq j < N_{\texttt{perm}}} p_j(X) \in \mathbb{F}_{<N_{\texttt{perm}} \cdot n}[X]$ \\
+		$q'(X) = \prod\limits_{0 \leq j < N_{\texttt{perm}}} q_j(X) \in \mathbb{F}_{<N_{\texttt{perm}} \cdot n}[X]$
+	\end{center}
+	\item Compute $P(X), Q(X) \in \mathbb{F}_{<n+1}[X]$, such that:
+	\begin{center}
+		$P(g) = Q(g) = 1$ \\
+		$P(g^i) = \prod\limits_{1 \leq j < i}p'(g^i)$ for $i \in {2, \dots, n + 1}$ \\
+		$Q(g^i) = \prod\limits_{1 \leq j < i}q'(g^i)$ for $i \in {2, \dots, n + 1}$ \\
+	\end{center}
+	\item Compute and send commitments to $P$ and $Q$ to \textbf{V}
+	\item Get $a_1, \dots, a_6 \leftarrow \mathbb{F}$ from \textbf{V}
+	\item Define polynomials ($F_1, \dots, F_5$ - copy-satisfability):
+	\begin{center}
+		$F_1(x) = L_1(x)(P(x) - 1)$\\
+		$F_2(x) = L_1(x)(Q(x) - 1)$ \\
+		$F_3(x) = P(x)p'(x) - P(xg)$ \\
+		$F_4(x) = Q(x)q'(x) - Q(xg)$ \\
+		$F_5(x) = L_n(x)(P(xg) - Q(xg))$ \\
+		$F_6(x) = \sum\limits_{0 \leq i < N_{\texttt{sel}}} (\textbf{q}_{i}(x) \cdot \texttt{gate}_i(x))
+			+ (\sum\limits_{0 \leq i < N_{\texttt{const}}}(\textbf{f}_{c_i}(x)) + PI(x))$
+	\end{center}
+	\item Compute:
+	\begin{center}
+		$F(x) = \sum\limits_{i = 1}^6 a_iF_i(x)$ \\
+		$T(x) = \frac{F(x)}{Z(x)}$
+	\end{center}
+	\item Split $T(x)$ into seprate polynomials $T_0(x), ..., T_{N_{\texttt{perm}} + 1}$
+	\item Send commitments to $T_0(x), ..., T_{N_{\texttt{perm}} + 1}$ to \textbf{V}
+	\item Get \textbf{P} $y \leftarrow \mathbb{F}/H$ from \textbf{V}
+	\item Run evaluation scheme with the committed polynomials and $y$
+	\item \textbf{V} checks the identity:
+		\begin{center}
+			$\sum\limits_{i = 1}^6a_iF_i(y) = Z(y)T(y)$
+		\end{center}
+\end{enumerate}
+
+\subsection{Non-Interactive Verification}
+
+\begin{enumerate}
+	\item Let $f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires}}, \texttt{comm}}$ be commitments to $f_{0}, \dots, f_{N_{\texttt{wires}}}$
+	\item $\text{transcript} = \text{setup\_values} || f_{0, \texttt{comm}} || \dots || f_{N_{\texttt{wires}}, \texttt{comm}}$
+	\item $\beta, \gamma = H(\text{transcript})$
+	\item Let $P_{\texttt{comm}}, Q_{\texttt{comm}}$ be commitments to $P(X), Q(X)$
+	\item $\text{transcript} = \text{transcript} || P_{\texttt{comm}} || Q_{\texttt{comm}}$
+	\item $a_1, \dots, a_6 = H(\text{transcript})$
+	\item Let $T_{0, \texttt{comm}}(x), ..., T_{N_{\texttt{perm}, \texttt{comm}} + 1}$ be commitments to $T_0(x), ..., T_{N_{\texttt{perm}} + 1}$ 
+	\item $\text{transcript} = \text{transcript} || T_{0, \texttt{comm}}(x) || ... || T_{N_{\texttt{perm}, \texttt{comm}} + 1}$
+	\item $y = H_{\mathbb{F}/H}(\text{transcript})$
+	\item Run evaluation scheme verification with the committed polynomials and $y$ to get values 
+		$f_i(y), P(y), P(y\omega), Q(y), Q(y\omega), T_j(y)$.  \\
+		\textbf{Remark}: Depending on the circuit, evaluation can be done also on $f_i(y\omega), f_i(y\omega^{-1})$ for some $i$.
+	\item Calculate:
+	\begin{center}
+		$F_1(y) = L_1(y)(P(y) - 1)$ \\
+		$F_2(y) = L_1(y)(Q(y) - 1)$ \\
+		$p'(y) = \prod p_i(y) = \prod f_i(y) + \beta \cdot S_{id_i}(y) + \gamma$ \\
+		$F_3(y) = P(y)p'(y) - P(y\omega)$ \\
+		$q'(y) = \prod q_i(y) = \prod f_i(y) + \beta \cdot S_{\sigma_i}(y) + \gamma$ \\
+		$F_4(y) = Q(y)q'(y) - Q(y\omega)$ \\
+		$F_5(y) = L_n(y)(P(y\omega) - Q(y\omega))$ \\
+		$F_6(y) = \sum\limits_{0 \leq i < N_{\texttt{sel}}} (\textbf{q}_{i}(y) \cdot \texttt{gate}_i(y))
+			+ (\sum\limits_{0 \leq i < N_{\texttt{const}}}(\textbf{f}_{c_i}(y)) + PI(y))$ \\
+		$T(y) = \sum\limits_{0 \leq j < N_{\texttt{perm}}}y^{n \cdot j}T_j(y)$
+	\end{center}
+	\item Check the identity:
+	\begin{center}
+		$\sum\limits_{i = 1}^6a_iF_i(y) = Z(y)T(y)$
+	\end{center}
+\end{enumerate}
