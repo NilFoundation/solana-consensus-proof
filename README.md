@@ -9,12 +9,6 @@ This repository contains In-EVM Solana Light-Client State verification project. 
 
 ## Mock Data Generator
 
-## State Circuit Description & Submission Protocol
-
-Complete documentation is available at https://solana.nil.foundation/projects/verification
-
-## Light-Client State Proof Generator
-
 Auxiliary proof generator is implemented in C++ and uses =nil; Crypto3 C++ Cryptography Suite
 (https://github.com/nilfoundation/crypto3) for cryptographic primitives definition.
 
@@ -29,15 +23,37 @@ Compiler/environment requirements are as follows:
 
 ### Building
 
-`mkdir build && cd build && cmake .. && make aux-proof-gen`
+`mkdir build && cd build && cmake .. && make mock`
 
 ### Usage
 
-## In-EVM Proof Verification
+## State Circuit Description & Submission Protocol
+
+Project documentation is available at https://solana.nil.foundation/projects/verification
+
+## Light-Client State Proof Generator
+
+Light-client state proof generator is a UNIX-style application taking Solana's light-client state data as an input and producing the proof as an output. 
+
+It is implemented in C++ and uses =nil; Crypto3 C++ Cryptography Suite (https://github.com/nilfoundation/crypto3) for cryptographic primitives definition.
+
+### Dependencies
+
+Libraries requirements are as follows:
+* Boost (https://boost.org) (>= 1.76)
+
+Compiler/environment requirements are as follows:
+* CMake (https://cmake.org) (>= 3.13)
+* GCC (>= 10.3) / Clang (>= 9.0.0) / AppleClang (>= 11.0.0)
+
+### Building
+
+`mkdir build && cd build && cmake .. && make prove`
+
+### Usage
 
 ## Community
 
-Issue reports are preferred to be done with Github Issues in here:
-https://github.com/nilfoundation/evm-solana-verification.git.
+Issue reports are preferred to be done with Github Issues in here: https://github.com/nilfoundation/evm-solana-verification.git.
 
-Usage and development questions a preferred to be asked in a Telegram chat: https:/t.me/nil_crypto3
+Usage and development questions a preferred to be asked in a Telegram chat: https:/t.me/nilcrypto3
