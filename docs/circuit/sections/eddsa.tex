@@ -2,21 +2,21 @@
 \label{section:eddsa}
 To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a generator $B$ do:
 \begin{enumerate}
-\item Prove that $s$ in the range $L = 2^252+27742317777372353535851937790883648493$.
+\item Prove that $s$ in the range $L = 2^{252}+27742317777372353535851937790883648493$.
 \begin{center}
 \begin{tabular}{ |c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
  \hline
 j + 0 & $s$ & $z_0$ & $z_1$ & $z_2$ & $z_3$\\ 
 ... & & & & &\\ 
-j + 5 & $z_25$ & $$ & $$ & $--$ & \\ 
+j + 5 & $z_{25}$ & $$ & $$ & $--$ & \\ 
  \hline
 \end{tabular}
 \end{center}
  Constraints:
 \begin{center}
-$w_{2, j} = w_{1,j} + 2^253 + L $ \\
-Each $w_{i,k} - 2^10 \cdot w_{next} $, where $i = 2,..,o$ for $k = 0$ and $i = 1,..,o$ for $k = 1,.., 4$ is range-constrained by 10-bits plookup table. \\
+$w_{2, j} = w_{1,j} + 2^{253} + L $ \\
+Each $w_{i,k} - 2^{10} \cdot w_{next} $, where $i = 2,..,o$ for $k = 0$ and $i = 1,..,o$ for $k = 1,.., 4$ is range-constrained by 10-bits plookup table. \\
 $w_{1,j+5} \cdot 2^7 $ is range-constrained by 10-bits plookup table.
 \end{center}
 \item $k ==$ SHA-512$(data||R||A||M)$ //See section \ref{sha512}
@@ -38,7 +38,7 @@ $- x_r^2 + y_r^2 = 1 - d \cdot x_r^2 \cdot y_r^2$
 This section instantiates the arithmetic of edwards25519 curve:
 \begin{center}
 $- x^2 + y^2 = 1 - (121665/121666) \cdot x^2 \cdot y^2$
-\end{center}.
+\end{center}
 Affine coordinates are used for points. 
 Let $d$ be equal to $(121665/121666)$.
 
@@ -53,7 +53,7 @@ j + 2 & $b_{n - 4}$ & $b_{n - 5}$ & $v_2$ & $b_{n - 7}$ & acc\\
 j + 3 & $x_3$ & $ y_3$ & $b_{n - 8}$ & $b_{n - 9}$ & $u_3$\\ 
 j + 4 & $x_4$ & $y_4$ & $v_3$ & $--$ & acc\\ 
 ... & & & & &\\ 
-j + 84 & $--$ & $--$ & $v_85$ & $--$ & --\\ 
+j + 84 & $--$ & $--$ & $v_{85}$ & $--$ & --\\ 
 
  \hline
 \end{tabular}
@@ -70,7 +70,7 @@ $w_{3, j} \cdot (-u'_0 \cdot w_{2, j} \cdot w_{1, j} + u'_0 \cdot w_{1, j} + u'_
 
 $w_{3, j} \cdot (-v'_0 \cdot w_{2, j} \cdot w_{1, j} + v'_0 \cdot w_{1, j} + v'_0 \cdot w_{2, j} - v'_0 + v'_2 \cdot w_{1, j}\cdot w_{2, j} -v'_2\cdot w_{2, j} + v'_4 \cdot w_{1, j}\cdot w_{2, j} - v'_4\cdot w_{2, j} -v'_6 \cdot w_{1, j} \cdot w_{2, j} + v'_1 \cdot w_{2, j} \cdot w_{1, j} - v'_1 \cdot w_{1, j} - v'_1 \cdot w_{2, j} + v'_1  - v'_3 \cdot w_{1, j}\cdot w_{2, j} + v'_3\cdot w_{2, j} - v'_5 \cdot w_{1, j}\cdot w_{2, j} + v'_5\cdot w_{2, j} + v'_7 \cdot w_{1, j} \cdot w_{2, j}) = w_{o,j+1} - v'_0 \cdot w_{2, j} \cdot w_{1, j} + v'_0 \cdot w_{1, j} + v'_0 \cdot w_{2, j} - v'_0 + v'_2 \cdot w_{1, j}\cdot w_{2, j} - v'_2\cdot w_{2, j} + v'_4 \cdot w_{1, j}\cdot w_{2, j} - v'_4\cdot w_{2, j} - v'_6 \cdot w_{1, j} \cdot w_{2, j} $ \\
 
-These two constraints are used for three sets: $\{ w_{1,j+1}, w_{2,j+1}, ( w_{4,j}, w_{o,j+1} for the first row, or w_{1, j + k - 1}, w_{2, j + k - 1}), w_{4, j+1}, w_{3,j+2} \}, \{ w_{1, j+3}, w_{2, j +3}, w_{1, j+1}, w_{2, j+1}, w_{o, j+3}, w_{3, j+4}\}, \{w_{1,j+2}, w_{2,j+4}, w_{1, j+3},w_{2, j+3}, w_{4, j+5}, w_{o,j+6} \}$: \\
+These two constraints are used for three sets: $\{ w_{1,j+1}, w_{2,j+1}, ( w_{4,j}, w_{o,j+1}$  for the first row, or $w_{1, j + k - 1}, w_{2, j + k - 1}), w_{4, j+1}, w_{3,j+2} \}, \{ w_{1, j+3}, w_{2, j +3}, w_{1, j+1}, w_{2, j+1}, w_{o, j+3}, w_{3, j+4}\}, \{w_{1,j+2}, w_{2,j+4}, w_{1, j+3},w_{2, j+3}, w_{4, j+5}, w_{o,j+6} \}$: \\
 $w_{1, j+1} \cdot (1 + d \cdot w_{4,j} \cdot w_{o,j+1} \cdot w_{4,j+1} \cdot w_{3, j+2} = w_{4,j} \cdot w_{3, j+2} + w_{o,j+1} \cdot w_{4,j+1}$
 $w_{2, j+1} \cdot (1 - d \cdot w_{4,j} \cdot w_{o,j+1} \cdot w_{4,j+1} \cdot w_{3, j+2} = w_{4,j} \cdot w_{4, j+1} + w_{o,j+1} \cdot w_{3,j+2}$
 
@@ -99,20 +99,20 @@ j + 212 & $x_1$ & $ y_1$ & $y_{n-1}$ & $x_n$ & $y_n$ \\
 $w_{o, j + 0} = w_{1, j} \cdot 2 + w_{4, j}$ it is used only for the beginning of the circuit. The additional term $w_{o, i - 1}$ is used for the following groups of rows. \\
 $w_{o, j + k} = w_{o, j + k - 1} \cdot 2 + w_{4, j}$, where $k = 1, 2, 3, 4$\\
 
-$w_{2, j + 0} \cdot ((w_{2, j + 2}^2 - w{1, j + 2}^2) \cdot (2 - w_{2, j + 2}^2 + w{1, j + 2}^2) + 2d \cdot w_{2, j + 2}^2 \cdot w{1, j + 2}^2 \cdot (w_{2, j + 2}^2 + w{1, j + 2}^2) \cdot w{1, j}) = 
-2 \cdot w_{2, j + 2} \cdot (w_{2, j + 2} \cdot w_{1,j} + 1 - w_{1,j}) \cdot w{1, j + 2} \cdot (2 - w_{2, j + 2}^2 + w{1, j + 2}^2) 
-+ w{1, j + 2} \cdot (w_{2, j + 2}^2 + w{1, j + 2}^2) \cdot (w_{2, j + 2}^2 - w{1, j + 2}^2)\cdot w{1, j}$ it is used only for the beginning of the circuit. The doubling of $x_1, y_1$ is replaced by the doubling of previous result.\\
+$w_{2, j + 0} \cdot ((w_{2, j + 2}^2 - w_{1, j + 2}^2) \cdot (2 - w_{2, j + 2}^2 + w_{1, j + 2}^2) + 2d \cdot w_{2, j + 2}^2 \cdot w_{1, j + 2}^2 \cdot (w_{2, j + 2}^2 + w_{1, j + 2}^2) \cdot w_{1, j}) = 
+2 \cdot w_{2, j + 2} \cdot (w_{2, j + 2} \cdot w_{1,j} + 1 - w_{1,j}) \cdot w_{1, j + 2} \cdot (2 - w_{2, j + 2}^2 + w_{1, j + 2}^2) 
++ w_{1, j + 2} \cdot (w_{2, j + 2}^2 + w_{1, j + 2}^2) \cdot (w_{2, j + 2}^2 - w_{1, j + 2}^2)\cdot w_{1, j}$ it is used only for the beginning of the circuit. The doubling of $x_1, y_1$ is replaced by the doubling of previous result.\\
 
-$w_{1, j + 1} \cdot ((w_{4, j }^2 - w{3, j }^2) \cdot (2 - w_{4, j}^2 + w{3, j}^2) + 2d \cdot w_{4, j } \cdot w{3, j } \cdot (w_{4, j}^2 + w{2, j}^2) \cdot w_{2, j + 2} \cdot w_{1, j + 2} \cdot w{4, j}) = 
-2 \cdot w_{4, j } \cdot w{3, j } \cdot (2 - w_{4, j }^2 + w{3, j }^2) \cdot (w_{2, j + 2} \cdot w_{4,j} + 1 - w_{4,j})  
-+ w{3, j } \cdot (w_{4, j }^2 + w{3, j }^2) \cdot (w_{4, j }^2 - w{3, j }^2) \cdot w_{1, j + 2} \cdot w{4, j}$ - this constraint holds for any $x_i, y_i, b_{i -1}$ with small changes in cells of table. \\
+$w_{1, j + 1} \cdot ((w_{4, j }^2 - w_{3, j }^2) \cdot (2 - w_{4, j}^2 + w_{3, j}^2) + 2d \cdot w_{4, j } \cdot w_{3, j } \cdot (w_{4, j}^2 + w_{2, j}^2) \cdot w_{2, j + 2} \cdot w_{1, j + 2} \cdot w_{4, j}) = 
+2 \cdot w_{4, j } \cdot w_{3, j } \cdot (2 - w_{4, j }^2 + w_{3, j }^2) \cdot (w_{2, j + 2} \cdot w_{4,j} + 1 - w_{4,j})  
++ w_{3, j } \cdot (w_{4, j }^2 + w_{3, j }^2) \cdot (w_{4, j }^2 - w_{3, j }^2) \cdot w_{1, j + 2} \cdot w_{4, j}$ - this constraint holds for any $x_i, y_i, b_{i -1}$ with small changes in cells of table. \\
 
-$w_{3, j+1} \cdot ((w_{2, j + 2}^2 - w{1, j + 2}^2) \cdot (2 - w_{2, j + 2}^2 - w{1, j + 2}^2) + 2d \cdot w_{2, j + 2}^2 \cdot w{1, j + 2}^2 \cdot (w_{2, j + 2}^2 + w{1, j + 2}^2) \cdot w{1, j}) = 
-2 \cdot w_{1, j + 2}^2 \cdot (w_{2, j + 2} \cdot (2 - w_{2, j + 2}^2 + w{1, j + 2}^2)\cdot w{1, j}  
-+ (w_{2, j + 2}^2 - w{1, j + 2}^2)\cdot (w_{2, j + 2}^2 + w{1, j + 2}^2) \cdot (w_{2, j + 2} \cdot w_{1,j} + 1 - w_{1,j}) $ it is used only for the beginning of the circuit. The doubling of $x_1, y_1$is replaced by the doubling of previous result.\\
+$w_{3, j+1} \cdot ((w_{2, j + 2}^2 - w_{1, j + 2}^2) \cdot (2 - w_{2, j + 2}^2 - w_{1, j + 2}^2) + 2d \cdot w_{2, j + 2}^2 \cdot w_{1, j + 2}^2 \cdot (w_{2, j + 2}^2 + w_{1, j + 2}^2) \cdot w_{1, j}) = 
+2 \cdot w_{1, j + 2}^2 \cdot (w_{2, j + 2} \cdot (2 - w_{2, j + 2}^2 + w_{1, j + 2}^2)\cdot w_{1, j}  
++ (w_{2, j + 2}^2 - w_{1, j + 2}^2)\cdot (w_{2, j + 2}^2 + w_{1, j + 2}^2) \cdot (w_{2, j + 2} \cdot w_{1,j} + 1 - w_{1,j}) $ it is used only for the beginning of the circuit. The doubling of $x_1, y_1$is replaced by the doubling of previous result.\\
 
-$w_{2, j + 1} \cdot ((w_{4, j }^2 - w{3, j }^2) \cdot (2 - w_{4, j}^2 + w{3, j}^2) + 2d \cdot w_{4, j } \cdot w{3, j } \cdot (w_{4, j}^2 + w{3, j}^2) \cdot w_{2, j + 2} \cdot w_{1, j + 2} \cdot w{4, j}) = 
-2 \cdot w_{4, j } \cdot w{3, j } \cdot (2 - w_{4, j }^2 + w{3, j }^2) \cdot w_{1, j + 2} \cdot w_{4,j}  
-+  (w_{2, j + 2} \cdot w_{4,j} + 1 - w_{4,j}) \cdot (w_{4, j }^2 + w{3, j }^2) \cdot (w_{4, j }^2 - w{3, j }^2) $ - this constraint holds for any $x_i, y_i, b_{i -1}$ with small changes in cells of table. \\
+$w_{2, j + 1} \cdot ((w_{4, j }^2 - w_{3, j }^2) \cdot (2 - w_{4, j}^2 + w_{3, j}^2) + 2d \cdot w_{4, j } \cdot w_{3, j } \cdot (w_{4, j}^2 + w_{3, j}^2) \cdot w_{2, j + 2} \cdot w_{1, j + 2} \cdot w_{4, j}) = 
+2 \cdot w_{4, j } \cdot w_{3, j } \cdot (2 - w_{4, j }^2 + w_{3, j }^2) \cdot w_{1, j + 2} \cdot w_{4,j}  
++  (w_{2, j + 2} \cdot w_{4,j} + 1 - w_{4,j}) \cdot (w_{4, j }^2 + w_{3, j }^2) \cdot (w_{4, j }^2 - w_{3, j }^2) $ - this constraint holds for any $x_i, y_i, b_{i -1}$ with small changes in cells of table. \\
 
 \end{center}
