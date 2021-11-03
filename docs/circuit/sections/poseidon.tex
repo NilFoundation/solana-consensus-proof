@@ -1,6 +1,25 @@
 \section{Poseidon Circuit}
 \label{section:poseidon}
+Consider a poseidon permutation $F: [0_{\mathbb{F}}, I[2], I[3]] \rightarrow [O[1], H, O[3]]$ of width $3$ and $\alpha = 5$.
+The 1-call sponge function is used:
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c| } 
+  & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
+ \hline
+j + 0 & $0_{\mathbb{F}}$ & $I[2]$ & $I[3]$ & $T_{1,0}$ & $T_{1,1}$ \\ 
+j + 1 & $T_{1,2}$ & $T_{2,0}$  & $T_{2,1}$  & $T_{2,2}$  & $T_{3,0}$ \\ 
+... & & & & &\\ 
+j + 39 & $O[1]$ & $H$ & $O[3]$ & $--$ & --\\ 
 
-WIP
-
-For now, there are two SNARK-friendly hash function candidates: Poseidon\footnote{\url{https://www.poseidon-hash.info}} and Reinforce Concrete\footnote{\url{https://www.rc-hash.info}}. 
+ \hline
+\end{tabular}
+\end{center}
+ Constraints:
+\begin{center}
+For 4 rounds: \\
+$ [w_{4, j}, w_{o, j}, w_{1, j+1}] = [w_{1,j}^5, w_{2,j}^5, w_{3,j}^5] \times M + RC$ \\
+For 57 rounds: \\
+$ [w_{1, j +4}, w_{2, j + 4}, w_{3, j+4}] = [w_{3,j+3}, w_{4,j + 3}, w_{o,j +3}^5] \times M + RC$ \\
+For 4 rounds: \\
+$ [w_{2, j + 37}, w_{3, j + 37}, w_{4, j+37}] = [w_{4,j +36}^5, w_{o,j +36}^5, w_{1,j + 37}^5] \times M + RC$ \\
+\end{center}
