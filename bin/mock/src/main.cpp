@@ -17,9 +17,12 @@
 #include <iostream>
 
 #include <boost/circular_buffer.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
+
+#ifndef __EMSCRIPTEN__
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#endif
 
 #include <nil/crypto3/algebra/curves/curve25519.hpp>
 
@@ -86,6 +89,7 @@ int main(int argc, char *argv[]) {
     typedef algebra::curves::curve25519 curve_type;
     typedef typename curve_type::scalar_field_type scalar_field_type;
 
+#ifndef __EMSCRIPTEN__
     boost::program_options::options_description options("Solana 'Light-Client' Mock Votes Data Generator");
     // clang-format off
     options.add_options()("help,h", "Display help message")
@@ -101,6 +105,7 @@ int main(int argc, char *argv[]) {
         std::cout << options << std::endl;
         return 0;
     }
+#endif
 
     return 0;
 }
