@@ -6,9 +6,8 @@ include(CMSetupVersion)
 
 cm_project(prove WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM C CXX)
 
-if(NOT Boost_FOUND)
-    cm_find_package(Boost COMPONENTS filesystem
-                    log log_setup program_options thread system)
+if(NOT Boost_FOUND AND NOT CMAKE_CROSSCOMPILING)
+    cm_find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options thread system)
 endif()
 
 cm_setup_version(VERSION 0.1.0)
