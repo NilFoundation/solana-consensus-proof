@@ -3,15 +3,13 @@
 Consider a poseidon permutation $F: [0_{\mathbb{F}}, I[2], I[3]] \rightarrow [O[1], H, O[3]]$ of width $3$ and $\alpha = 5$.
 The 1-call sponge function is used:
 \begin{center}
-\begin{tabular}{ |c|c|c|c|c|c| } 
+\begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
  \hline
 j + 0 & $0_{\mathbb{F}}$ & $I[2]$ & $I[3]$ & $T_{1,0}$ & $T_{1,1}$ \\ 
 j + 1 & $T_{1,2}$ & $T_{2,0}$  & $T_{2,1}$  & $T_{2,2}$  & $T_{3,0}$ \\ 
 ... & & & & &\\ 
-j + 39 & $O[1]$ & $H$ & $O[3]$ & $--$ & --\\ 
-
- \hline
+j + 39 & $O[1]$ & $H$ & $O[3]$ & $-$ & $-$\\ 
 \end{tabular}
 \end{center}
  Constraints:
