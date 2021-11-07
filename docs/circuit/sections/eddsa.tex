@@ -4,13 +4,12 @@ To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a genera
 \begin{enumerate}
 \item Prove that $s$ in the range $L = 2^{252}+27742317777372353535851937790883648493$.
 \begin{center}
-\begin{tabular}{ |c|c|c|c|c|c } 
+\begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
  \hline
 j + 0 & $s$ & $z_0$ & $z_1$ & $z_2$ & $z_3$\\ 
 ... & & & & &\\ 
 j + 5 & $z_{25}$ & $$ & $$ & $--$ & \\ 
- \hline
 \end{tabular}
 \end{center}
  Constraints:
@@ -19,7 +18,7 @@ $w_{2, j} = w_{1,j} + 2^{253} + L $ \\
 Each $w_{i,k} - 2^{10} \cdot w_{next} $, where $i = 2,..,o$ for $k = 0$ and $i = 1,..,o$ for $k = 1,.., 4$ is range-constrained by 10-bits plookup table. \\
 $w_{1,j+5} \cdot 2^7 $ is range-constrained by 10-bits plookup table.
 \end{center}
-\item $k ==$ SHA-512$(data||R||A||M)$ //See section \ref{sha512}
+\item $k ==$ SHA-512$(data||R||A||M)$ // See section \ref{sha512}
 \item $sB ?=? R + kA$:
 \begin{enumerate}
 \item Fixed-base scalar multiplication circuit is used for $sB = S$
@@ -40,27 +39,44 @@ This section instantiates the arithmetic of edwards25519 curve:
 $- x^2 + y^2 = 1 - (121665/121666) \cdot x^2 \cdot y^2$
 \end{center}
 Affine coordinates are used for points. 
-Let $d$ be equal to $(121665/121666)$.
+Let $d$ be equal to $121665/121666$.
 
 \paragraph{Fixed-base scalar multiplication circuit}:
 \begin{center}
-\begin{tabular}{ |c|c|c|c|c|c } 
+\begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
  \hline
 j + 0 & $b_{n - 1}$ & $b_{n - 2}$ & $b_{n - 3}$ & $u_1$ & acc\\ 
 j + 1 & $x_2$ & $y_2$ & $b_{n - 6}$ & $u_2$ & $v_1$\\ 
 j + 2 & $b_{n - 4}$ & $b_{n - 5}$ & $v_2$ & $b_{n - 7}$ & acc\\ 
 j + 3 & $x_3$ & $ y_3$ & $b_{n - 8}$ & $b_{n - 9}$ & $u_3$\\ 
-j + 4 & $x_4$ & $y_4$ & $v_3$ & $--$ & acc\\ 
+j + 4 & $x_4$ & $y_4$ & $v_3$ & $-$ & acc\\ 
 ... & & & & &\\ 
-j + 84 & $--$ & $--$ & $v_{85}$ & $--$ & --\\ 
-
- \hline
+j + 84 & $-$ & $-$ & $v_{85}$ & $-$ & $-$ \\ 
 \end{tabular}
 \end{center}
+
  Constraints:
+%\begin{itemize}
+%	\item For $j + 0$:
+%	\begin{itemize}
+%		\item $w_{o, j } = w_{1,j} \cdot 2^2 + w_{2,j} \cdot 2 + w_{3, j}$ 
+%	\end{itemize}
+%	\item For $j + z$, $z \mod 5 = 0$, $z \neq 0$:
+%	\begin{itemize}
+%		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2, j + z} \cdot 2 + w_{3, j + z} + w_{o, j + z - 1} \cdot 2^3$ 
+%	\end{itemize}
+%	\item For $j + z$, $z \mod 5 = 2$:
+%	\begin{itemize}
+%		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2,j + z} \cdot 2 + w_{3, j + z - 1} + w_{o, j+ z - 2} \cdot 2^3$
+%	\end{itemize}
+%	\item For $j + z$, $z \mod 5 = 4$:
+%	\begin{itemize}
+%		\item $w_{o, j + z} = w_{4,j + z - 2} \cdot 2^2 + w_{3,j + z - 3} \cdot 2 + w_{4, j + z - 3} + w_{o, j + z - 2} \cdot 2^3$
+%	\end{itemize}
+%\end{itemize}
 \begin{center}
-$w_{o, j } = w_{1,j} \cdot 2^2 + w_{2,j} \cdot 2 + w_{3, j}$ it is used only for the beginning of the circuit. The additional term $w_{o, j+k - 1} \cdot 2^3$ is used for the following rows. \\
+$w_{o, j } = w_{1,j} \cdot 2^2 + w_{2,j} \cdot 2 + w_{3, j}$ is used only for the beginning of the circuit. The additional term $w_{o, j+k - 1} \cdot 2^3$ is used for the following rows. \\
 $w_{o, j + 2} = w_{1,j + 2} \cdot 2^2 + w_{2,j + 2} \cdot 2 + w_{3, j + 1} + w_{o, j+k - 2} \cdot 2^3$ \\
 $w_{o, j + 4} = w_{4,j + 2} \cdot 2^2 + w_{3,j + 3} \cdot 2 + w_{4, j + 3} + w_{o, j+k - 2} \cdot 2^3$ \\
 
@@ -78,7 +94,7 @@ $w_{2, j+1} \cdot (1 - d \cdot w_{4,j} \cdot w_{o,j+1} \cdot w_{4,j+1} \cdot w_{
 
 \paragraph{Variable-base scalar multiplication circuit}:
 \begin{center}
-\begin{tabular}{ |c|c|c|c|c|c } 
+\begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
  \hline
 j + 0 & $b_{n - 1}$ & $x_2$ & $y_2$ & $b_{n - 2}$ & acc\\ 
@@ -90,8 +106,6 @@ j + 4 & $y_6$ & $ x_7$ & $y_7$ & $b_{n - 6}$ & acc\\
 j + 210 &  & $x_{n-3}$ & $y_{n-3}$ & $b_2$ & b\\ 
 j + 211 & $x_{n-2}$ & $ y_{n-2}$ & $b_1$ & $b_0$ & $x_{n-1}$\\ 
 j + 212 & $x_1$ & $ y_1$ & $y_{n-1}$ & $x_n$ & $y_n$ \\ 
-
- \hline
 \end{tabular}
 \end{center}
  Constraints:
