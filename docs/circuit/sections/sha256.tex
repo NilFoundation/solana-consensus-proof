@@ -300,8 +300,8 @@ The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a spars
 We need the following lookup tables:
 \begin{enumerate}
 \item \textbf{SHA-256 NORMALIZE2}: Read $a_i$ to $a'_i$
-\item \textbf{SHA-256 8ROT1 64}: Read $a'_0$ to $r_1$
-\item \textbf{SHA-256 8SHR7 64}: Read $a'_0$ to $r_3$
+\item \textbf{SHA-512 8ROT1 64}: Read $a'_0$ to $r_1$
+\item \textbf{SHA-512 8SHR7 64}: Read $a'_0$ to $r_3$
 \end{enumerate}
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
@@ -334,8 +334,8 @@ The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a spars
 We need the following lookup tables:
 \begin{enumerate}
 \item \textbf{SHA-256 NORMALIZE2}: Read $a_i$ to $a'_i$
-\item \textbf{SHA-256 8ROT3 64}: Read $a'_2$ to $r_1$
-\item \textbf{SHA-256 8ROT5 SHR6 64}: Read $a'_7 + a'_0$ to $r_2$
+\item \textbf{SHA-512 8ROT3 64}: Read $a'_2$ to $r_1$
+\item \textbf{SHA-512 8ROT5 SHR6 64}: Read $a'_7 + a'_0$ to $r_2$
 \end{enumerate}
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
@@ -395,10 +395,10 @@ Let $a$ be divided to 7-bits chunks $a_0, a_1, a_2,a_3$ and 9 bits-chunks $ a_4,
 The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
 We need the following lookup tables:
 \begin{enumerate}
-\item \textbf{SHA-256 9NORMALIZE2}: Read $a_i$ to $a'_i$
-\item \textbf{SHA-256 7NORMALIZE2}: Read $a_i$ to $a'_i$
-\item \textbf{SHA-256 9ROT6 32}: Read $a'_4$ to $r_2$
-\item \textbf{SHA-256 9ROT2 32}: Read $a'_5$ to $r_3$
+\item \textbf{SHA-512 9NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-512 7NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-512 9ROT6 64}: Read $a'_4$ to $r_2$
+\item \textbf{SHA-512 9ROT2 64}: Read $a'_5$ to $r_3$
 \end{enumerate}
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
@@ -421,12 +421,12 @@ $w_{o,j+2} =  w_{4,j+2} + w_{1,j+3} \cdot 4^9 + w_{2,j+3} \cdot 4^{9 \cdot 2}
 	$+ w_{3,j+1} \cdot 4^{9 \cdot 4 +7 \cdot 2} + w_{4,j+1} \cdot 4^{9 \cdot 4 +7 \cdot 3}
 	+	w_{1,j+1} \cdot 4^{64  - 34)} + w_{2,j+1} \cdot 4^{64 + (7 - 34)}
 	+ w_{3,j+1} \cdot 4^{64 + (7 \cdot 2 - 34)} + w_{4,j+1} \cdot 4^{64 + (7 \cdot 3- 34)}
-	+ w_{1,j+3} \cdot 4^{64 + (7 \cdot 4 + 9 - 34)} + w_{2,j+3} \cdot 4^{64 + (7 \cdot 4 + 9  \cdot 2  -34)}
-	+ w_{3,j+3} \cdot 4^{64 +(7 \cdot 4 + 9 \cdot 3 - 34)} + w_{1,j+1} \cdot 4^{64  - 39)}
+	+ w_{1,j+3} \cdot 4^{7 \cdot 4 + 9 - 34} + w_{2,j+3} \cdot 4^{7 \cdot 4 + 9  \cdot 2  -34}
+	+ w_{3,j+3} \cdot 4^{7 \cdot 4 + 9 \cdot 3 - 34} + w_{1,j+1} \cdot 4^{64  - 39)}
 	+ w_{2,j+1} \cdot 4^{64 + (7 - 39)} + w_{3,j+1} \cdot 4^{64 + (7 \cdot 2 - 39)}
 	+ w_{4,j+1} \cdot 4^{64 + (7 \cdot 3- 39)} +w_{4,j+2} \cdot 4^{64 + (7 \cdot 4 - 39)}
-	+ w_{2,j+3} \cdot 4^{64 + (7 \cdot 4 + 9 \cdot 2 -39)}
-	+ w_{3,j+3} \cdot 4^{64 +(7 \cdot 4 + 9 \cdot 3- 39)} + w_{4, j+3} + w_{o, j+3}$ \\
+	+ w_{2,j+3} \cdot 4^{7 \cdot 4 + 9 \cdot 2 - 39}
+	+ w_{3,j+3} \cdot 4^{7 \cdot 4 + 9 \cdot 3- 39} + w_{4, j+3} + w_{o, j+3}$ \\
 10 plookup constraints \\
 \end{center}
 
@@ -436,10 +436,10 @@ Let $a$ be divided to 7-bits chunks $a_0, a_1, a_2,a_3$ and 9 bits-chunks $ a_4,
 The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
 We need the following lookup tables:
 \begin{enumerate}
-\item \textbf{SHA-256 9NORMALIZE2}: Read $a_i$ to $a'_i$
-\item \textbf{SHA-256 7NORMALIZE2}: Read $a_i$ to $a'_i$
-\item \textbf{SHA-256 7ROT4 32}: Read $a'_2$ to $r_2$
-\item \textbf{SHA-256 9ROT4 32}: Read $a'_5$ to $r_3$
+\item \textbf{SHA-512 9NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-512 7NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-512 7ROT4 32}: Read $a'_2$ to $r_2$
+\item \textbf{SHA-512 9ROT4 32}: Read $a'_5$ to $r_3$
 \end{enumerate}
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
@@ -447,7 +447,7 @@ We need the following lookup tables:
  \hline
 j + 0 & $a_0$ & $ a_1$ & $a_2$ & $a_3$ & $a_4$\\ 
 j + 1 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & a \\
-j + 2 & $a_5 $& $a_6$ & $a_7$ & $a_4'$& $\Sigma_0$ \\ 
+j + 2 & $a_5 $& $a_6$ & $a_7$ & $a_4'$& $\Sigma_1$ \\ 
 j + 3 & $a'_5$ & $ a'_6$ & $a'_7$ & $r_1$ & $r_2$\\
 \end{tabular}
 \end{center}
@@ -461,15 +461,15 @@ $w_{o,j+2} =  w_{3,j+1} + w_{4,j+1} \cdot 7^7 + w_{4,j+2} \cdot 7^{7 \cdot 2}
 	+ w_{1,j+3} \cdot 7^{7 \cdot 2+9} + w_{2,j+3} \cdot 7^{7 \cdot 2+9 \cdot 2}
 	+ w_{3,j+3} \cdot 7^{9 \cdot 3 +7 \cdot 2} + w_{1,j+1} \cdot 7^{9 \cdot 4 +7 \cdot 2}
 	+ w_{2,j+1} \cdot 7^{9 \cdot 4 +7 \cdot 3} + w_{1,j+1} \cdot 7^{64  - 18)}
-	+ w_{2,j+1} \cdot 7^{64 + (7 - 18)} + w_{4,j+1} \cdot 7^{64 + (7 \cdot 4 - 18)}
-	+ w_{4,j+2} \cdot 7^{64 + (7 \cdot 4 + 9 - 18)}
-	+ w_{1,j+3} \cdot 7^{64 + (7 \cdot 4 + 9 \cdot 2 - 18)}
-	+ w_{2,j+3} \cdot 7^{64 + (7 \cdot 4 + 9 \cdot 3 - 18)}
-	+ w_{3,j+3} \cdot 7^{64 +(7 \cdot 4 + 9 \cdot - 18)} + w_{1,j+1} \cdot 7^{64  - 41)}
+	+ w_{2,j+1} \cdot 7^{64 + (7 - 18)} + w_{4,j+1} \cdot 7^{7 \cdot 3 - 18}
+	+ w_{4,j+2} \cdot 7^{7 \cdot 4- 18}
+	+ w_{1,j+3} \cdot 7^{7 \cdot 4 + 9  - 18}
+	+ w_{2,j+3} \cdot 7^{7 \cdot 4 + 9 \cdot 2 - 18}
+	+ w_{3,j+3} \cdot 7^{7 \cdot 4 + 9 \cdot 3 - 18} + w_{1,j+1} \cdot 7^{64  - 41)} |||||||||
 	+ w_{2,j+1} \cdot 7^{64 + (7 - 41)} + w_{3,j+1} \cdot 7^{64 + (7 \cdot 2 - 41)}
 	+ w_{4,j+1} \cdot 7^{64 + (7 \cdot 3- 41)} +w_{4,j+2} \cdot 7^{64 + (7 \cdot 3 + 9 - 41)}
 	+ w_{2,j+3} \cdot 7^{64 + (7 \cdot 3 + 9 \cdot 2 -41)}
-	+ w_{3,j+3} \cdot 7^{64 +(7 \cdot 3 + 9 \cdot 3- 41)} + w_{4, j+3} + w_{o, j+3}$ \\
+	+ w_{3,j+3} \cdot 7^{7 \cdot 3 + 9 \cdot 3- 41} + w_{4, j+3} + w_{o, j+3}$ \\
 10 plookup constraints \\
 \end{center}
 
