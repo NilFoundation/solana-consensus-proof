@@ -15,6 +15,8 @@ Notations:
 	$N_{\texttt{sel}}$ & Number of selectors used in the circuit \\
 	\hline
 	$N_{\texttt{const}}$ & Number of constant columns  \\
+	\hline 
+	$N_{\texttt{lookups}}$ & Number of lookups \\
 	\hline
 	$\textbf{f}_i$ & Witness polynomials, $0 \leq i < N_{\texttt{wires}}$  \\
 	\hline
@@ -42,6 +44,7 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 	\item Compute $N_{\texttt{perm}}$ identity permutation polynomials: $S_{id_i}(X)$ such that $S_{id_i}(\omega^j) = \delta^i \cdot \omega^j$
 	\item Let $H = \{\omega^0, ..., \omega^n\}$ be a cyclic subgroup of $\mathbb{F}^*$
 	\item Let $Z(X) = \prod\limits{a \in H^*}(X - a)$
+	\item Let $A_i$ be a witness lookup columns and $S_i$ be a table columns, $i = 0,.., m$.
 \end{enumerate}
 \end{algorithm}
 
@@ -57,6 +60,18 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 		$f_i(X) = \textbf{f}_{i}(X) + h_i(X)Z(X)$ for $0 \leq i < N_{\texttt{wires}}$
 	\end{center}
 	\item Send commitments to $f_i$ to $\textbf{V}$
+	\item Get $\theta\leftarrow \mathbb{F}$ from \textbf{V}
+	\item Construct the witness lookup compression and table compression $S(\theta)$ and $A(\theta)$:
+	\begin{center}
+		$A(\theta) = \theta^{m - 1} A_{0} + \theta^{m - 2} A_{1} + ... + \theta A_{ m - 2} + A_{m - 1}$ //
+		$S(\theta) = \theta^{m-1} S_{0} + \theta^{m-2} S_{1} + ... + \theta S_{m-2} + S_{m-1}$
+	\end{center}
+	\item Produce the permutation polynomials $S'(X)$ and $A'(X)$ such that:
+	\begin{enumerate}
+		\item All the cells of column $A'$ are arranged so that like-valued cells are vertically adjacent to each other. 
+		\item The first row in a sequence of values in $A'$ is the row that has the corresponding value in $S'$.
+	\end{enumerate}
+	\item Compute and send commitments to $A'$ and $S'$ to \textbf{V}
 	\item Get $\beta, \gamma \leftarrow \mathbb{F}$ from \textbf{V}
 	\item For $0 \leq i < N_{\texttt{perm}}$
 	\begin{center}
@@ -75,6 +90,12 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 		$Q(\omega^i) = \prod\limits_{1 \leq j < i}q'(\omega^i)$ for $i \in {2, \dots, n + 1}$ \\
 	\end{center}
 	\item Compute and send commitments to $P$ and $Q$ to \textbf{V}
+	\item Compute permutation product column:
+	\begin{center}
+	$V (\omega^i) = \frac{(\theta^{m-1} A_0(\omega^i) + \theta^{m-2} A_1(\omega^i) + ... + \theta A_{m-2}(\omega^i) + A_{m-1}(\omega^i) + \beta) \cdot (\theta^{m-1} S_0(\omega^i) + \theta^{m-2} S_1(\omega^i) + ... + \theta S_{m-2}(\omega^i) + S_{m-1}(\omega^i) + \gamma)} {(A'(\omega^i) + \beta) (S'(\omega^i) + \gamma)}$ \\
+	$V (1) = V (\omega^{N_{\texttt{lookups}}}) = 1$
+	\end{center}
+	\item Compute and send commitments to $V$ to \textbf{V}
 	\item Get $\alpha_0, \dots, \alpha_5 \leftarrow \mathbb{F}$ from \textbf{V}
 	\item Define polynomials ($F_0, \dots, F_4$ - copy-satisfability):
 	\begin{center}
@@ -86,9 +107,18 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 		$F_5(X) = \sum\limits_{0 \leq i < N_{\texttt{sel}}} (\textbf{q}_{i}(X) \cdot \texttt{gate}_i(X))
 			+ \sum\limits_{0 \leq i < N_{\texttt{const}}}(\textbf{f}_{c_i}(X)) + PI(X)$
 	\end{center}
+	\item For the lookup:
+	\begin{enumerate}
+		\item Two selectors $q_{last}$ and $q_{blind}$ are used, where $q_{last} = 1$ for $t$ last blinding rows and $q_{blind} = 1$ on the row in between the usable rows and the blinding rows.
+		\item $F_6(X) = L_0(X) (1 - V(X))$
+		\item $F_7(X) = q_{last} \cdot (V(X)^2 - V(X))$
+		\item $F_8(X) = (1 - (q_{last} + q_{blind})) \cdot ( V(\omega X) (A'(X) + \beta) (S'(X) + \gamma) - V(X) (\theta^{m-1} A_0(X) + ... + A_{m-1}(X) + \beta) (\theta^{m-1} S_0(X) + ... + S_{m-1}(X) + \gamma) )$
+		\item $F_9(X) = L_0(X) \cdot (A'(X) - S'(X))$
+		\item $F_{10}(X) = (1 - (q_{last} + q_{blind})) \cdot (A'(X) - S'(X))\cdot(A'(X) - A'(\omega^{-1} X))$
+	\end{enumerate}
 	\item Compute:
 	\begin{center}
-		$F(X) = \sum\limits_{i = 0}^5 \alpha_iF_i(X)$ \\
+		$F(X) = \sum\limits_{i = 0}^{10} \alpha_iF_i(X)$ \\
 		$T(X) = \frac{F(X)}{Z(X)}$
 	\end{center}
 	\item Split $T(X)$ into separate polynomials $T_0(X), ..., T_{N_{\texttt{perm}}}(X)$
@@ -103,15 +133,18 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 \begin{enumerate}
 	\item Let $f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires}}, \texttt{comm}}$ be commitments to $f_{0}(X), \dots, f_{N_{\texttt{wires}}}(X)$
 	\item $\text{transcript} = \text{setup\_values} || f_{0, \texttt{comm}} || \dots || f_{N_{\texttt{wires}}, \texttt{comm}}$
+	\item $\theta= H(\text{transcript})$
+	\item Let $A'_{\texttt{comm}}, S'_{\texttt{comm}}$ be commitments to $A'(X), S'(X)$.
+	\item $\text{transcript} = \text{transcript} || A'_{\texttt{comm}} || S'_{\texttt{comm}}$ 
 	\item $\beta, \gamma = H(\text{transcript})$
-	\item Let $P_{\texttt{comm}}, Q_{\texttt{comm}}$ be commitments to $P(X), Q(X)$
-	\item $\text{transcript} = \text{transcript} || P_{\texttt{comm}} || Q_{\texttt{comm}}$
+	\item Let $P_{\texttt{comm}}, Q_{\texttt{comm}}, V_{i, \texttt{comm}}$ be commitments to $P(X), Q(X), V(X)$.
+	\item $\text{transcript} = \text{transcript} || P_{\texttt{comm}} || Q_{\texttt{comm}} || V_{\texttt{comm}}$
 	\item $\alpha_0, \dots, \alpha_5 = H(\text{transcript})$
 	\item Let $T_{0, \texttt{comm}}, ..., T_{N_{\texttt{perm}, \texttt{comm}}}$ be commitments to $T_0(X), ..., T_{N_{\texttt{perm}}}(X)$ 
 	\item $\text{transcript} = \text{transcript} || T_{0, \texttt{comm}} || ... || T_{N_{\texttt{perm}, \texttt{comm}}}$
 	\item $y = H_{\mathbb{F}/H}(\text{transcript})$
 	\item Run evaluation scheme verification with the committed polynomials and $y$ to get values 
-		$f_i(y), P(y), P(y\omega), Q(y), Q(y\omega), T_j(y)$.  \\
+		$f_i(y), P(y), P(y\omega), Q(y), Q(y\omega), T_j(y), A'(y), S'(y), V(y), A'(y\omega^{-1}, V(y\omega))$.  \\
 		\textbf{Remark}: Depending on the circuit, evaluation can be done also on $f_i(y\omega), f_i(y\omega^{-1})$ for some $i$.
 	\item Calculate:
 	\begin{center}
@@ -125,9 +158,14 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 		$F_5(y) = \sum\limits_{0 \leq i < N_{\texttt{sel}}} (\textbf{q}_{i}(y) \cdot \texttt{gate}_i(y))
 			+ \sum\limits_{0 \leq i < N_{\texttt{const}}}(\textbf{f}_{c_i}(y)) + PI(y)$ \\
 		$T(y) = \sum\limits_{0 \leq j < N_{\texttt{perm} + 1}}y^{n \cdot j}T_j(y)$
+		$F_6(y) = L_0(y) (1 - V(y))$ \\
+		$F_7(y) = q_{last} \cdot (V(y)^2 - V(y))$ \\
+		$F_8(y) = (1 - (q_{last} + q_{blind})) \cdot ( V(\omega y) (A'(y) + \beta) (S'(y) + \gamma) - V(y) (\theta^{m-1} A_{0}(y) + ... + A_{m-1}(y) + \beta) (\theta^{m-1} S_{i, 0}(y) + ... + S_{m-1}(y) + \gamma) )$ \\
+		$F_9(y) = L_0(y) \cdot (A'(y) - S'(y))$ \\
+		$F_{10}(y) = (1 - (q_{last} + q_{blind})) \cdot (A'(y) - S'(y))\cdot(A'(y) - A'(\omega^{-1} y))$ \\
 	\end{center}
 	\item Check the identity:
 	\begin{center}
-		$\sum\limits_{i = 0}^5\alpha_iF_i(y) = Z(y)T(y)$
+		$\sum\limits_{i = 0}^{10}\alpha_iF_i(y) = Z(y)T(y)$
 	\end{center}
 \end{enumerate}
