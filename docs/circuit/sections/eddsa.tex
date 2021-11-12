@@ -59,7 +59,7 @@ j + 84 & $-$ & $-$ & $v_{85}$ & $-$ & $-$ \\
 \end{tabular}
 \end{center}
 
-Define the following set of functions:
+Define the following functions:
 \begin{enumerate}
 	\item $\phi_1: (x_1, x_2, x_3, x_4) \mapsto $ \\
 				$x_3 \cdot (-u'_0 \cdot x_2 \cdot x_1 + u'_0 \cdot x_1 + u'_0 \cdot x_2
@@ -89,38 +89,38 @@ Define the following set of functions:
 Constraints:
 \begin{itemize}
 	\item For $j + 0$:
-	\begin{enumerate}
+	\begin{itemize}
 		\item $w_{o, j} = w_{1, j} \cdot 2^2 + w_{2, j} \cdot 2 + w_{3, j}$ 
 		\item $\phi_3(w_{1, j + 1}, w_{2, j + 1}, w_{4, j}, w_{o, j + 1}, w_{4, j + 1}, w_{3, j + 2}) = 0$
 		\item $\phi_4(w_{1, j + 1}, w_{2, j + 1}, w_{4, j}, w_{o, j + 1}, w_{4, j + 1}, w_{3, j + 2}) = 0$
-	\end{enumerate}
+	\end{itemize}
 	\item For $j + z$, $z \equiv 0 \mod 5$, $z \neq 0$:
-	\begin{enumerate}
+	\begin{itemize}
 		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2, j + z} \cdot 2 + w_{3, j + z} + w_{o, j + z - 1} \cdot 2^3$ 
 		\item $\phi_1(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{4, j + z}) = 0$
 		\item $\phi_2(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z + 1}) = 0$
 		\item $\phi_3(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{3, j + z + 2}) = 0$
 		\item $\phi_4(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{3, j + z + 2}) = 0$
-	\end{enumerate}
+	\end{itemize}
 	\item For $j + z$, $z \equiv 2 \mod 5$, $z \not\equiv 4 \mod 5$:
-	\begin{enumerate}
+	\begin{itemize}
 		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2,j + z} \cdot 2 + w_{3, j + z - 1} + w_{o, j+ z - 2} \cdot 2^3$
 		\item $\phi_1(w_{1, j + z}, w_{2, j + z}, w_{3, j + z - 1}, w_{4, j + z - 1}) = 0$
 		\item $\phi_2(w_{1, j + z}, w_{2, j + z}, w_{3, j + z - 1}, w_{4, j + z - 1}, w_{3, j + z}) = 0$
 		\item $\phi_3(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{o, j + z + 1}, w_{3, j + z + 2}) = 0$
 		\item $\phi_4(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{o, j + z + 1}, w_{3, j + z + 2}) = 0$
-	\end{enumerate}
+	\end{itemize}
 	\item For $j + z$, $z \equiv 3 \mod 5$:
-	\begin{enumerate}
+	\begin{itemize}
 		\item $\phi_1(w_{4, j + z - 1}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z}) = 0$
 		\item $\phi_2(w_{4, j + z - 1}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z}, w_{3, j + z + 1}) = 0$
-	\end{enumerate}
+	\end{itemize}
 	\item For $j + z$, $z \equiv 4 \mod 5$:
-	\begin{enumerate}
+	\begin{itemize}
 		\item $w_{o, j + z} = w_{4,j + z - 2} \cdot 2^2 + w_{3,j + z - 3} \cdot 2 + w_{4, j + z - 3} + w_{o, j + z - 2} \cdot 2^3$
 		\item $\phi_3(w_{1, j + z - 2}, w_{2, j + z}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{o, j + z + 2}) = 0$
 		\item $\phi_4(w_{1, j + z - 2}, w_{2, j + z}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{o, j + z + 2}) = 0$
-	\end{enumerate}
+	\end{itemize}
 \end{itemize}
 
 \paragraph{Variable-base scalar multiplication circuit}:
@@ -134,11 +134,93 @@ j + 2 & $x_1$ & $ y_1$ & $y_4$ & $b_{n - 4}$ & acc\\
 j + 3 & $x_5$ & $y_5$ & $x_6$ & $b_{n - 5}$ & acc \\ 
 j + 4 & $y_6$ & $ x_7$ & $y_7$ & $b_{n - 6}$ & acc\\
 ... & & & & &\\ 
-j + 210 &  & $x_{n-3}$ & $y_{n-3}$ & $b_2$ & b\\ 
+j + 210 & $\dots$  & $x_{n-3}$ & $y_{n-3}$ & $b_2$ & b\\ 
 j + 211 & $x_{n-2}$ & $ y_{n-2}$ & $b_1$ & $b_0$ & $x_{n-1}$\\ 
 j + 212 & $x_1$ & $ y_1$ & $y_{n-1}$ & $x_n$ & $y_n$ \\ 
 \end{tabular}
 \end{center}
+
+Define the following functions:
+\begin{enumerate}
+							%{w_{2, j + 0}, w_{2, j + 2}, w_{1, j + 2}, w_{1, j + 0}}
+	\item $\phi_1: (x_1, x_2, x_3, x_4) \mapsto $ \\
+				$x_1 \cdot ((x_2^2 - x_3^2) \cdot (2 - x_2^2 + x_3^2)
+				+ 2d \cdot x_2^2 \cdot x_3^2 \cdot (x_2^2 + x_3^2) \cdot x_4) 
+				- (2 \cdot x_2 \cdot (x_2 \cdot x_4 + 1 - x_4) \cdot x_3 
+				\cdot (2 - x_2^2 + x_3^2) + x_3 \cdot (x_2^2
+				+ x_3^2) \cdot (x_2^2 - x_3^2)\cdot x_4)$
+	\item $\phi_2: (x_1, x_2, x_3, x_4, x_5, x_6) \mapsto $ \\
+				% %{w_{1, j + 1}, w_{4, j + 0}, w_{3, j + 0}, w_{2, j + 0}, w_{2, j + 2}, w_{1, j + 2}, }
+				$x_1 \cdot ((x_2^2 - x_3^2) \cdot (2 - x_2^2 + x_3^2) 
+					+ 2d \cdot x_2 \cdot x_3 \cdot (x_2^2 + x_4^2) \cdot x_5 \cdot x_6 \cdot x_2) 
+					- (2 \cdot x_2 \cdot x_3 \cdot (2 - x_2^2 + x_3^2) 
+					\cdot (x_5 \cdot x_2 + 1 - x_2) + x_3 \cdot (x_2^2 
+					+ x_3^2) \cdot (x_2^2 - x_3^2) \cdot x_6 \cdot x_2)$
+	\item $\phi_3: (x_1, x_2, x_3, x_4, x_5) \mapsto $ \\
+				% %{w_{3, j + 1}, w_{2, j + 2}, w_{1, j + 2}, w_{1, j}, w_{1, j + 2}}
+				$x_1 \cdot ((x_2^2 - x_3^2) \cdot (2 - x_2^2 - x_3^2) 
+				+ 2d \cdot x_2^2 \cdot x_3^2 \cdot (x_2^2 + x_3^2) \cdot x_4) 
+				- (2 \cdot x_5^2 \cdot (x_2 \cdot (2 - x_2^2 + x_3^2) \cdot x_4 
+				+ (x_2^2 - x_3^2)\cdot (x_2^2 + x_3^2) \cdot (x_2 \cdot x_4 + 1 - x_4))$
+	\item $\phi_4: (x_1, x_2, x_3, x_4, x_5) \mapsto $ \\
+				% %{w_{2, j + 1}, w_{4, j}, w_{3, j}, w_{2, j + 2}, w_{1, j + 2}}
+				$x_1 \cdot ((x_2^2 - x_3^2) \cdot (2 - x_2^2 + x_3^2) + 2d \cdot x_2 \cdot x_3 \cdot (x_2^2 + x_3^2) \cdot x_4 \cdot x_5 \cdot x_2) = 
+2 \cdot x_2 \cdot x_3 \cdot (2 - x_2^2 + x_3^2) \cdot x_5 \cdot x_2  
++  (x_4 \cdot x_2 + 1 - x_2) \cdot (x_2^2 + x_3^2) \cdot (x_2^2 - x_3^2) $
+\end{enumerate}
+
+Constraints:
+\begin{itemize}
+	\item For $j + 0$:
+	\begin{itemize}
+		\item $w_{o, j} = w_{1, j} \cdot 2 + w_{4, j}$
+		\item $\phi_1$
+		\item $\phi_2$
+		\item $\phi_3$
+		\item $\phi_4$
+	\end{itemize}
+	\item For $j + z$, $z \equiv 0 \mod 5$, $z \neq 0$:
+	\begin{itemize}
+		\item $w_{o, j + z} = w_{1, j + z} \cdot 2 + w_{4, j + z} + w_{o, j + z - 1}$
+		\item $\phi_1$
+		\item $\phi_2$
+		\item $\phi_3$
+		\item $\phi_4$
+	\end{itemize}
+	\item For $j + z$, $z \equiv 1 \mod 5$, $z \not\equiv 4 \mod 5$:
+	\begin{itemize}
+		\item $w_{o, j + z} = 2 \cdot w_{o, j + z - 1} + w_{4, j + z}$
+		\item $\phi_1$
+		\item $\phi_2$
+		\item $\phi_3$
+		\item $\phi_4$
+	\end{itemize}
+	\item For $j + z$, $z \equiv 2 \mod 5$, $z \not\equiv 4 \mod 5$:
+	\begin{itemize}
+		\item $w_{o, j + z} = 2 \cdot w_{o, j + z - 1} + w_{4, j + z}$
+		\item $\phi_1$
+		\item $\phi_2$
+		\item $\phi_3$
+		\item $\phi_4$
+	\end{itemize}
+	\item For $j + z$, $z \equiv 3 \mod 5$:
+	\begin{itemize}
+		\item $w_{o, j + z} = 2 \cdot w_{o, j + z - 1} + w_{4, j + z}$
+		\item $\phi_1$
+		\item $\phi_2$
+		\item $\phi_3$
+		\item $\phi_4$
+	\end{itemize}
+	\item For $j + z$, $z \equiv 4 \mod 5$:
+	\begin{itemize}
+		\item $w_{o, j + z} = 2 \cdot w_{o, j + z - 1} + w_{4, j + z}$
+		\item $\phi_1$
+		\item $\phi_2$
+		\item $\phi_3$
+		\item $\phi_4$
+	\end{itemize}
+\end{itemize}
+
  Constraints:
 \begin{center}
 $w_{o, j + 0} = w_{1, j} \cdot 2 + w_{4, j}$ it is used only for the beginning of the circuit. The additional term $w_{o, i - 1}$ is used for the following groups of rows. \\
