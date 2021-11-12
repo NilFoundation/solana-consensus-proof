@@ -1,5 +1,6 @@
 \section{Ed25519 Circuit}
 \label{section:eddsa}
+
 To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a generator $B$ do:
 \begin{enumerate}
 \item Prove that $s$ in the range $L = 2^{252}+27742317777372353535851937790883648493$.
@@ -34,6 +35,8 @@ $- x_r^2 + y_r^2 = 1 - d \cdot x_r^2 \cdot y_r^2$
 
 \end{enumerate}
 \subsection{Arithmetic of Elliptic Curves} \label{ellcurve}
+\textbf{WIP}
+
 This section instantiates the arithmetic of edwards25519 curve:
 \begin{center}
 $- x^2 + y^2 = 1 - (121665/121666) \cdot x^2 \cdot y^2$
@@ -56,41 +59,69 @@ j + 84 & $-$ & $-$ & $v_{85}$ & $-$ & $-$ \\
 \end{tabular}
 \end{center}
 
- Constraints:
-%\begin{itemize}
-%	\item For $j + 0$:
-%	\begin{itemize}
-%		\item $w_{o, j } = w_{1,j} \cdot 2^2 + w_{2,j} \cdot 2 + w_{3, j}$ 
-%	\end{itemize}
-%	\item For $j + z$, $z \mod 5 = 0$, $z \neq 0$:
-%	\begin{itemize}
-%		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2, j + z} \cdot 2 + w_{3, j + z} + w_{o, j + z - 1} \cdot 2^3$ 
-%	\end{itemize}
-%	\item For $j + z$, $z \mod 5 = 2$:
-%	\begin{itemize}
-%		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2,j + z} \cdot 2 + w_{3, j + z - 1} + w_{o, j+ z - 2} \cdot 2^3$
-%	\end{itemize}
-%	\item For $j + z$, $z \mod 5 = 4$:
-%	\begin{itemize}
-%		\item $w_{o, j + z} = w_{4,j + z - 2} \cdot 2^2 + w_{3,j + z - 3} \cdot 2 + w_{4, j + z - 3} + w_{o, j + z - 2} \cdot 2^3$
-%	\end{itemize}
-%\end{itemize}
-\begin{center}
-$w_{o, j } = w_{1,j} \cdot 2^2 + w_{2,j} \cdot 2 + w_{3, j}$ is used only for the beginning of the circuit. The additional term $w_{o, j+k - 1} \cdot 2^3$ is used for the following rows. \\
-$w_{o, j + 2} = w_{1,j + 2} \cdot 2^2 + w_{2,j + 2} \cdot 2 + w_{3, j + 1} + w_{o, j+k - 2} \cdot 2^3$ \\
-$w_{o, j + 4} = w_{4,j + 2} \cdot 2^2 + w_{3,j + 3} \cdot 2 + w_{4, j + 3} + w_{o, j+k - 2} \cdot 2^3$ \\
+Define the following set of functions:
+\begin{enumerate}
+	\item $\phi_1: (x_1, x_2, x_3, x_4) \mapsto $ \\
+				$x_3 \cdot (-u'_0 \cdot x_2 \cdot x_1 + u'_0 \cdot x_1 + u'_0 \cdot x_2
+				- u'_0 + u'_2 \cdot x_1 \cdot x_2 - u'_2\cdot x_2 + u'_4 \cdot x_1 \cdot x_2
+				- u'_4\cdot x_2 -u'_6 \cdot x_1 \cdot x_2 + u'_1 \cdot x_2 \cdot x_1
+				- u'_1 \cdot x_1 - u'_1 \cdot x_2 + u'_1  - u'_3 \cdot x_1 \cdot x_2 + u'_3\cdot x_2
+				- u'_5 \cdot x_1 \cdot x_2 + u'_5\cdot x_2 + u'_7 \cdot x_1 \cdot x_2) -
+				(x_4 - u'_0 \cdot x_2 \cdot x_1 + u'_0 \cdot x_1 + u'_0 \cdot x_2
+				- u'_0 + u'_2 \cdot x_1 \cdot x_2 - u'_2\cdot x_2 + u'_4 \cdot x_1 \cdot x_2
+				- u'_4\cdot x_2 -u'_6 \cdot x_1 \cdot x_2)$
+	\item $\phi_2: (x_1, x_2, x_3, x_4, x_5) \mapsto $ \\
+				$x_3 \cdot (-v'_0 \cdot x_2 \cdot x_1 + v'_0 \cdot x_1 + v'_0 \cdot x_2
+				- v'_0 + v'_2 \cdot x_1 \cdot x_2 -v'_2 \cdot x_2 + v'_4 \cdot x_1 \cdot x_2
+				- v'_4 \cdot x_2 - v'_6 \cdot x_1 \cdot x_2 + v'_1 \cdot x_2 \cdot x_1
+				- v'_1 \cdot x_1 - v'_1 \cdot x_2 + v'_1  - v'_3 \cdot x_1 \cdot x_2
+				+ v'_3 \cdot x_2 - v'_5 \cdot x_1 \cdot x_2 + v'_5 \cdot x_2
+				+ v'_7 \cdot x_1 \cdot x_2) - (x_5 - v'_0 \cdot x_2 \cdot x_1
+				+ v'_0 \cdot x_1 + v'_0 \cdot x_2 - v'_0 + v'_2 \cdot x_1 \cdot x_2
+				- v'_2 \cdot x_2 + v'_4 \cdot x_1 \cdot x_2 - v'_4 \cdot x_2 - v'_6 \cdot x_1 \cdot x_2) $
+	\item $\phi_3: (x_1, x_2, x_3, x_4, x_5, x_6) \mapsto $ \\
+				$x_1 \cdot (1 + d \cdot x_3 \cdot x_4 \cdot x_5 \cdot x_6
+				- (x_3 \cdot x_6 + x_4 \cdot x_5)$
+	\item $\phi_4: (x_1, x_2, x_3, x_4, x_5, x_6) \mapsto $ \\
+				$x_2 \cdot (1 - d \cdot x_3 \cdot x_4 \cdot x_5 \cdot x_6 - (x_3 \cdot x_5 + x_4 \cdot x_6)$
+\end{enumerate}
 
-
-These two constraints are used for three sets: $\{ w_{1,j}, w_{2,j}, w_{3,j}, w_{4,j}, w_{o, j+1} \}, \{ w_{1, j+2}, w_{2, j +2}, w_{3, j+1}, w_{4, j+1}, w_{3, j+2}\}, \{w_{4,j+2}, w_{3,j+3}, w_{4, j+3},w_{o, j+3}, w_{3, j+4} \}$: \\
-$w_{3, j} \cdot (-u'_0 \cdot w_{2, j} \cdot w_{1, j} + u'_0 \cdot w_{1, j} + u'_0 \cdot w_{2, j} - u'_0 + u'_2 \cdot w_{1, j}\cdot w_{2, j} - u'_2\cdot w_{2, j} + u'_4 \cdot w_{1, j}\cdot w_{2, j} - u'_4\cdot w_{2, j} -u'_6 \cdot w_{1, j} \cdot w_{2, j} + u'_1 \cdot w_{2, j} \cdot w_{1, j} - u'_1 \cdot w_{1, j} - u'_1 \cdot w_{2, j} + u'_1  - u'_3 \cdot w_{1, j}\cdot w_{2, j} + u'_3\cdot w_{2, j} - u'_5 \cdot w_{1, j}\cdot w_{2, j} + u'_5\cdot w_{2, j} + u'_7 \cdot w_{1, j} \cdot w_{2, j}) = w_{4,j} -u'_0 \cdot w_{2, j} \cdot w_{1, j} + u'_0 \cdot w_{1, j} + u'_0 \cdot w_{2, j} - u'_0 + u'_2 \cdot w_{1, j}\cdot w_{2, j} - u'_2\cdot w_{2, j} + u'_4 \cdot w_{1, j}\cdot w_{2, j} - u'_4\cdot w_{2, j} -u'_6 \cdot w_{1, j} \cdot w_{2, j} $ \\
-
-$w_{3, j} \cdot (-v'_0 \cdot w_{2, j} \cdot w_{1, j} + v'_0 \cdot w_{1, j} + v'_0 \cdot w_{2, j} - v'_0 + v'_2 \cdot w_{1, j}\cdot w_{2, j} -v'_2\cdot w_{2, j} + v'_4 \cdot w_{1, j}\cdot w_{2, j} - v'_4\cdot w_{2, j} -v'_6 \cdot w_{1, j} \cdot w_{2, j} + v'_1 \cdot w_{2, j} \cdot w_{1, j} - v'_1 \cdot w_{1, j} - v'_1 \cdot w_{2, j} + v'_1  - v'_3 \cdot w_{1, j}\cdot w_{2, j} + v'_3\cdot w_{2, j} - v'_5 \cdot w_{1, j}\cdot w_{2, j} + v'_5\cdot w_{2, j} + v'_7 \cdot w_{1, j} \cdot w_{2, j}) = w_{o,j+1} - v'_0 \cdot w_{2, j} \cdot w_{1, j} + v'_0 \cdot w_{1, j} + v'_0 \cdot w_{2, j} - v'_0 + v'_2 \cdot w_{1, j}\cdot w_{2, j} - v'_2\cdot w_{2, j} + v'_4 \cdot w_{1, j}\cdot w_{2, j} - v'_4\cdot w_{2, j} - v'_6 \cdot w_{1, j} \cdot w_{2, j} $ \\
-
-These two constraints are used for three sets: $\{ w_{1,j+1}, w_{2,j+1}, ( w_{4,j}, w_{o,j+1}$  for the first row, or $w_{1, j + k - 1}, w_{2, j + k - 1}), w_{4, j+1}, w_{3,j+2} \}, \{ w_{1, j+3}, w_{2, j +3}, w_{1, j+1}, w_{2, j+1}, w_{o, j+3}, w_{3, j+4}\}, \{w_{1,j+2}, w_{2,j+4}, w_{1, j+3},w_{2, j+3}, w_{4, j+5}, w_{o,j+6} \}$: \\
-$w_{1, j+1} \cdot (1 + d \cdot w_{4,j} \cdot w_{o,j+1} \cdot w_{4,j+1} \cdot w_{3, j+2} = w_{4,j} \cdot w_{3, j+2} + w_{o,j+1} \cdot w_{4,j+1}$
-$w_{2, j+1} \cdot (1 - d \cdot w_{4,j} \cdot w_{o,j+1} \cdot w_{4,j+1} \cdot w_{3, j+2} = w_{4,j} \cdot w_{4, j+1} + w_{o,j+1} \cdot w_{3,j+2}$
-
-\end{center}
+Constraints:
+\begin{itemize}
+	\item For $j + 0$:
+	\begin{enumerate}
+		\item $w_{o, j} = w_{1, j} \cdot 2^2 + w_{2, j} \cdot 2 + w_{3, j}$ 
+		\item $\phi_3(w_{1, j + 1}, w_{2, j + 1}, w_{4, j}, w_{o, j + 1}, w_{4, j + 1}, w_{3, j + 2}) = 0$
+		\item $\phi_4(w_{1, j + 1}, w_{2, j + 1}, w_{4, j}, w_{o, j + 1}, w_{4, j + 1}, w_{3, j + 2}) = 0$
+	\end{enumerate}
+	\item For $j + z$, $z \equiv 0 \mod 5$, $z \neq 0$:
+	\begin{enumerate}
+		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2, j + z} \cdot 2 + w_{3, j + z} + w_{o, j + z - 1} \cdot 2^3$ 
+		\item $\phi_1(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{4, j + z}) = 0$
+		\item $\phi_2(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z + 1}) = 0$
+		\item $\phi_3(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{3, j + z + 2}) = 0$
+		\item $\phi_4(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{3, j + z + 2}) = 0$
+	\end{enumerate}
+	\item For $j + z$, $z \equiv 2 \mod 5$, $z \not\equiv 4 \mod 5$:
+	\begin{enumerate}
+		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2,j + z} \cdot 2 + w_{3, j + z - 1} + w_{o, j+ z - 2} \cdot 2^3$
+		\item $\phi_1(w_{1, j + z}, w_{2, j + z}, w_{3, j + z - 1}, w_{4, j + z - 1}) = 0$
+		\item $\phi_2(w_{1, j + z}, w_{2, j + z}, w_{3, j + z - 1}, w_{4, j + z - 1}, w_{3, j + z}) = 0$
+		\item $\phi_3(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{o, j + z + 1}, w_{3, j + z + 2}) = 0$
+		\item $\phi_4(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{o, j + z + 1}, w_{3, j + z + 2}) = 0$
+	\end{enumerate}
+	\item For $j + z$, $z \equiv 3 \mod 5$:
+	\begin{enumerate}
+		\item $\phi_1(w_{4, j + z - 1}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z}) = 0$
+		\item $\phi_2(w_{4, j + z - 1}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z}, w_{3, j + z + 1}) = 0$
+	\end{enumerate}
+	\item For $j + z$, $z \equiv 4 \mod 5$:
+	\begin{enumerate}
+		\item $w_{o, j + z} = w_{4,j + z - 2} \cdot 2^2 + w_{3,j + z - 3} \cdot 2 + w_{4, j + z - 3} + w_{o, j + z - 2} \cdot 2^3$
+		\item $\phi_3(w_{1, j + z - 2}, w_{2, j + z}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{o, j + z + 2}) = 0$
+		\item $\phi_4(w_{1, j + z - 2}, w_{2, j + z}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{o, j + z + 2}) = 0$
+	\end{enumerate}
+\end{itemize}
 
 \paragraph{Variable-base scalar multiplication circuit}:
 \begin{center}
