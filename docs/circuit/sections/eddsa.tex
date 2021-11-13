@@ -45,6 +45,7 @@ Affine coordinates are used for points.
 Let $d$ be equal to $121665/121666$.
 
 \paragraph{Fixed-base scalar multiplication circuit}:
+We precompute all values $w(\mathbb{G},s,k) = k_i \cdot 8^s \mathbb{G}$, where $k_i \in \{ 0,..7 \}$, $s \in \{0,.., 84\}$.
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
@@ -97,23 +98,23 @@ Constraints:
 	\item For $j + z$, $z \equiv 0 \mod 5$, $z \neq 0$:
 	\begin{itemize}
 		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2, j + z} \cdot 2 + w_{3, j + z} + w_{o, j + z - 1} \cdot 2^3$ 
-		\item $\phi_1(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{4, j + z}) = 0$
-		\item $\phi_2(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z + 1}) = 0$
+		\item $\phi_1(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{4, j + z}) = 0$, where $(u'_{i}, v'_{i}) = w(\mathbb{G}, 3 \cdot (\frac{z}{5}), i)$
+		\item $\phi_2(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z + 1}) = 0$, where $(u'_{i}, v'_{i}) = w(\mathbb{G}, 3 \cdot (\frac{z}{5}), i)$
 		\item $\phi_3(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{3, j + z + 2}) = 0$
 		\item $\phi_4(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z + 1}, w_{3, j + z + 2}) = 0$
 	\end{itemize}
 	\item For $j + z$, $z \equiv 2 \mod 5$, $z \not\equiv 4 \mod 5$:
 	\begin{itemize}
 		\item $w_{o, j + z} = w_{1, j + z} \cdot 2^2 + w_{2,j + z} \cdot 2 + w_{3, j + z - 1} + w_{o, j+ z - 2} \cdot 2^3$
-		\item $\phi_1(w_{1, j + z}, w_{2, j + z}, w_{3, j + z - 1}, w_{4, j + z - 1}) = 0$
-		\item $\phi_2(w_{1, j + z}, w_{2, j + z}, w_{3, j + z - 1}, w_{4, j + z - 1}, w_{3, j + z}) = 0$
+		\item $\phi_1(w_{1, j + z}, w_{2, j + z}, w_{3, j + z - 1}, w_{4, j + z - 1}) = 0$, where $(u'_{i}, v'_{i}) = w(\mathbb{G}, 3 \cdot (\frac{z - 2}{5}) + 1, i)$
+		\item $\phi_2(w_{1, j + z}, w_{2, j + z}, w_{3, j + z - 1}, w_{4, j + z - 1}, w_{3, j + z}) = 0$, where $(u'_{i}, v'_{i}) = w(\mathbb{G}, 3 \cdot (\frac{z - 2}{5}) + 1, i)$
 		\item $\phi_3(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{o, j + z + 1}, w_{3, j + z + 2}) = 0$
 		\item $\phi_4(w_{1, j + z + 1}, w_{2, j + z + 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{o, j + z + 1}, w_{3, j + z + 2}) = 0$
 	\end{itemize}
 	\item For $j + z$, $z \equiv 3 \mod 5$:
 	\begin{itemize}
-		\item $\phi_1(w_{4, j + z - 1}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z}) = 0$
-		\item $\phi_2(w_{4, j + z - 1}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z}, w_{3, j + z + 1}) = 0$
+		\item $\phi_1(w_{4, j + z - 1}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z}) = 0$, where $(u'_{i}, v'_{i}) = w(\mathbb{G}, 3 \cdot (\frac{z - 3}{5}) + 2, i)$
+		\item $\phi_2(w_{4, j + z - 1}, w_{3, j + z}, w_{4, j + z}, w_{o, j + z}, w_{3, j + z + 1}) = 0$, where $(u'_{i}, v'_{i}) = w(\mathbb{G}, 3 \cdot (\frac{z - 3}{5}) + 2, i)$
 	\end{itemize}
 	\item For $j + z$, $z \equiv 4 \mod 5$:
 	\begin{itemize}
