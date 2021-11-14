@@ -17,17 +17,17 @@ j + 3 & $a_0 $& $a_1$ & $a_2$ & $a_3$ & a \\
 \end{center}
 Range gate constraints:
 \begin{center}
-$w_{1,i}(w_{1,i}-1)(w_{1,i}-2)(w_{1,i} -3) + w_{2,i}(w_{2,i}-1)(w_{2,i}-2)(w_{2,i} -3) + w_{3,i}(w_{3,i}-1)(w_{3,i}-2)(w_{3,i} -3) + w_{4,i}(w_{4,i}-1)(w_{4,i}-2)(w_{4,i} -3)$ \\
+$w_{1,i}(w_{1,i}-1)(w_{1,i}-2)(w_{1,i} -3) + w_{2,i}(w_{2,i}-1)(w_{2,i}-2)(w_{2,i} -3) + w_{3,i}(w_{3,i}-1)(w_{3,i}-2)(w_{3,i} -3) + w_{4,i}(w_{4,i}-1)(w_{4,i}-2)(w_{4,i} -3) = 0$ \\
 $w_{o,i} = w_{o, i - 1} \cdot 4^4 + w_{4,i} \cdot 4^3 + w_{3,i} \cdot 4^2 + w_{2,i} \cdot 4 + w_{1,i}$
 \end{center}
 The range proofs are included for each input data block. 
 
-\paragraph{The function $\sigma_0$} contain sparse mapping subcircuit with base $2$.
+\paragraph{The function $\sigma_0$} contain sparse mapping subcircuit with base $4$.
 Let $a$ be divided to 8 bits-chunks $a_0, a_1, a_2, a_3$.
 The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form, and $a'$ is a sparse $a$.
 We need the following lookup tables:
 \begin{enumerate}
-\item \textbf{SHA-256 NORMALIZE2}: Read $a'_i$ to $a_i$
+\item \textbf{SHA-256 NORMALIZE4}: Read $a'_i$ to $a_i$
 \item \textbf{SHA-256 8ROT3 32}: Read $a'_1$ to $r_1$
 \item \textbf{SHA-256 8ROT2 32}: Read $a'_4$ to $r_2$
 \item \textbf{SHA-256 8SHR3 32}: Read $a'_0$ to $r_3$
@@ -52,12 +52,12 @@ $w_{o, j+2} = w_{0, j+1} + w_{1,j+2} + w_{2, j+2} + w_{3, j+2}$ \\
 7 plookup constraints \\
 \end{center}
 
-\paragraph{The function $\sigma_1$} contain sparse mapping subcircuit with base $2$.
+\paragraph{The function $\sigma_1$} contain sparse mapping subcircuit with base $4$.
 Let $a$ be divided to 8 bits-chunks $a_0, a_1, a_2, a_3$.
 The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form and $a'$ is a sparse $a$.
 We need the following lookup tables:
 \begin{enumerate}
-\item \textbf{SHA-256 NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-256 NORMALIZE4}: Read $a_i$ to $a'_i$
 \item \textbf{SHA-256 8ROT1 32}: Read $a'_2$ to $r_1$
 \item \textbf{SHA-256 8ROT3 32}: Read $a'_2$ to $r_2$ 
 \item \textbf{SHA-256 8ROT2 32}: Read $a'_1$ to $r_3$ 
@@ -77,14 +77,14 @@ $w_{o,j} = w_{1,j} + w_{2,j} \cdot 2^8 + w_{3,j} \cdot 2^{8 \cdot 2} + w_{4,j} \
 $w_{o,j + 1} = w_{1,j + 1} \cdot 4^{8 \cdot 2 - 1} + w_{2,j + 1} \cdot 4^{8 \cdot 3 - 1} + w_{4,j + 1} \cdot 4^{8 - 1}
 	 	+ w_{1,j + 1} \cdot 4^{8 \cdot 2 - 3} + w_{2,j + 1} \cdot 4^{8 \cdot 3 - 3}$\\
 	 $+ w_{4,j + 1} \cdot 4^{8 - 3}
-	 	+ w_{1,j + 1} \cdot 4^{8^3 - 2} + w_{3,j + 1} \cdot 4^{8-2} + w_{4,j + 1} \cdot 4^{8^2 - 2}$ \\
+	 	+ w_{1,j + 1} \cdot 4^{8 \cdot 3 - 2} + w_{3,j + 1} \cdot 4^{8-2} + w_{4,j + 1} \cdot 4^{8^2 - 2}$ \\
 $w_{o, j+2} = w_{0, j+1} + w_{1,j+2} + w_{2, j+2} + w_{3, j+2}$ \\
 7 plookup constraints \\
 \end{center}
 
 The sparse values $\sigma_0$ and $\sigma_1$ have to be normalized.
 The final addition requires one add gate.
-We use \textbf{SHA256 NORMALIZE2}
+We use \textbf{SHA256 NORMALIZE4}
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
@@ -96,7 +96,7 @@ j + 1 & $a_0$ & $ a_1$ & $a_2$ & $a_3$ &  $\sigma_i$ \\
 
 Normalize gate constraints:
 \begin{center}
-$w_{o,j-1} = w_{4,j} \cdot 4^8 \cdot 3 + w_{3,j} \cdot 4^8 \cdot 2 + w_{2,j} \cdot 4^8 + w_{1,j}$
+$w_{o,j-1} = w_{4,j} \cdot 4^{8 \cdot 3} + w_{3,j} \cdot 4^{8 \cdot 2} + w_{2,j} \cdot 4^8 + w_{1,j}$
 $w_{o,j+1} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1}$ \\
 4 plookup constraints \\
 \end{center}
@@ -107,7 +107,7 @@ Let $a$ be divided to 8 bits-chunks $a_0, a_1, a_2, a_3$.
 The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form, and $a'$ is a sparse $a$.
 We need the following lookup tables:
 \begin{enumerate}
-\item \textbf{SHA-256 NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-256 NORMALIZE4}: Read $a_i$ to $a'_i$
 \item \textbf{SHA-256 8ROT2 32}: Read $a'_0$ to $r_1$
 \item \textbf{SHA-256 8ROT5 32}: Read $a'_1$ to $r_2$
 \item \textbf{SHA-256 8ROT6 32}: Read $a'_2$ to $r_3$
@@ -162,7 +162,7 @@ $w_{o,j+2} =  w_{2,j+1} \cdot 7^{8-6} + w_{3,j+1} \cdot 7^{8 \cdot 2 - 6} + w_{7
 \end{center}
 
 The sparse values $\Sigma_0$ and $\Sigma_1$ have to be normalized.
-We use \textbf{SHA256 NORMALIZE7}
+We use \textbf{SHA256 NORMALIZE4} and \textbf{SHA256 NORMALIZE7}.
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
@@ -192,7 +192,7 @@ The variables $b$ and $c$ were represented in sparse form in the previous rounds
  \hline 
 j - k & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & a' \\ 
 ... & & & & \\
-j - l & $b'_0$ & $b'_1$ & $b'_2$ & $b'_3$ b'&\\ 
+j - l & $b'_0$ & $b'_1$ & $b'_2$ & $b'_3$ & b'\\ 
 ... & & & & \\
 j - t & $c'_0$ & $c'_1$ & $c'_2$ & $c'_3$ & c' \\ 
 ... & & & & \\
@@ -205,7 +205,7 @@ $w_{o, j} = w_{1,j} + w_{2, j} + w_{3, j}$ \\
 \end{center}
 
 The sparse values $maj$ have to be normalized.
-We use \textbf{SHA256 MAJ NORMALIZE2}
+We use \textbf{SHA256 MAJ NORMALIZE4}
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
@@ -217,7 +217,7 @@ j + 1 & $a_0$ & $ a_1$ & $a_2$ & $a_3$ &  $maj$ \\
 
 Normalize gate constraints:
 \begin{center}
-$w_{o,i} = w_{4,i} \cdot 256^3 + w_{3,i} \cdot 256^2 + w_{2,i} \cdot 8 + w_{1,i}$ \\
+$w_{o,i} = w_{4,i} \cdot 256^3 + w_{3,i} \cdot 256^2 + w_{2,i} \cdot 256 + w_{1,i}$ \\
 \end{center}
 
 The final addition requires one add gate.
@@ -227,7 +227,7 @@ contain sparse mapping subcircuit with base $2$ for $e, f ,g$.
 Let $e; f; g$ be divided to 8 bits-chunks $e_0, e_1, e_2, e_3; f_0, f_1, f_2, f_3; g_0, g_1, g_2, g_3$.
 The values $e'_0, e'_1, e'_2, e'_3$ are in sparse form, and $e'$ is a sparse $e$.
 Similarly for b and c. 
-Note, that $e$ we already have in the sparse from $\Sigma_0$ in the circuit. 
+Note, that $e$ we already have in the sparse from $\Sigma_1$ in the circuit. 
 The variables $f$ and $g$ were represented in sparse form in the previous rounds or it is public inputs.
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
@@ -235,7 +235,7 @@ The variables $f$ and $g$ were represented in sparse form in the previous rounds
  \hline 
 j - k & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & a' \\ 
 ... & & & & \\
-j - l & $b'_0$ & $b'_1$ & $b'_2$ & $b'_3$ b'&\\ 
+j - l & $b'_0$ & $b'_1$ & $b'_2$ & $b'_3$ & b'\\ 
 ... & & & & \\
 j - t & $c'_0$ & $c'_1$ & $c'_2$ & $c'_3$ & c' \\ 
 ... & & & & \\
@@ -260,7 +260,7 @@ j + 1 & $a_0$ & $ a_1$ & $a_2$ & $a_3$ &  $ch$ \\
 
 Normalize gate constraints:
 \begin{center}
-$w_{o,i} = w_{4,i} \cdot 256^3 + w_{3,i} \cdot 256^2 + w_{2,i} \cdot 8 + w_{1,i}$ \\
+$w_{o,i} = w_{4,i} \cdot 256^3 + w_{3,i} \cdot 256^2 + w_{2,i} \cdot 256 + w_{1,i}$ \\
 \end{center}
 
 The final addition requires one add gate.
@@ -270,7 +270,7 @@ The updating of variables for new rounds costs 10 add gates.
 Producing the final hash value costs two add gates.
 
 \subsection{SHA-512}\label{sha512}
-SHA-512 uses the similar logical functions as in ref{sha256} which operates on $64$-bits words.
+SHA-512 uses the similar logical functions as in \ref{section:sha256} which operates on $64$-bits words.
 Thus each input uses the same range proof which extended to 64-bits.
 
 \paragraph{Range proof that $a < 2^{64}$}
@@ -294,12 +294,12 @@ $w_{o,i} = w_{o, i - 1} \cdot 4^4 + w_{4,i} \cdot 4^3 + w_{3,i} \cdot 4^2 + w_{2
 \end{center}
 The range proofs are included for each input data block. 
 
-\paragraph{The function $\sigma_0$} contain sparse mapping subcircuit with base $2$.
+\paragraph{The function $\sigma_0$} contain sparse mapping subcircuit with base $4$.
 Let $a$ be divided to 8 bits-chunks $a_0, a_1, a_2, ..., a_7$.
 The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
 We need the following lookup tables:
 \begin{enumerate}
-\item \textbf{SHA-256 NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-256 NORMALIZE4}: Read $a_i$ to $a'_i$
 \item \textbf{SHA-512 8ROT1 64}: Read $a'_0$ to $r_1$
 \item \textbf{SHA-512 8SHR7 64}: Read $a'_0$ to $r_3$
 \end{enumerate}
@@ -328,12 +328,12 @@ $w_{o,j+2} =  w_{2,j+1} \cdot 4^{8-1} + w_{3,j+1} \cdot 4^{8 \cdot 2-1} + w_{4,j
 10 plookup constraints \\
 \end{center}
 
-\paragraph{The function $\sigma_1$} contain sparse mapping subcircuit with base $2$.
+\paragraph{The function $\sigma_1$} contain sparse mapping subcircuit with base $4$.
 Let $a$ be divided to 8 bits-chunks $a_0, a_1, a_2, ..., a_7$.
 The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
 We need the following lookup tables:
 \begin{enumerate}
-\item \textbf{SHA-256 NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-256 NORMALIZE4}: Read $a_i$ to $a'_i$
 \item \textbf{SHA-512 8ROT3 64}: Read $a'_2$ to $r_1$
 \item \textbf{SHA-512 8ROT5 SHR6 64}: Read $a'_7 + a'_0$ to $r_2$
 \end{enumerate}
@@ -366,7 +366,7 @@ $w_{o,j+2} =  w_{1,j+1} \cdot 4^{64 -19} + w_{2,j+1} \cdot 4^{64 + (8-19)}
 The sparse values $\sigma_0$ and $\sigma_1$ have to be normalized.
 The final addition requires one add gate.
 Note, that $a'$ already initialized in the row $j - 2$.
-We use \textbf{SHA256 NORMALIZE2}
+We use \textbf{SHA256 NORMALIZE4}
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
@@ -380,7 +380,7 @@ j + 3 & $a_4$ & $ a_5$ & $a_6$ & $a_7$ &  \\
 
 Normalize gate constraints:
 \begin{center}
-$w_{o,j+1} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1} 
+$w_{o,j+2} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1} 
 	+ w_{1,j+3} \cdot 256^4$ \\
 	$+ w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7$ \\
 $w_{o,j} = w_{o, j - 2} - (w_{4,j} \cdot 256^3 + w_{3,j} \cdot 256^2 + w_{2,j} \cdot 256 + w_{1,j})$ \\
@@ -390,13 +390,13 @@ $w_{o,j+1} = w_{o,j} - ( w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5+ w_{3,j+3
 \end{center}
 
 \paragraph{The $\Sigma_0$ function}
-contain sparse mapping subcircuit with base $2$.
+contain sparse mapping subcircuit with base $4$.
 Let $a$ be divided to 7-bits chunks $a_0, a_1, a_2,a_3$ and 9 bits-chunks $ a_4, a_5, a_6, a_7$.
 The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
 We need the following lookup tables:
 \begin{enumerate}
-\item \textbf{SHA-512 9NORMALIZE2}: Read $a_i$ to $a'_i$
-\item \textbf{SHA-512 7NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-512 9NORMALIZE4}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-512 7NORMALIZE4}: Read $a_i$ to $a'_i$
 \item \textbf{SHA-512 9ROT6 64}: Read $a'_4$ to $r_2$
 \item \textbf{SHA-512 9ROT2 64}: Read $a'_5$ to $r_3$
 \end{enumerate}
@@ -431,13 +431,13 @@ $w_{o,j+2} =  w_{4,j+2} + w_{1,j+3} \cdot 4^9 + w_{2,j+3} \cdot 4^{9 \cdot 2}
 \end{center}
 
 \paragraph{The $\Sigma_1$ function}
-contain sparse mapping subcircuit with base $2$.
+contain sparse mapping subcircuit with base $7$.
 Let $a$ be divided to 7-bits chunks $a_0, a_1, a_2,a_3$ and 9 bits-chunks $ a_4, a_5, a_6, a_7$.
 The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
 We need the following lookup tables:
 \begin{enumerate}
-\item \textbf{SHA-512 9NORMALIZE2}: Read $a_i$ to $a'_i$
-\item \textbf{SHA-512 7NORMALIZE2}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-512 9NORMALIZE7}: Read $a_i$ to $a'_i$
+\item \textbf{SHA-512 7NORMALIZE7}: Read $a_i$ to $a'_i$
 \item \textbf{SHA-512 7ROT4 32}: Read $a'_2$ to $r_2$
 \item \textbf{SHA-512 9ROT4 32}: Read $a'_5$ to $r_3$
 \end{enumerate}
@@ -465,7 +465,7 @@ $w_{o,j+2} =  w_{3,j+1} + w_{4,j+1} \cdot 7^7 + w_{4,j+2} \cdot 7^{7 \cdot 2}
 	+ w_{4,j+2} \cdot 7^{7 \cdot 4- 18}
 	+ w_{1,j+3} \cdot 7^{7 \cdot 4 + 9  - 18}
 	+ w_{2,j+3} \cdot 7^{7 \cdot 4 + 9 \cdot 2 - 18}
-	+ w_{3,j+3} \cdot 7^{7 \cdot 4 + 9 \cdot 3 - 18} + w_{1,j+1} \cdot 7^{64  - 41)} |||||||||
+	+ w_{3,j+3} \cdot 7^{7 \cdot 4 + 9 \cdot 3 - 18} + w_{1,j+1} \cdot 7^{64  - 41)}
 	+ w_{2,j+1} \cdot 7^{64 + (7 - 41)} + w_{3,j+1} \cdot 7^{64 + (7 \cdot 2 - 41)}
 	+ w_{4,j+1} \cdot 7^{64 + (7 \cdot 3- 41)} +w_{4,j+2} \cdot 7^{64 + (7 \cdot 3 + 9 - 41)}
 	+ w_{2,j+3} \cdot 7^{64 + (7 \cdot 3 + 9 \cdot 2 -41)}
@@ -474,22 +474,22 @@ $w_{o,j+2} =  w_{3,j+1} + w_{4,j+1} \cdot 7^7 + w_{4,j+2} \cdot 7^{7 \cdot 2}
 \end{center}
 
 The sparse values $\Sigma_0$ and $\Sigma_1$ have to be normalized.
-We use \textbf{SHA256 NORMALIZE7}
+We use \textbf{SHA256 NORMALIZE4} and \textbf{SHA256 NORMALIZE7}.
 Note, that $a'$ already initialized in the row $j - 2$.
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
  \hline
-j + 0 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ &  $a'$\\ 
-j + 1 & $a_0$ & $ a_1$ & $a_2$ & $a_3$ & $acc$ \\
-j + 2 & $a'_4$ & $a'_5$ & $a'_6$ & $a'_7$ & $\sigma_i$\\ 
+j + 0 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ &  $a''$\\ 
+j + 1 & $a_0$ & $ a_1$ & $a_2$ & $a_3$ & $0$ \\
+j + 2 & $a'_4$ & $a'_5$ & $a'_6$ & $a'_7$ & $\Sigma_i$\\ 
 j + 3 & $a_4$ & $ a_5$ & $a_6$ & $a_7$ &  \\
 \end{tabular}
 \end{center}
 
 Normalize gate constraints:
 \begin{center}
-$w_{o,j+1} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256
+$w_{o,j+2} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256
 	+ w_{1,j+1} +  w_{1,j+3} \cdot 256^4$ \\ 
 	$+ w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7$ \\
 $w_{o,j} = w_{1,j-3} + w_{2,j-3} \cdot 4^7 + w_{3,j-3} \cdot 4^{7 \cdot 2}
@@ -497,14 +497,13 @@ $w_{o,j} = w_{1,j-3} + w_{2,j-3} \cdot 4^7 + w_{3,j-3} \cdot 4^{7 \cdot 2}
 	+ w_{1,j-1} \cdot 7^{7 \cdot 4+9}$ \\
 	$+ w_{2,j-1} \cdot 7^{7 \cdot 4 + 9 \cdot 2}
 	+ w_{2,j-1} \cdot 7^{7 \cdot 4 + 9 \cdot 3}$ for maj or ch function. For $\Sigma_1$ replace 4 with 7\\
-$w_{o,j} = w_{o, j - 2} - (w_{4,j} \cdot 256^3 + w_{3,j} \cdot 256^2 + w_{2,j} \cdot 256 + w_{1,j})$ \\
-$w_{o,j+1} = w_{o,j} - ( w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7)$
+$w_{o,j+1} = w_{o, j - 2} - (w_{4,j} \cdot 256^3 + w_{3,j} \cdot 256^2 + w_{2,j} \cdot 256 + w_{1,j} + w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7)$
 
 8 plookup constraints \\
 \end{center}
 
 \paragraph{The Maj function}
-contain sparse mapping subcircuit with base $2$ for $a, b ,c$.
+contain sparse mapping subcircuit with base $4$ for $a, b ,c$.
 Note, that the sparse chunks of $a$ we already have in $\Sigma_0$ in the circuit. 
 The variables $b$ and $c$ were represented in sparse chunks in the previous rounds or it is public inputs.
 \begin{center}
@@ -520,8 +519,8 @@ $w_{o, j} = w_{1,j} + w_{2, j} + w_{3, j}$ \\
 \end{center}
 
 The sparse values $maj$ have to be normalized.
-We use \textbf{SHA256 MAJ NORMALIZE2}
-Note, that $maj$ already initialized in the row $j - 1$.
+We use \textbf{SHA256 MAJ NORMALIZE4}
+Note, that the sparse $maj$ already initialized in the row $j - 1$.
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c} 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
@@ -535,7 +534,7 @@ j + 3 & $a_4$ & $ a_5$ & $a_6$ & $a_7$ &  \\
 
 Normalize gate constraints:
 \begin{center}
-$w_{o,j+1} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1}
+$w_{o,j+2} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1}
 	+  w_{1,j+3} \cdot 256^4$ \\ 
 	$+ w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7$ \\
 $w_{o,j} = w_{o, j - 1} - (w_{4,j} \cdot 256^3 + w_{3,j} \cdot 256^2 + w_{2,j} \cdot 256 + w_{1,j})$ \\
@@ -548,14 +547,14 @@ $w_{o,j+1} = w_{o,j} - ( w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5+ w_{3,j+3
 The final addition requires one add gate.
 
 \paragraph{The Ch function}
-contain sparse mapping subcircuit with base $2$ for $e, f ,g$.
+contain sparse mapping subcircuit with base $7$ for $e, f ,g$.
 Note, that $e$ we already have in the sparse from $\Sigma_1$ in the circuit. 
 The variables $f$ and $g$ were represented in sparse form in the previous rounds or it is public inputs.
 \begin{center}
 \begin{tabular}{ c|c|c|c|c|c } 
   & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$\\ 
  \hline 
-j + 0 & e' & f' & g' & & ch\\
+j + 0 & $e'$ & $f'$ & $g'$ & & ch\\
 \end{tabular}
 \end{center}
 Sparse map gate constraints:
@@ -579,7 +578,7 @@ j + 3 & $a_4$ & $ a_5$ & $a_6$ & $a_7$ &  \\
 
 Normalize gate constraints:
 \begin{center}
-$w_{o,j+1} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1}
+$w_{o,j+2} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1}
 	+  w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5$ \\
 	$+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7$ \\
 $w_{o,j} = w_{o, j - 1} - (w_{4,j} \cdot 256^3 + w_{3,j} \cdot 256^2 + w_{2,j} \cdot 256 + w_{1,j})$ \\
