@@ -48,7 +48,7 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 \end{enumerate}
 \end{algorithm}
 
-\paragraph{Protocol (Prover):}
+\subsection{Prover View}
 \begin{enumerate}
 	\item Choose masking polynomials: 
 	\begin{center}
@@ -63,7 +63,7 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 	\item Get $\theta \in \mathbb{F}$ from $hash(\text{transcript})$
 	\item Construct the witness lookup compression and table compression $S(\theta)$ and $A(\theta)$:
 	\begin{center}
-		$A(\theta) = \theta^{m - 1} A_{0} + \theta^{m - 2} A_{1} + ... + \theta A_{ m - 2} + A_{m - 1}$ //
+		$A(\theta) = \theta^{m - 1} A_{0} + \theta^{m - 2} A_{1} + ... + \theta A_{ m - 2} + A_{m - 1}$ \\
 		$S(\theta) = \theta^{m-1} S_{0} + \theta^{m-2} S_{1} + ... + \theta S_{m-2} + S_{m-1}$
 	\end{center}
 	\item Produce the permutation polynomials $S'(X)$ and $A'(X)$ such that:
@@ -126,10 +126,18 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 	\item Get $y \in \mathbb{F}/H$ from $hash|_{\mathbb{F}/H}(\text{transcript})$
 	\item Run evaluation scheme with the committed polynomials and $y$ \\
 	\textbf{Remark}: Depending on the circuit, evaluation can be done also on $y\omega, y\omega^{-1}$.
-	\item Send proof $\pi$ to $\textbf{V}$
+	\item The proof is $\pi_{\texttt{comm}}$ and $\pi_{\texttt{eval}}$,, where:
+		\begin{itemize}
+			\item $\pi_{\texttt{comm}} = \{f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires}}, \texttt{comm}},
+			 P_{\texttt{comm}}, Q_{\texttt{comm}}, T_{0, \texttt{comm}}, ..., T_{N_{\texttt{perm}, \texttt{comm}}},
+			 A'_{\texttt{comm}}, S'_{\texttt{comm}}, V_{\texttt{comm}} \}$
+			 \item  $\pi_{\texttt{eval}}$ is evaluation proofs for $f_0(y), \dots, f_{N_{\texttt{wires}}}(y),
+			 P(y), P(y\omega), Q(y), Q(y\omega),$ \\
+			 $T_0(y), \dots, T_{N_{\texttt{perm}}}(y), A'(y), A'(y\omega^{-1}), S'(y), V(y), V(y\omega)$
+		\end{itemize}
 \end{enumerate}
 
-\subsection{Non-Interactive Verification}
+\subsection{Verifier View}
 
 \begin{enumerate}
 	\item Let $f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires}}, \texttt{comm}}$ be commitments to $f_{0}(X), \dots, f_{N_{\texttt{wires}}}(X)$
@@ -145,7 +153,7 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
 	\item $\text{transcript} = \text{transcript} || T_{0, \texttt{comm}} || ... || T_{N_{\texttt{perm}, \texttt{comm}}}$
 	\item $y = hash_{\mathbb{F}/H}(\text{transcript})$
 	\item Run evaluation scheme verification with the committed polynomials and $y$ to get values 
-		$f_i(y), P(y), P(y\omega), Q(y), Q(y\omega), T_j(y), A'(y), S'(y), V(y), A'(y\omega^{-1}, V(y\omega))$.  \\
+		$f_i(y), P(y), P(y\omega), Q(y), Q(y\omega), T_j(y), A'(y), S'(y), V(y), A'(y\omega^{-1}), V(y\omega)$.  \\
 		\textbf{Remark}: Depending on the circuit, evaluation can be done also on $f_i(y\omega), f_i(y\omega^{-1})$ for some $i$.
 	\item Calculate:
 	\begin{center}
