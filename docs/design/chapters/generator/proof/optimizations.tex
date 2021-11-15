@@ -7,9 +7,9 @@
 Instead of check each commitment individualy, we can aggregate them for FRI.
 For polynomials $f_0, \dots, f_k$:
 \begin{enumerate}
-	\item Get $\theta$ from transcript
-	\item $f = f_0 \cdot \theta^{k - 1} + \dots + f_k$
-	\item Run FRI over $f$, using oracles to $f_0, \dots, f_k$
+    \item Get $\theta$ from transcript
+    \item $f = f_0 \cdot \theta^{k - 1} + \dots + f_k$
+    \item Run FRI over $f$, using oracles to $f_0, \dots, f_k$
 \end{enumerate}
 
 Thus, we can run only one FRI instance for all commited polynomials.

@@ -1,0 +1,20 @@
+\chapter{State Proof Generator}
+
+This introduces a description for Solana's 'Light-Client' state proof generator.
+
+Crucial components which define this part design and performance are:
+\begin{enumerate}
+    \item Proof system used for the proof generation.
+    \item Circuit definition used for the proof system.
+\end{enumerate}
+
+\input{chapters/generator/proof/introduction}
+\input{chapters/generator/proof/optimizations}
+\input{chapters/generator/proof/protocol}
+
+\input{chapters/generator/circuit/introduction}
+\input{chapters/generator/circuit/sha256}
+\input{chapters/generator/circuit/poseidon}
+\input{chapters/generator/circuit/merkle}
+\input{chapters/generator/circuit/eddsa}
+\input{chapters/generator/circuit/correct_validator_set}

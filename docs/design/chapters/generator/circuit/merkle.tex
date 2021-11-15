@@ -1,0 +1,26 @@
+\subsection{Merkle Tree Circuit}
+\label{section:merkle}
+
+Merkle Tree generation for set $\{H_{B_{n_1}}, ..., H_{B_{n_2}}\}$.
+Let $k = \lceil \log(n_2 - n_1) \rceil$
+
+\begin{enumerate}
+    \item $n = n_2 - n_1$
+    \item $2^k = n$
+    \item for $i$ from $0$ to $n - 1$:
+    \begin{enumerate}
+        \item $T_i \coloneqq H_i$ // just notation for simplicity, not a real part of the circuit
+    \end{enumerate}
+    \item for $i$ from $0$ to $k - 1$:
+    \begin{enumerate}
+        \item for $j$ from $0$ to $(n - 1) / 2$:
+        \begin{enumerate}
+            \item $T'_i = \texttt{hash}(T_{2 \cdot  i}, T_{2 \cdot i + 1})$. // see Section \ref{section:poseidon}
+        \end{enumerate}
+        \item $n = \frac{n}{2}$
+        \item for $j$ from $0$ to $n - 1$:
+        \begin{enumerate}
+            \item $T_i \coloneqq T'_i$. // just notation for simplicity, not a real part of the circuit
+        \end{enumerate}
+    \end{enumerate}
+\end{enumerate}
