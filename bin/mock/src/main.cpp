@@ -46,9 +46,9 @@ struct block_timestamp {
     std::time_t timestamp;
 };
 
+template<typename SignatureSchemeType>
 struct vote_state {
-    typedef algebra::curves::curve25519::template g1_type<> group_type;
-    typedef pubkey::eddsa<group_type, pubkey::EddsaVariant::basic, void> scheme_type;
+    typedef SignatureSchemeType scheme_type;
     typedef pubkey::private_key<scheme_type> private_key_type;
     typedef pubkey::public_key<scheme_type> public_key_type;
 
@@ -84,28 +84,37 @@ struct vote_state {
     block_timestamp last_timestamp;
 };
 
+template<typename Hash>
+struct block_data {
+    typedef typename Hash::digest_type digest_type;
+
+    std::size_t block_number;
+    digest_type bank_hash;
+    digest_type merkle_hash;
+    digest_type previous_bank_hash;
+    //    std::vector<vote_state> votes; </// Not implemented yet. Requires Solana replication protocol changes.
+};
+
+template<typename Hash, typename SignatureSchemeType>
+struct state_type {
+    typedef Hash hash_type;
+    typedef SignatureSchemeType signature_scheme_type;
+    typedef typename pubkey::public_key<signature_scheme_type>::signature_type signature_type;
+
+    std::size_t confirmed;
+    std::size_t new_confirmed;
+    std::vector<block_data<hash_type>> repl_data;
+    std::vector<signature_type> signatures;
+};
+
 int main(int argc, char *argv[]) {
 
+    typedef hashes::sha2<256> hash_type;
     typedef algebra::curves::curve25519 curve_type;
-    typedef typename curve_type::scalar_field_type scalar_field_type;
+    typedef typename curve_type::template g1_type<> group_type;
+    typedef pubkey::eddsa<group_type, pubkey::EddsaVariant::basic, void> scheme_type;
 
-#ifndef __EMSCRIPTEN__
-    boost::program_options::options_description options("Solana 'Light-Client' Mock Votes Data Generator");
-    // clang-format off
-    options.add_options()("help,h", "Display help message")
-    ("version,v", "Display version")
-    ("generate", "Generate");
-    // clang-format on
-
-    boost::program_options::variables_map vm;
-    boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(options).run(), vm);
-    boost::program_options::notify(vm);
-
-    if (vm.count("help") || argc < 2) {
-        std::cout << options << std::endl;
-        return 0;
-    }
-#endif
+    state_type<hash_type, scheme_type> state;
 
     return 0;
 }

@@ -57,6 +57,8 @@ int main(int argc, char *argv[]) {
         std::cout << options << std::endl;
         return 0;
     }
+#else
+
 #endif
 
     return 0;
