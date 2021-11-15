@@ -1,4 +1,4 @@
-\section{SHA256 Circuit}
+\subsection{SHA2-256 Circuit}
 \label{section:sha256}
 Suppose that input data in the 32-bits form, which is already padded to the required size.
 Checking that chunked input data corresponds to the original data out of this circuit.
@@ -270,7 +270,8 @@ The updating of variables for new rounds costs 10 add gates.
 
 Producing the final hash value costs two add gates.
 
-\subsection{SHA-512}\label{sha512}
+\subsection{SHA2-512 Circuit}
+\label{section:sha512}
 SHA-512 uses the similar logical functions as in \ref{section:sha256} which operates on $64$-bits words.
 Thus each input uses the same range proof which extended to 64-bits.
 
