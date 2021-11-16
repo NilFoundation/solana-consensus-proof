@@ -18,6 +18,8 @@
 
 #include <boost/circular_buffer.hpp>
 #include <boost/optional.hpp>
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
 
 #ifndef __EMSCRIPTEN__
 #include <boost/filesystem.hpp>
@@ -28,6 +30,8 @@
 
 #include <nil/crypto3/hash/algorithm/hash.hpp>
 #include <nil/crypto3/hash/sha2.hpp>
+
+#include <nil/crypto3/multiprecision/cpp_int/import_export.hpp>
 
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
@@ -113,8 +117,49 @@ int main(int argc, char *argv[]) {
     typedef algebra::curves::curve25519 curve_type;
     typedef typename curve_type::template g1_type<> group_type;
     typedef pubkey::eddsa<group_type, pubkey::EddsaVariant::basic, void> scheme_type;
+    typedef typename pubkey::public_key<scheme_type>::signature_type signature_type;
 
-    state_type<hash_type, scheme_type> state;
+    typedef multiprecision::number<multiprecision::cpp_int_backend<hash_type::digest_bits, hash_type::digest_bits,
+                                                                   multiprecision::unsigned_magnitude>>
+        hash_number_type;
+
+    typedef multiprecision::number<multiprecision::cpp_int_backend<pubkey::public_key<scheme_type>::signature_bits,
+                                                                   pubkey::public_key<scheme_type>::signature_bits,
+                                                                   multiprecision::unsigned_magnitude>>
+        signature_number_type;
+
+    typedef boost::random::independent_bits_engine<boost::random::mt19937, hash_type::digest_bits, hash_number_type>
+        random_hash_generator_type;
+
+    typedef boost::random::independent_bits_engine<
+        boost::random::mt19937, pubkey::public_key<scheme_type>::signature_bits, signature_number_type>
+        random_signature_generator_type;
+
+    boost::random::random_device rd;     // Will be used to obtain a seed for the random number engine
+    boost::random::mt19937 gen(rd());    // Standard mersenne_twister_engine seeded with rd()
+    boost::random::uniform_int_distribution<> distrib(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+
+    random_hash_generator_type hash_gen;
+    random_signature_generator_type sig_gen;
+
+    state_type<hash_type, scheme_type> state {.confirmed = static_cast<size_t>(distrib(gen)),
+                                              .new_confirmed = distrib(gen) + state.confirmed};
+
+    for (int i = 0; i < distrib(gen); i++) {
+        block_data<hash_type> r {.block_number = static_cast<size_t>(distrib(gen))};
+        multiprecision::export_bits(hash_gen(), std::back_inserter(r.previous_bank_hash),
+                                    std::numeric_limits<std::uint8_t>::digits);
+        multiprecision::export_bits(hash_gen(), std::back_inserter(r.merkle_hash),
+                                    std::numeric_limits<std::uint8_t>::digits);
+        multiprecision::export_bits(hash_gen(), std::back_inserter(r.bank_hash),
+                                    std::numeric_limits<std::uint8_t>::digits);
+    }
+
+    for (int i = 0; i < distrib(gen); i++) {
+        signature_type sig;
+        multiprecision::export_bits(sig_gen(), std::back_inserter(sig), std::numeric_limits<std::uint8_t>::digits);
+        state.signatures.push_back(sig);
+    }
 
     return 0;
 }
