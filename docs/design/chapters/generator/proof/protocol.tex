@@ -121,27 +121,27 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
             $F(X) = \sum\limits_{i = 0}^{10} \alpha_iF_i(X)$ \\
             $T(X) = \frac{F(X)}{Z(X)}$
         \end{center}
-    \item Split $T(X)$ into separate polynomials $T_0(X), ..., T_{N_{\texttt{perm}}}(X)$
-    \item Add commitments to $T_0(X), ..., T_{N_{\texttt{perm}}}(X)$ to $\text{transcript}$
+    \item Split $T(X)$ into separate polynomials $T_0(X), ..., T_{N_{\texttt{perm}} - 1}(X)$
+    \item Add commitments to $T_0(X), ..., T_{N_{\texttt{perm}} - 1}(X)$ to $\text{transcript}$
     \item Get $y \in \mathbb{F}/H$ from $hash|_{\mathbb{F}/H}(\text{transcript})$
     \item Run evaluation scheme with the committed polynomials and $y$ \\
         \textbf{Remark}: Depending on the circuit, evaluation can be done also on $y\omega, y\omega^{-1}$.
     \item The proof is $\pi_{\texttt{comm}}$ and $\pi_{\texttt{eval}}$,, where:
         \begin{itemize}
-            \item $\pi_{\texttt{comm}} = \{f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires}}, \texttt{comm}},
-                    P_{\texttt{comm}}, Q_{\texttt{comm}}, T_{0, \texttt{comm}}, ..., T_{N_{\texttt{perm}, \texttt{comm}}},
+            \item $\pi_{\texttt{comm}} = \{f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires} - 1}, \texttt{comm}},
+                    P_{\texttt{comm}}, Q_{\texttt{comm}}, T_{0, \texttt{comm}}, ..., T_{N_{\texttt{perm}} - 1, \texttt{comm}},
                 A'_{\texttt{comm}}, S'_{\texttt{comm}}, V_{\texttt{comm}} \}$
             \item  $\pi_{\texttt{eval}}$ is evaluation proofs for $f_0(y), \dots, f_{N_{\texttt{wires}}}(y),
                 P(y), P(y\omega), Q(y), Q(y\omega),$ \\
-                $T_0(y), \dots, T_{N_{\texttt{perm}}}(y), A'(y), A'(y\omega^{-1}), S'(y), V(y), V(y\omega)$
+                $T_0(y), \dots, T_{N_{\texttt{perm}} - 1}(y), A'(y), A'(y\omega^{-1}), S'(y), V(y), V(y\omega)$
         \end{itemize}
 \end{enumerate}
 
 \subsection{Verifier View}
 
 \begin{enumerate}
-    \item Let $f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires}}, \texttt{comm}}$ be commitments to $f_{0}(X), \dots, f_{N_{\texttt{wires}}}(X)$
-    \item $\text{transcript} = \text{setup\_values} || f_{0, \texttt{comm}} || \dots || f_{N_{\texttt{wires}}, \texttt{comm}}$
+    \item Let $f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires}} - 1, \texttt{comm}}$ be commitments to $f_{0}(X), \dots, f_{N_{\texttt{wires}} - 1}(X)$
+    \item $\text{transcript} = \text{setup\_values} || f_{0, \texttt{comm}} || \dots || f_{N_{\texttt{wires}} - 1, \texttt{comm}}$
     \item $\theta = hash(\text{transcript})$
     \item Let $A'_{\texttt{comm}}, S'_{\texttt{comm}}$ be commitments to $A'(X), S'(X)$.
     \item $\text{transcript} = \text{transcript} || A'_{\texttt{comm}} || S'_{\texttt{comm}}$ 
@@ -149,8 +149,8 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
     \item Let $P_{\texttt{comm}}, Q_{\texttt{comm}}, V_{i, \texttt{comm}}$ be commitments to $P(X), Q(X), V(X)$.
     \item $\text{transcript} = \text{transcript} || P_{\texttt{comm}} || Q_{\texttt{comm}} || V_{\texttt{comm}}$
     \item $\alpha_0, \dots, \alpha_5 = hash(\text{transcript})$
-    \item Let $T_{0, \texttt{comm}}, ..., T_{N_{\texttt{perm}, \texttt{comm}}}$ be commitments to $T_0(X), ..., T_{N_{\texttt{perm}}}(X)$ 
-    \item $\text{transcript} = \text{transcript} || T_{0, \texttt{comm}} || ... || T_{N_{\texttt{perm}, \texttt{comm}}}$
+    \item Let $T_{0, \texttt{comm}}, ..., T_{N_{\texttt{perm}} - 1, \texttt{comm}}$ be commitments to $T_0(X), ..., T_{N_{\texttt{perm}} - 1}(X)$ 
+    \item $\text{transcript} = \text{transcript} || T_{0, \texttt{comm}} || ... || T_{N_{\texttt{perm}} - 1, \texttt{comm}}$
     \item $y = hash_{\mathbb{F}/H}(\text{transcript})$
     \item Run evaluation scheme verification with the committed polynomials and $y$ to get values 
         $f_i(y), P(y), P(y\omega), Q(y), Q(y\omega), T_j(y), A'(y), S'(y), V(y), A'(y\omega^{-1}), V(y\omega)$.  \\
