@@ -147,17 +147,18 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < distrib(gen); i++) {
         block_data<hash_type> r {.block_number = static_cast<size_t>(distrib(gen))};
-        multiprecision::export_bits(hash_gen(), std::back_inserter(r.previous_bank_hash),
+        multiprecision::export_bits(hash_gen(), std::inserter(r.previous_bank_hash, r.previous_bank_hash.end()),
                                     std::numeric_limits<std::uint8_t>::digits);
-        multiprecision::export_bits(hash_gen(), std::back_inserter(r.merkle_hash),
+        multiprecision::export_bits(hash_gen(), std::inserter(r.merkle_hash, r.merkle_hash.end()),
                                     std::numeric_limits<std::uint8_t>::digits);
-        multiprecision::export_bits(hash_gen(), std::back_inserter(r.bank_hash),
+        multiprecision::export_bits(hash_gen(), std::inserter(r.bank_hash, r.bank_hash.end()),
                                     std::numeric_limits<std::uint8_t>::digits);
     }
 
     for (int i = 0; i < distrib(gen); i++) {
         signature_type sig;
-        multiprecision::export_bits(sig_gen(), std::back_inserter(sig), std::numeric_limits<std::uint8_t>::digits);
+        multiprecision::export_bits(sig_gen(), std::inserter(sig, sig.end()),
+                                    std::numeric_limits<std::uint8_t>::digits);
         state.signatures.push_back(sig);
     }
 
