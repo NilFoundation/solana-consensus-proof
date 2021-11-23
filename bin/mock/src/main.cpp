@@ -18,6 +18,7 @@
 
 #include <boost/circular_buffer.hpp>
 #include <boost/optional.hpp>
+#include <boost/json.hpp>
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
 
@@ -147,17 +148,26 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < distrib(gen); i++) {
         block_data<hash_type> r {.block_number = static_cast<size_t>(distrib(gen))};
-        multiprecision::export_bits(hash_gen(), std::back_inserter(r.previous_bank_hash),
-                                    std::numeric_limits<std::uint8_t>::digits);
-        multiprecision::export_bits(hash_gen(), std::back_inserter(r.merkle_hash),
-                                    std::numeric_limits<std::uint8_t>::digits);
-        multiprecision::export_bits(hash_gen(), std::back_inserter(r.bank_hash),
-                                    std::numeric_limits<std::uint8_t>::digits);
+        std::vector<typename hash_type::digest_type::value_type> tmp;
+
+        multiprecision::export_bits(hash_gen(), std::back_inserter(tmp), std::numeric_limits<std::uint8_t>::digits);
+        std::copy(tmp.begin(), tmp.end(), r.previous_bank_hash.end());
+        tmp.clear();
+
+        multiprecision::export_bits(hash_gen(), std::back_inserter(tmp), std::numeric_limits<std::uint8_t>::digits);
+        std::copy(tmp.begin(), tmp.end(), r.merkle_hash.end());
+        tmp.clear();
+
+        multiprecision::export_bits(hash_gen(), std::back_inserter(tmp), std::numeric_limits<std::uint8_t>::digits);
+        std::copy(tmp.begin(), tmp.end(), r.bank_hash.end());
+        tmp.clear();
     }
 
     for (int i = 0; i < distrib(gen); i++) {
         signature_type sig;
-        multiprecision::export_bits(sig_gen(), std::back_inserter(sig), std::numeric_limits<std::uint8_t>::digits);
+        std::vector<typename hash_type::digest_type::value_type> tmp;
+        multiprecision::export_bits(sig_gen(), std::back_inserter(tmp), std::numeric_limits<std::uint8_t>::digits);
+        std::copy(tmp.begin(), tmp.end(), sig.end());
         state.signatures.push_back(sig);
     }
 
