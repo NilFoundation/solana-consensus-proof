@@ -1,106 +1,91 @@
-\subsection{SHA2-256 Circuit}
+\subsection{SHA-256 Circuit}
 \label{section:sha256}
-Suppose that input data in the 32-bits form, which is already padded to the required size.
-Checking that chunked input data corresponds to the original data out of this circuit.
-However, we add the boolean check and range proof.
+Suppose that input data is in the 32-bits form, which is already padded to the required size.
+We suppose that the checking that chunked input data corresponds to the original data out of the circuit.
+However, we do not need to range constrain these chunks as we get them for free from the SHA-256 circuit.
 
-\paragraph{Range proof that $a < 2^{32}$}
-Let $a = \{ a_0, ..., a_{15} \}$, where $a_i$ is two bits.
-\begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$    & $w_2$     & $w_3$    & $w_4$    & $w_o$ \\
-        \hline
-        j + 0 & $a_{12}$ & $ a_{13}$ & $a_{14}$ & $a_{15}$ & acc   \\
-        j + 1 & $a_8$    & $a_{9}$   & $a_{10}$ & $a_{11}$ & acc   \\
-        j + 2 & $a_4$    & $a_5$     & $a_6$    & $a_7$    & acc   \\
-        j + 3 & $a_0 $   & $a_1$     & $a_2$    & $a_3$    & a     \\
-    \end{tabular}
-\end{center}
-Range gate constraints:
-\begin{center}
-    $w_{1,i}(w_{1,i}-1)(w_{1,i}-2)(w_{1,i} -3) + w_{2,i}(w_{2,i}-1)(w_{2,i}-2)(w_{2,i} -3) + w_{3,i}(w_{3,i}-1)(w_{3,i}-2)(w_{3,i} -3) + w_{4,i}(w_{4,i}-1)(w_{4,i}-2)(w_{4,i} -3) = 0$ \\
-    $w_{o,i} = w_{o, i - 1} \cdot 4^4 + w_{4,i} \cdot 4^3 + w_{3,i} \cdot 4^2 + w_{2,i} \cdot 4 + w_{1,i}$
-\end{center}
-The range proofs are included for each input data block.
 
-\paragraph{The function $\sigma_0$} contain sparse mapping subcircuit with base $4$.
-Let $a$ be divided to 8 bits-chunks $a_0, a_1, a_2, a_3$.
+Thus, the preprocessing constraints for the SHA-256 circuit is a decomposition of $k$ message blocks to $32$ bits chunks without range proofs. For `Solana-EVM` circuit, $k = 3$.
+
+\paragraph{Lookup tables}
+We use the following lookup tables:
+\begin{enumerate}
+\item \textbf{SHA-256 NORMALIZE4} with 2 columns and $2^{14}$ rows. 
+The first column contains all possible 14-bits words.
+The second column contains corresponding sparse representations.
+The constraints can be used for the range check and sparse representation simultaneously.
+\end{enumerate}
+
+\paragraph{The function $\sigma_0$} contains sparse mapping with base $4$.
+Let $a$ be divided to chunks $a_0, a_1, a_2, a_3$ which equals to $3, 4, 11, 14$ bits respectively.
 The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form, and $a'$ is a sparse $a$.
-We need the following lookup tables:
-\begin{enumerate}
-    \item \textbf{SHA-256 NORMALIZE4}: Read $a'_i$ to $a_i$
-    \item \textbf{SHA-256 8ROT3 32}: Read $a'_1$ to $r_1$
-    \item \textbf{SHA-256 8ROT2 32}: Read $a'_4$ to $r_2$
-    \item \textbf{SHA-256 8SHR3 32}: Read $a'_0$ to $r_3$
-\end{enumerate}
+\textbf{SHA-256 NORMALIZE4} lookup table is used for mapping to sparse representation and range-constraining for each chunk $a_i$, where bit-length of $a_i > 3$.
+If a chunk is $14$ bits long, then it is constrained for free.
+Else the prover has to calculate the sparse representation $\hat{a}_i$ for $2^j \cdot a_i$, where $j + \texttt{len}(a_i) = 14$ and $\texttt{len}(a_i)$ is bit-length of $a_i$.
+
 \begin{center}
     \begin{tabular}{ c|c|c|c|c|c }
         & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_o$      \\
         \hline
-        j + 0 & $a_0$  & $ a_1$ & $a_2$  & $a_3$  & a          \\
-        j + 1 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & acc        \\
-        j + 2 & $r1 $  & $r_2$  & $r_3$  &        & $\sigma_0$ \\
+        j + 0 & $a_0$  & $ \hat{a}_1$ & $\hat{a}_2$  & $a_3$  & a          \\
+        j + 1 & $a'_0$ & $a_1$ & $a_2$ & $a'_3$ & $-$\\
+        j + 2 & $s_0$ & $a'_1$ & $a'_2$ & $s_3$ & $\sigma_0$ \\
+        j + 3 & $b$  & $ s_1$ & $s_2$  & $c$  & $w$ \\
     \end{tabular}
 \end{center}
-Sparse map gate constraints:
+Constraints:
 \begin{center}
-    $w_{o,j} = w_{1,j} + w_{2,j} \cdot 2^8 + w_{3,j} \cdot 2^{8 \cdot 2} + w_{4,j} \cdot 2^{8 \cdot 3}$ \\
-    $w_{o,j + 1} =  w_{2,j + 1} \cdot 4^{8 - 7} + w_{3,j + 1} \cdot 4^{8 \cdot 2 - 7} + w_{4,j + 1} \cdot 4^{8 \cdot 3 - 7}
-    + w_{1,j + 1} \cdot 4^{8 \cdot 2 - 2} + w_{2,j + 1} \cdot 4^{8 \cdot 3 - 2}$ \\
-    $+ w_{4,j + 1} \cdot 4^{8 - 2} + w_{2,j + 1} \cdot 4^{8 - 3} + w_{3,j + 1} \cdot 4^{8 \cdot 2 - 3}
-    + w_{4,j + 1} \cdot 4^{8^3 - 3}$ \\
-    $w_{o, j+2} = w_{0, j+1} + w_{1,j+2} + w_{2, j+2} + w_{3, j+2}$ \\
-    7 plookup constraints \\
+    $w_{o,j} = w_{1,j} + w_{2,j + 1} \cdot 2^3 + w_{3,j + 1} \cdot 2^{7} + w_{4,j} \cdot 2^{18}$ \\
+    $w_{o, j+3} = w_{1,j + 2} + w_{2,j + 3} \cdot 2^3 + w_{3,j + 3} \cdot 2^{7} + w_{4,j +2} \cdot 2^{18}$ \\
+    $(w_{1,j} - 7) \cdot (w_{1,j} - 6) \cdot ... \cdot w_{1,j} = 0$ \\
+    10 plookup constraints: $(w_{1,j}, w_{1,j+1}), ( 2^10 \cdot w_{2,j+1}, w_{2,j}), (w_{2, j+1}, w_{2, j + 2}), (2^3 \cdot w_{3,j+1}, w_{3,j}), (w_{3, j + 1}, w_{3, j + 2}), (w_{4,j}, w_{4,j+1}), (w_{1, j + 2}, (w_{3, j + 2} + w_{4,j + 1} + w_{2,j + 2}), (w_{2, j + 3}, (w_{4,j + 1} + w_{1,j + 1} + w_{3,j + 2}, (w_{3,j + 3}, (w_{1,j + 1} + w_{2,j + 2} + w_{4,j + 1}), (w_{4,j + 2}, (w_{2,j + 2} + w_{3,j + 2})$ \\
 \end{center}
 
-\paragraph{The function $\sigma_1$} contain sparse mapping subcircuit with base $4$.
-Let $a$ be divided to 8 bits-chunks $a_0, a_1, a_2, a_3$.
+\paragraph{The function $\sigma_1$} contains sparse mapping subcircuit with base $4$.
+Let $a$ be divided to chunks $a_0, a_1, a_2, a_3$ which equals to $10, 7, 2, 13$ bits respectively.
 The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form and $a'$ is a sparse $a$.
-We need the following lookup tables:
+\textbf{SHA-256 NORMALIZE4} lookup table is used for mapping to sparse representation and range-constraining in the same way as for $\sigma_0$.
+
+\begin{center}
+    \begin{tabular}{ c|c|c|c|c|c }
+        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_o$      \\
+        \hline
+        j + 0& $s_0$  & $ s_1$ & $-$  & $s_3$  & $\sigma_1$ \\
+        j + 1 & $a'_0$ & $a'_1$ & $s_2$ & $a'_3$ & $-$ \\
+        j + 2 & $a_0$ & $a_1$ & $a'_2$ & $a_3$ & $-$\\
+        j + 3 & $\hat{a}_0$  & $ \hat{a}_1$ & $a_2$  & $\hat{a}_3$  & a\\
+    \end{tabular}
+\end{center}
+Constraints:
+\begin{center}
+    $w_{o,j} = w_{1,j} + w_{2,j} \cdot 2^{10} + w_{3,j + 1} \cdot 2^{17} + w_{4,j} \cdot 2^{19}$ \\
+    $w_{o, j+3} = w_{1,j + 2} + w_{2,j + 2} \cdot 2^{10} + w_{3,j + 3} \cdot 2^{17} + w_{4,j +2} \cdot 2^{19}$ \\
+    $(w_{3,j + 3} - 3) \cdot (w_{3,j + 3} - 2) \cdot ... \cdot w_{3,j + 3} = 0$ \\
+    11 plookup constraints: $(2^4 \cdot (w_{1,j + 2}, w_{1,j+1}), (2^7 \cdot w_{2,j + 2}, w_{2,j+3}), (2 \cdot w_{3, j+2}, w_{3, j + 3}), (w_{1,j + 2}, w_{1,j+1}), (w_{2, j + 2}, w_{2, j + 1}), (w_{3,j + 3}, w_{3,j+2}), (w_{4, j + 2}, w_{4, j+1}),(w_{1, j}, (w_{3, j + 2} + w_{4,j + 1} + w_{2,j + 1}), (w_{2, j}, (w_{4,j + 1} + w_{1,j + 1} + w_{3,j + 2}, (w_{3,j + 1}, (w_{1,j + 1} + w_{3,j + 2} + w_{4,j + 1}), (w_{4,j }, (w_{2,j + 1} + w_{3,j + 2})$ \\
+\end{center}
+
+\paragraph{Message scheduling}
+For each block of $512$ bits of the padded message the 64 words are constructed in the following way:
+\begin{itemize}
+\item The first $16$ words are obtained by splitting the message.
+\item The last $48$ words are obtained by using the functions $\sigma_0, \sigma_1$:
+\begin{center}
+$W_i = \sigma_1(W_{i-2}) \oplus W_{i - 7} \oplus \sigma_0(W_{i-15}) \oplus W_{i-16}$
+\end{center}
+\end{itemize}
+The first $16$ words require a range check. 
+We get it fo free from range-constraining chunks inside functions $\sigma_0$ and $\sigma_1$.
+Thus, for $i$ from $16$ to $63$:
 \begin{enumerate}
-    \item \textbf{SHA-256 NORMALIZE4}: Read $a_i$ to $a'_i$
-    \item \textbf{SHA-256 8ROT1 32}: Read $a'_2$ to $r_1$
-    \item \textbf{SHA-256 8ROT3 32}: Read $a'_2$ to $r_2$
-    \item \textbf{SHA-256 8ROT2 32}: Read $a'_1$ to $r_3$
+\item Apply $\sigma_0$ to $W_{i-15}$. It costs $4$ rows.
+\item Add the following constraint for $W_i$:
+\begin{center}
+	$w_{o,3} = w_{1, 3} + w_{4,3} + w_{o, 2} + w_{o, 4}$,
+\end{center}
+	where rows $2$ and $3$ belong to the $\sigma_0$ table and row $4$ is the first row of the $\sigma_1$ table. This constraint does not require additional rows. 
+\item Apply $\sigma_1$ to $W_{i-2}$. It costs $4$ rows.
 \end{enumerate}
-\begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_o$      \\
-        \hline
-        j + 0 & $a_0$  & $ a_1$ & $a_2$  & $a_3$  & a          \\
-        j + 1 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & acc        \\
-        j + 2 & $r1 $  & $r_2$  & $r_3$  &        & $\sigma_1$ \\
-    \end{tabular}
-\end{center}
-Sparse map gate constraints:
-\begin{center}
-    $w_{o,j} = w_{1,j} + w_{2,j} \cdot 2^8 + w_{3,j} \cdot 2^{8 \cdot 2} + w_{4,j} \cdot 2^{8 \cdot 3}$ \\
-    $w_{o,j + 1} = w_{1,j + 1} \cdot 4^{8 \cdot 2 - 1} + w_{2,j + 1} \cdot 4^{8 \cdot 3 - 1} + w_{4,j + 1} \cdot 4^{8 - 1}
-    + w_{1,j + 1} \cdot 4^{8 \cdot 2 - 3} + w_{2,j + 1} \cdot 4^{8 \cdot 3 - 3}$\\
-    $+ w_{4,j + 1} \cdot 4^{8 - 3}
-    + w_{1,j + 1} \cdot 4^{8 \cdot 3 - 2} + w_{3,j + 1} \cdot 4^{8-2} + w_{4,j + 1} \cdot 4^{8^2 - 2}$ \\
-    $w_{o, j+2} = w_{0, j+1} + w_{1,j+2} + w_{2, j+2} + w_{3, j+2}$ \\
-    7 plookup constraints \\
-\end{center}
-
-The sparse values $\sigma_0$ and $\sigma_1$ have to be normalized.
-The final addition requires one add gate.
-We use \textbf{SHA256 NORMALIZE4}
-\begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_o$      \\
-        \hline
-        j + 0 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ &            \\
-        j + 1 & $a_0$  & $ a_1$ & $a_2$  & $a_3$  & $\sigma_i$ \\
-    \end{tabular}
-\end{center}
-
-Normalize gate constraints:
-\begin{center}
-    $w_{o,j-1} = w_{4,j} \cdot 4^{8 \cdot 3} + w_{3,j} \cdot 4^{8 \cdot 2} + w_{2,j} \cdot 4^8 + w_{1,j}$
-    $w_{o,j+1} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1}$ \\
-    4 plookup constraints \\
-\end{center}
+Thus, the message schedule takes $8 \cdot 48 = 384$ rows.
 
 \paragraph{The $\Sigma_0$ function}
 contain sparse mapping subcircuit with base $2$.
