@@ -122,19 +122,22 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
             $F(X) = \sum\limits_{i = 0}^{10} \alpha_iF_i(X)$ \\
             $T(X) = \frac{F(X)}{Z(X)}$
         \end{center}
-    \item Split $T(X)$ into separate polynomials $T_0(X), ..., T_{N_{\texttt{perm}} - 1}(X)$
-    \item Add commitments to $T_0(X), ..., T_{N_{\texttt{perm}} - 1}(X)$ to $\text{transcript}$
+    \item $N_T \coloneqq \texttt{max}(N_{\texttt{perm}}, \texttt{deg}_{\texttt{gates}} - 1)$, 
+		where $\texttt{deg}_{\texttt{gates}}$ is the highest degree of the degrees of gate polynomials. 
+    \item Split $T(X)$ into separate polynomials $T_0(X), ..., T_{N_T - 1}(X)$\footnote{
+    	Commit scheme supposes that polynomials should be degree $\leq n$}
+    \item Add commitments to $T_0(X), ..., T_{N_T - 1}(X)$ to $\text{transcript}$
     \item Get $y \in \mathbb{F}/H$ from $hash|_{\mathbb{F}/H}(\text{transcript})$
     \item Run evaluation scheme with the committed polynomials and $y$ \\
         \textbf{Remark}: Depending on the circuit, evaluation can be done also on $y\omega, y\omega^{-1}$.
     \item The proof is $\pi_{\texttt{comm}}$ and $\pi_{\texttt{eval}}$,, where:
         \begin{itemize}
             \item $\pi_{\texttt{comm}} = \{f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires} - 1}, \texttt{comm}},
-                    P_{\texttt{comm}}, Q_{\texttt{comm}}, T_{0, \texttt{comm}}, ..., T_{N_{\texttt{perm}} - 1, \texttt{comm}},
+                    P_{\texttt{comm}}, Q_{\texttt{comm}}, T_{0, \texttt{comm}}, ..., T_{N_T - 1, \texttt{comm}},
                 A'_{\texttt{comm}}, S'_{\texttt{comm}}, V_{\texttt{comm}} \}$
             \item  $\pi_{\texttt{eval}}$ is evaluation proofs for $f_0(y), \dots, f_{N_{\texttt{wires}}}(y),
                 P(y), P(y\omega), Q(y), Q(y\omega),$ \\
-                $T_0(y), \dots, T_{N_{\texttt{perm}} - 1}(y), A'(y), A'(y\omega^{-1}), S'(y), V(y), V(y\omega)$
+                $T_0(y), \dots, T_{N_T - 1}(y), A'(y), A'(y\omega^{-1}), S'(y), V(y), V(y\omega)$
         \end{itemize}
 \end{enumerate}
 
@@ -151,8 +154,10 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
     \item $\text{transcript} = \text{transcript} || P_{\texttt{comm}} || Q_{\texttt{comm}} || V_{\texttt{comm}}$
     \item $\alpha_0, \dots, \alpha_5 = hash(\text{transcript})$
     \item $\tau = hash(\text{transcript})$
-    \item Let $T_{0, \texttt{comm}}, ..., T_{N_{\texttt{perm}} - 1, \texttt{comm}}$ be commitments to $T_0(X), ..., T_{N_{\texttt{perm}} - 1}(X)$ 
-    \item $\text{transcript} = \text{transcript} || T_{0, \texttt{comm}} || ... || T_{N_{\texttt{perm}} - 1, \texttt{comm}}$
+    \item $N_T \coloneqq \texttt{max}(N_{\texttt{perm}}, \texttt{deg}_{\texttt{gates}} - 1)$, 
+		where $\texttt{deg}_{\texttt{gates}}$ is the highest degree of the degrees of gate polynomials. 
+    \item Let $T_{0, \texttt{comm}}, ..., T_{N_T - 1, \texttt{comm}}$ be commitments to $T_0(X), ..., T_{N_T - 1}(X)$ 
+    \item $\text{transcript} = \text{transcript} || T_{0, \texttt{comm}} || ... || T_{N_T - 1, \texttt{comm}}$
     \item $y = hash_{\mathbb{F}/H}(\text{transcript})$
     \item Run evaluation scheme verification with the committed polynomials and $y$ to get values 
         $f_i(y), P(y), P(y\omega), Q(y), Q(y\omega), T_j(y), A'(y), S'(y), V(y), A'(y\omega^{-1}), V(y\omega)$.  \\
@@ -168,7 +173,7 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
             $F_4(y) = L_n(y)(P(y\omega) - Q(y\omega))$ \\
             $F_5(y) = \sum\limits_{0 \leq i < N_{\texttt{sel}}} (\tau^i \cdot \textbf{q}_{i}(y) \cdot \texttt{gate}_i(y))
             + PI(y)$ \\
-            $T(y) = \sum\limits_{0 \leq j < N_{\texttt{perm} + 1}}y^{n \cdot j}T_j(y)$
+            $T(y) = \sum\limits_{0 \leq j < N_{T}}y^{n \cdot j}T_j(y)$
             $F_6(y) = L_0(y) (1 - V(y))$ \\
             $F_7(y) = q_{last} \cdot (V(y)^2 - V(y))$ \\
             $F_8(y) = (1 - (q_{last} + q_{blind})) \cdot ( V(\omega y) (A'(y) + \beta) (S'(y) + \gamma) - V(y) (\theta^{m-1} A_{0}(y) + ... + A_{m-1}(y) + \beta) (\theta^{m-1} S_{i, 0}(y) + ... + S_{m-1}(y) + \gamma) )$ \\
