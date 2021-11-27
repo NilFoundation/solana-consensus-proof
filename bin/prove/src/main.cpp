@@ -32,8 +32,6 @@
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
-#include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
-
 #include <nil/marshalling/status_type.hpp>
 
 using namespace nil::crypto3;
