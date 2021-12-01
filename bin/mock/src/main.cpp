@@ -18,7 +18,7 @@
 
 #include <boost/circular_buffer.hpp>
 #include <boost/optional.hpp>
-#include <boost/json.hpp>
+#include <boost/json/src.hpp>
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
 
@@ -112,6 +112,14 @@ struct state_type {
     std::vector<signature_type> signatures;
 };
 
+template<typename Hash>
+void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, block_data<Hash> const &c) {
+    jv = {{"block_number", c.block_number},
+          {"bank_hash", c.bank_hash},
+          {"merkle_hash", c.merkle_hash},
+          {"previous_bank_hash", c.previous_bank_hash}};
+}
+
 int main(int argc, char *argv[]) {
 
     typedef hashes::sha2<256> hash_type;
@@ -170,6 +178,13 @@ int main(int argc, char *argv[]) {
         std::copy(tmp.begin(), tmp.end(), sig.end());
         state.signatures.push_back(sig);
     }
+
+    boost::json::value jv = {{"confirmed", state.confirmed},
+                             {"new_confirmed", state.new_confirmed},
+                             {"repl_data", state.repl_data},
+                             {"signatures", state.signatures}};
+
+    std::cout << boost::json::serialize(jv) << std::endl;
 
     return 0;
 }
