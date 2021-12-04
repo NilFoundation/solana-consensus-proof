@@ -5,36 +5,37 @@ To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a genera
 \begin{enumerate}
     \item Prove that $s$ in the range $L = 2^{252}+27742317777372353535851937790883648493$.
         \begin{center}
-            \begin{tabular}{ c|c|c|c|c|c }
-            & $w_1$    & $w_2$ & $w_3$ & $w_4$ & $w_o$ \\
+    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
+        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$  & $w_6$ & $w_7$ & $w_8$ & $w_9$  \\
             \hline
-                j + 0 & $s$      & $z_0$ & $z_1$ & $z_2$ & $z_3$ \\
-                ...   &          &       &       &       &       \\
-                j + 5 & $z_{25}$ & $$    & $$    & $--$  &       \\
+                j + 0 & $s$ & $z_0$ & $z_1$ & $z_2$ & $z_3$ & $z_4$ & $z_5$ & $z_6$ & $z_7$ \\
+                j + 1 & $z_8$ & $z_{9}$ & $z_{10}$ & $z_{11}$ & $z_{12}$ & $z_{13}$ & $z_{14}$ & $z_{15}$ & $z_{16}$ \\
+                j + 2 & $z_{17}$ & $z_{18}$ & $z_{19}$ & $z_{20}$ & $z_{21}$ & $z_{22}$ & $z_{23}$ & $z_{24}$ & $z_{25}$ \\
             \end{tabular}
         \end{center}
         Constraints:
         \begin{center}
             $w_{2, j} = w_{1,j} + 2^{253} - L $ \\
-            Each $w_{i,k} - 2^{10} \cdot w_{next} $, where $i = 2,..,o$ for $k = 0$ and $i = 1,..,o$ for $k = 1,.., 4$ is range-constrained by 10-bits plookup table. \\
-            $w_{1,j+5} \cdot 2^7 $ is range-constrained by 10-bits plookup table.
+            Each $w_{i,k} - 2^{10} \cdot w_{i + a, k + b} $, where $i = 2,..,9$ for $k = 0$, $i = 1,..,9$ for $k = 1$ and $i = 1,..,8$ for $k = 2$, $(i + 1) = b \cdot 9 + a$  is range-constrained by 10-bits plookup table. \\
+            $w_{9,j+2} \cdot 2^7 $ is range-constrained by 10-bits plookup table.
         \end{center}
+	It costs $3$ rows.
     \item $k ==$ SHA-512$(data||R||A||M)$ // See section \ref{sha512}
+    It costs $?$ rows.
     \item $sB ?=? R + kA$:
         \begin{enumerate}
-            \item Fixed-base scalar multiplication circuit is used for $sB = S$
+            \item Fixed-base scalar multiplication circuit is used for $sB = S$. The cell $w_{1, j + 84}$ is copy-constrained with $w_{1, j + 0}$ from the range circuit.
             \item One addition is used for $S + (-R)$. The coordinates of $R$ and $T = S + (-R)$ are placed on the last row of fixed-base scalar multiplication circuit.
                 In total, three constraints are used for addition:
                 \begin{center}
-                    $x_t \cdot (1 + d x_s \cdot (-x_r) \cdot y_s \cdot y_r) = x_s \cdot y_r + (-x_r) \cdot y_s$ \\
-                    $y_t \cdot (1 - d x_s \cdot (-x_r) \cdot y_s \cdot y_r) = x_s \cdot (-x_r) + y_r \cdot y_s$ \\
-                    $- x_r^2 + y_r^2 = 1 - d \cdot x_r^2 \cdot y_r^2$
+                    $w_{4, j + 84}\cdot (1 + d w_{7, j + 84} \cdot (-w_{2, j + 84}) \cdot w_{8, j + 84} \cdot w_{3, j + 84}) = w_{7, j + 84} \cdot w_{3, j + 84} + (-w_{2, j + 84}) \cdot w_{8, j + 84}$ \\
+                    $w_{5, j + 84} \cdot (1 - d w_{7, j + 84} \cdot (-w_{2, j + 84}) \cdot w_{8, j + 84} \cdot w_{3, j + 84}) = w_{7, j + 84} \cdot (-w_{2, j + 84}) + w_{3, j + 84} \cdot w_{8, j + 84}$ \\
+                    $(- w_{2, j + 84})^2 + w_{3, j + 84}^2 = 1 - d \cdot w_{2, j + 84}^2 \cdot w_{3, j + 84}^2$
                 \end{center}
-            \item Variable-base scalar multiplication circuit has to be used in reversed order, where $(x_n, y_n) = (x_t,y_t)$.
+            \item Variable-base scalar multiplication circuit for $T = k \cdot A$, where cells $w_{2, j + 254}, w_{3, j + 254}$ are copy constrained with $w_{4, j + 84}, w _{5, j + 84}$ from the fixed-base scalar multiplication circuit.
         \end{enumerate}
-
 \end{enumerate}
-
+It costs $..$.
 \subsection{Elliptic Curves Arithmetics}
 \label{ellcurve}
 \textbf{WIP}
@@ -55,7 +56,7 @@ We precompute all values $w(B,s,k) = k_i \cdot 8^s B$, where $k_i \in \{ 0,..7 \
         j + 0  & $acc$  & $b_{252}$ & $b_{251}$ & $b_{250}$ & $u_1$ & $v_1$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
         j + 1  & $acc$  & $b_{249}$ & $b_{248}$ & $b_{247}$ & $u_1$ & $v_1$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
         ...    &             &             &             &             &      & & & &  \\
-        j + 84 & $s$  & $b_{0}$ & $--$ & $--$ & $--$ & $--$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
+        j + 84 & $s$  & $x_r$ & $y_r$ & $x_t$ & $y_t$ & $b_{0}$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
     \end{tabular}
 \end{center}
 
@@ -113,10 +114,10 @@ Constraints:
 
     \item For $j + 84$:
         \begin{itemize}
-        	 \item $(w_{2, j + 84} - 1) \cdot w_{2, j + 84} = 0$ 
-            \item $w_{1, j + 84} = w_{1, j + 83} \cdot 2 + w_{2, j + 84}$
-            \item $\phi_3(w_{7, j + z}, w_{7, j + z - 1}, w_{8, j + z - 1}, w_{2, j + 84} \cdot x_B, w_{2, j + 84} \cdot y_B + (1 - w_{2, j + 84}) ) = 0$
-            \item $\phi_4(w_{8, j + z}, w_{7, j + z - 1}, w_{8, j + z - 1}, w_{2, j + 84} \cdot x_B, w_{2, j + 84} \cdot y_B + (1 - w_{2, j + 84}) ) = 0$
+        	 \item $(w_{6, j + 84} - 1) \cdot w_{6, j + 84} = 0$ 
+            \item $w_{1, j + 84} = w_{1, j + 83} \cdot 2 + w_{6, j + 84}$
+            \item $\phi_3(w_{7, j + z}, w_{7, j + z - 1}, w_{8, j + z - 1}, w_{6, j + 84} \cdot x_B, w_{6, j + 84} \cdot y_B + (1 - w_{6, j + 84}) ) = 0$
+            \item $\phi_4(w_{8, j + z}, w_{7, j + z - 1}, w_{8, j + z - 1}, w_{6, j + 84} \cdot x_B, w_{6, j + 84} \cdot y_B + (1 - w_{6, j + 84}) ) = 0$, where $B = (x_B, y_B)$.
         \end{itemize}
 \end{itemize}
 
