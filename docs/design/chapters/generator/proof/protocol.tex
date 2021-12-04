@@ -141,7 +141,7 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
         \end{itemize}
 \end{enumerate}
 
-\subsection{Verifier View}
+\subsection{Verifier View}\label{section:protocol:verifier}
 
 \begin{enumerate}
     \item Let $f_{0, \texttt{comm}}, \dots, f_{N_{\texttt{wires}} - 1, \texttt{comm}}$ be commitments to $f_{0}(X), \dots, f_{N_{\texttt{wires}} - 1}(X)$
@@ -162,7 +162,8 @@ For details on polynomial commitment scheme and polynomial evaluation scheme, we
     \item Run evaluation scheme verification with the committed polynomials and $y$ to get values 
         $f_i(y), P(y), P(y\omega), Q(y), Q(y\omega), T_j(y), A'(y), S'(y), V(y), A'(y\omega^{-1}), V(y\omega)$.  \\
         \textbf{Remark}: Depending on the circuit, evaluation can be done also on $f_i(y\omega), f_i(y\omega^{-1})$ for some $i$.
-    \item Calculate:
+        \label{algoeirhm:verifier:15}
+    \item Calculate:\label{algoeirhm:verifier:16}
         \begin{center}
             $F_0(y) = L_1(y)(P(y) - 1)$ \\
             $F_1(y) = L_1(y)(Q(y) - 1)$ \\
