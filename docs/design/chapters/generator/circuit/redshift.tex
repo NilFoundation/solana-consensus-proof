@@ -19,3 +19,34 @@ There are more optimal ways to perform these calculations.
 However, the number of arithmetic operations is much less than in  Step \ref{algoeirhm:verifier:15}.
 It means that any optimizations do not decrease prover or verifier complexities in any noticeable way. 
 
+\paragraph{FRI Verification} is the main part of Step \ref{algoeirhm:verifier:15}. 
+It contains two operations: Merkle tree path check and polynomial interpolation. 
+The circuit version of Merkle path check algorithm does not differ from the original one. 
+The circuit form Section \ref{section:poseidon} is used to check hash operations correctness. 
+
+To check polynomial interpolation, the following circuit is used:
+\begin{center}
+    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
+        & $w_0$  & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$ & $w_6$ & $w_7$ & $w_8$  \\
+        \hline
+        j + 0  & $a_0$  & $a_1$ & $s_0$ & $s_1$ & $x$ & $y$ & $\alpha$ & $\beta$ & $\dots$   \\
+    \end{tabular}
+\end{center}
+
+Constraints ($\textbf{max degree} = 2$):
+\begin{enumerate}
+    \item $w_6 \cdot w_0 + w_7 = w_2 \longleftrightarrow 
+            \alpha \cdot a_0 + \beta = s_0$
+    \item $w_6 \cdot w_0 + w_7 = w_2 \longleftrightarrow 
+            \alpha \cdot a_1 + \beta = s_1$
+    \item $w_6 \cdot w_0 + w_7 = w_2 \longleftrightarrow 
+            \alpha \cdot x + \beta = y$
+\end{enumerate}
+
+Copy constraints:
+\begin{enumerate}
+    \item $a_0, a_1, s_0, s_1, y$ are constrained by public input.
+\end{enumerate}
+
+The gate uses the line equation to check that all three points are on the same line.
+This means, it checks $f(a_0) = s_0$ , $f(a_1) = s_1$, $f(x) = y$ for $f(X) = \alpha \cdot X + \beta$.
