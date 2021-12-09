@@ -1,0 +1,21 @@
+\subsection{Redshift Verification}
+\textbf{WIP}
+
+
+Redshift circuit repeats all steps from Section \ref{section:protocol:verifier}.
+The verification circuit is a part of bridge design, and it is supposed that any output of the basic proof is an input to the verification circuit. 
+Thus, we do not suppose any decoding for the proof because it can be represented directly in the desirable form. 
+
+In the previous sections, we described circuits for most of the steps of the verifier algorithm.
+However, steps \ref{algoeirhm:verifier:15}-\ref{algoeirhm:verifier:16} require additional clarification.
+
+We consider step \ref{algoeirhm:verifier:16} firstly as a simpler one.
+It contains basic arithmetic operations over finite field elements. 
+These operations can be done with standard generic PLONK gate:
+\begin{center}
+	$\textbf{q}_L \cdot w_0 + \textbf{q}_R \cdot w_1 + \textbf{q}_M \cdot w_0 \cdot w_1 + \textbf{q}_O \cdot w_2 + \textbf{q}_C$
+\end{center}
+There are more optimal ways to perform these calculations.
+However, the number of arithmetic operations is much less than in  Step \ref{algoeirhm:verifier:15}.
+It means that any optimizations do not decrease prover or verifier complexities in any noticeable way. 
+

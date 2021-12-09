@@ -41,9 +41,10 @@ Each round of the message scheduling has the following table:
         & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$  & $w_6$ & $w_7$ & $w_8$ & $w_9$  \\
         \hline
         j + 0 & $a$  & $a_0$  & $a_1$ & $a_2$ & $a_3$ & $ \hat{a}_1$ & $\hat{a}_2$ & $a'_0$  & $$      \\
-        j + 1 & $W_i$ & $W_j$ & $a'_1$ & $a'_2$ & $a'_3$ & $s_0$ & $s_1$ & $s_2$ & $s_3$\\
-        j + 2 & $w$ & $b'_0$ & $b'_1$ & $b'_2$ & $b'_3$ & $s_0$ & $s_1$ & $s_2$ & $s_3$\\
-        j + 3 & $b$  & $b_0$  & $b_1$ & $b_2$ & $b_3$ & $ \hat{b}_0$ & $\hat{b}_1$ & $\hat{b}_3$  & $$ 
+        j + 1 & $W_i$ & $W_j$ & $a'_1$ & $a'_2$ & $a'_3$ & $s'_0$ & $s'_1$ & $s'_2$ & $s'_3$\\
+        j + 2 & $w$ & $s_0$ & $s_1$ & $s_2$ & $s_3$ & $s_0$ & $s_1$ & $s_2$ & $s_3$\\
+        j + 3 & $$ & $b'_0$ & $b'_1$ & $b'_2$ & $b'_3$ & $s'_0$ & $s'_1$ & $s'_2$ & $s'_3$\\
+        j + 4 & $b$  & $b_0$  & $b_1$ & $b_2$ & $b_3$ & $ \hat{b}_0$ & $\hat{b}_1$ & $\hat{b}_3$  & $$ 
     \end{tabular}
 \end{center}
 
@@ -54,11 +55,11 @@ Thus, for $i$ from $16$ to $63$:
 \item Apply $\sigma_0$ to $W_{i-15}$.
 \item Add the following constraint for $W_i$:
 \begin{center}
-	$w_{1,j + 2} = w_{1, j + 1} + w_{2, j + 1} + w_{6, j + 1} + w_{7,j + 1} \cdot 2^3 + w_{8,j + 1} \cdot 2^{7} + w_{9, j + 1} \cdot 2^{18} + w_{6, j + 2} + w_{7, j + 2} \cdot 2^{10} + w_{8,j + 2} \cdot 2^{17} + w_{9, j + 2} \cdot 2^{19}$,
+	$w_{1,j + 2} = w_{1, j + 1} + w_{2, j + 1} + w_{2, j + 2} + w_{3,j + 2} \cdot 2^3 + w_{4,j + 2} \cdot 2^{7} + w_{5, j + 2} \cdot 2^{18} + w_{6, j + 2} + w_{7, j + 2} \cdot 2^{10} + w_{8,j + 2} \cdot 2^{17} + w_{9, j + 2} \cdot 2^{19}$,
 \end{center}
 \item Apply $\sigma_1$ to $W_{i-2}$.
 \end{enumerate}
-Thus, the message schedule takes $4 \cdot 48 = 192$ rows.
+Thus, the message schedule takes $5 \cdot 48 = 240$ rows.
 
 \paragraph{The function $\sigma_0$} contains sparse mapping with base $4$.
 Let $a$ be divided to chunks $a_0, a_1, a_2, a_3$ which equals to $3, 4, 11, 14$ bits respectively.
@@ -71,7 +72,10 @@ Constraints:
 \begin{center}
     $w_{1, j + 0} = w_{2, j + 0} + w_{3,j + 0} \cdot 2^3 + w_{4,j + 0} \cdot 2^{7} + w_{5, j + 0} \cdot 2^{18}$ \\
     $(w_{2, j + 0} - 7) \cdot (w_{2, j + 0} - 6) \cdot ... \cdot w_{2, j + 0} = 0$ \\
-    10 plookup constraints: $(w_{2, j + 0}, w_{8, j + 0}), ( 2^{10} \cdot w_{3, j + 0}, w_{6, j + 0}), (w_{3, j + 0}, w_{3, j + 1}), (2^3 \cdot w_{4, j + 0}, w_{7, j + 0}), (w_{4, j + 0}, w_{4, j + 1}), (w_{5, j + 0}, w_{5, j + 1}), (w_{6, j + 1}, (w_{4, j + 1} + w_{5,j + 1} + w_{3,j + 1}), (w_{7, j + 1}, (w_{5,j + 1} + w_{8,j + 0} + w_{4, j + 1}, (w_{8, j + 1}, (w_{8,j + 0} + w_{3,j + 1} + w_{5,j + 1}), (w_{9,j + 1}, (w_{3,j + 1} + w_{4, j + 1})$ \\
+    $w_{6, j + 1} + w_{7, j + 1} \cdot 4^{14} + w_{8, j + 1} \cdot 4^{28} + w_{9, j + 1} \cdot 2^{30} = w_{3, j + 1} + w_{4, j + 1} \cdot 4^{4} + w_{5, j + 1} \cdot 4^{15} + w_{4, j + 1} + w_{5, j + 1} \cdot 4^{11} + w_{8, j + 0} \cdot 4^{25} + w_{3, j + 1} \cdot 4^{28} + w_{5, j + 1} + w_{8, j + 0} \cdot 4^{14}+ w_{3, j + 1} \cdot 4^{17} + w_{4, j + 1} \cdot 4^{21}$ \\
+    $(w_{8, j + 1} - 3) \cdot (w_{8, j + 1} - 2) \cdot (w_{8, j + 1} - 1) \cdot w_{8, j + 1} = 0$
+    $(w_{9, j + 1} - 3) \cdot (w_{9, j + 1} - 2) \cdot (w_{9, j + 1} - 1) \cdot w_{9, j + 1} = 0$
+    10 plookup constraints: $(w_{2, j + 0}, w_{8, j + 0}), ( 2^{10} \cdot w_{3, j + 0}, w_{6, j + 0}), (w_{3, j + 0}, w_{3, j + 1}), (2^3 \cdot w_{4, j + 0}, w_{7, j + 0}), (w_{4, j + 0}, w_{4, j + 1}), (w_{5, j + 0}, w_{5, j + 1}), (w_{2, j + 2}, w_{6, j + 1}), (w_{3, j + 2}, w_{7, j + 1}), (w_{4, j + 2}, w_{8, j + 2}), (w_{5, j + 2}, w_{9, j + 2})$ \\
 \end{center}
 
 \paragraph{The function $\sigma_1$} contains sparse mapping subcircuit with base $4$.
@@ -83,7 +87,10 @@ Constraints:
 \begin{center}
     $w_{1, j + 3} = w_{2, j + 3} + w_{3, j + 3} \cdot 2^{10} + w_{4,j + 3} \cdot 2^{17} + w_{5, j + 3} \cdot 2^{19}$ \\
     $(w_{4,j + 3} - 3) \cdot (w_{4,j + 3} - 2) \cdot (w_{4,j + 3} - 1) \cdot w_{4,j + 3} = 0$ \\
-    11 plookup constraints: $(2^4 \cdot (w_{2, j + 3}, w_{6, j + 3}), (2^7 \cdot w_{3, j + 3}, w_{7,j+3}), (2 \cdot w_{5, j+3}, w_{8, j + 3}), (w_{2,j + 3}, w_{2,j+2}), (w_{3, j + 3}, w_{3, j + 2}), (w_{4,j + 3}, w_{4,j+2}), (w_{5, j + 3}, w_{5, j+2}), (w_{6, j + 2}, (w_{4, j + 2} + w_{5,j + 2} + w_{3,j + 2})), (w_{7, j + 2}, (w_{5,j + 2} + w_{2,j + 2} + w_{4,j + 2}, (w_{8,j + 2}, (w_{2,j + 2} + w_{3,j + 2} + w_{5,j + 2}), (w_{9,j + 2}, (w_{3,j + 2} + w_{4,j + 2})$ \\
+    $w_{6, j + 3} + w_{7, j + 3} \cdot 4^{14} + w_{8, j + 3} \cdot 4^{28} + w_{9, j + 3} \cdot 2^{30} = w_{3, j + 3} + w_{4, j + 3} \cdot 4^{7} + w_{5, j + 3} \cdot 4^{9} + w_{4, j + 3} + w_{5, j + 3} \cdot 4^{2} + w_{2, j + 3} \cdot 4^{15} + w_{3, j + 3} \cdot 4^{25} + w_{5, j + 3} + w_{2, j + 3} \cdot 4^{13}+ w_{3, j + 3} \cdot 4^{23} + w_{4, j + 3} \cdot 4^{30}$ \\
+    $(w_{8, j + 3} - 3) \cdot (w_{8, j + 3} - 2) \cdot (w_{8, j + 3} - 1) \cdot w_{8, j + 3} = 0$
+    $(w_{9, j + 3} - 3) \cdot (w_{9, j + 3} - 2) \cdot (w_{9, j + 3} - 1) \cdot w_{9, j + 3} = 0$
+    11 plookup constraints: $(2^4 \cdot (w_{2, j + 3}, w_{6, j + 3}), (2^7 \cdot w_{3, j + 3}, w_{7,j+3}), (2 \cdot w_{5, j+3}, w_{8, j + 3}), (w_{2,j + 3}, w_{2,j+2}), (w_{3, j + 3}, w_{3, j + 2}), (w_{4,j + 3}, w_{4,j+2}), (w_{5, j + 3}, w_{5, j+2}), (w_{6, j + 2}, w_{6, j + 3}), (w_{7, j + 2}, w_{7, j + 3}), (w_{8, j + 2}, w_{8, j + 3}), (w_{8, j + 2}, w_{9, j + 3})$ \\
 \end{center}
 
 \paragraph{Compression}
@@ -94,12 +101,13 @@ Each round of compression has the following table:
         & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$  & $w_6$ & $w_7$ & $w_8$ & $w_9$  \\
         \hline
         j + 0 & $e$ & $e'_0$ & $e_0$ & $e_1 $  & $e_2$  & $e_3$   & $ \hat{e}_1$ & $\hat{e}_2$  & $\hat{e}_3$   \\
-        j + 1 & $e'$  & $f'$ & $e'_1$ & $e'_2$ & $e'_3$ & $s_0$ & $s_1$ & $s_2$ & $s_3$ \\
-        j + 2 & $ch_{0, sparse}$ & $ch_{1, sparse}$ & $ch_{2, sparse}$ & $ch_{3, sparse}$ & $e_{new}$ & $ch_0$ & $ch_1$ & $ch_2$ & $ch_3$\\
-        j + 3 & $g'$  & $d$ & $h$  & $W_r$  & $a_{new}$ & $maj_3$ & $maj_0$ & $maj_1$ & $maj_2$ \\
-        j + 4 & $maj_{0,sparse}$  & $maj_{1,sparse}$ & $maj_{2,sparse}$  & $maj_{3,sparse}$  & $c'$ & $s_0$ & $s_1$ & $s_2$ & $s_3$\\
-        j + 5 & $a'$  & $b'$ & $a'_0$  & $a'_1$  & $a'_2$ & $a'_3$ & $$ & $$ & $$\\
-        j + 6 & $a$ & $$ & $a_0$ & $a_1$ & $a_2$ & $a_3$ & $\hat{a}_0$  & $ \hat{a}_1$ & $\hat{a}_3$ \\
+        j + 1 & $e'$  & $f'$ & $e'_1$ & $e'_2$ & $e'_3$ & $s'_0$ & $s'_1$ & $s'_2$ & $s'_3$ \\
+        j + 2 & $ch_{0, sparse}$  & $ch_{1, sparse}$ & $ch_{2, sparse}$ & $ch_{3, sparse}$ & $-$ & $s_0$ & $s_1$ & $s_2$ & $s_3$ \\
+        j + 3 & $g'$ & $d$ & $h$ & $W_r$ & $e_{new}$ & $ch_0$ & $ch_1$ & $ch_2$ & $ch_3$\\
+        j + 4 & $maj_{0,sparse}$  & $maj_{1,sparse}$ & $maj_{2,sparse}$  & $maj_{3,sparse}$  & $a_{new}$ & $maj_3$ & $maj_0$ & $maj_1$ & $maj_2$ \\
+        j + 5 & $a'$  & $b'$ & $$  & $$  & $c'$ & $s_0$ & $s_1$ & $s_2$ & $s_3$\\
+        j + 6 & $s'_1$  & $s'_2$ & $a'_0$  & $a'_1$  & $a'_2$ & $a'_3$ & $s'_3$ & $s'_4$ & $$\\
+        j + 7 & $a$ & $$ & $a_0$ & $a_1$ & $a_2$ & $a_3$ & $\hat{a}_0$  & $ \hat{a}_1$ & $\hat{a}_3$ \\
     \end{tabular}
 \end{center}
 
@@ -141,10 +149,13 @@ The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form and $a'$ is a sparse $a$.
 
 Constraints:
 \begin{center}
-    $w_{1, j + 6}= w_{3, j + 6} + w_{4, j + 6} \cdot 2^{2} + w_{5, j + 6} \cdot 2^{13} + w_{6, j + 6} \cdot 2^{22}$ \\
+    $w_{1, j + 7} = w_{3, j + 7} + w_{4, j + 7} \cdot 2^{2} + w_{5, j + 7} \cdot 2^{13} + w_{6, j + 7} \cdot 2^{22}$ \\
     $w_{1, j + 5} = w_{3, j + 6} + w_{4, j + 6} \cdot 4^{2} + w_{5, j + 6} \cdot 4^{13} + w_{6, j + 6} \cdot 4^{22}$ \\
     $(w_{3,j + 6} - 3) \cdot (w_{3,j + 6} - 2) \cdot (w_{3,j + 6} - 1) \cdot w_{3,j + 6} = 0$ \\
-    11 plookup constraints: $(2^3 \cdot (w_{4, j + 6}, w_{7, j + 6}), (2^5 \cdot w_{5, j + 6}, w_{8, j + 6}), (2^4 \cdot w_{6, j+6}, w_{9, j + 6}), (w_{3,j + 6}, w_{3,j+5}), (w_{4, j + 6}, w_{4, j + 5}), (w_{5, j + 6}, w_{5, j + 5}), (w_{6, j + 6}, w_{6, j + 5}), (w_{6, j + 4}, (w_{4, j + 5} + w_{5,j + 5} + w_{6,j + 5}), (w_{7, j + 4}, (w_{5,j + 5} + w_{6,j + 5} + w_{3,j + 5}, (w_{8, j + 4}, (w_{6,j + 5} + w_{3,j + 5} + w_{4,j + 5}), (w_{9, j + 4}, (w_{3,j + 5} + w_{4,j + 5} + w_{5,j + 5})$ \\
+    $w_{1, j + 6} + w_{2, j + 6} \cdot 4^{14} + w_{7, j + 6} \cdot 4^{28} + w_{8, j + 6} \cdot 2^{30} = w_{4, j + 6} + w_{5, j + 6} \cdot 4^{11} + w_{6, j + 6} \cdot 4^{20} + w_{2, j + 6} \cdot 2^{30} + w_{5, j + 6} + w_{6, j + 6} \cdot 4^{9} + w_{3, j + 6} \cdot 4^{19} + w_{4, j + 6} \cdot 4^{21} + w_{6, j + 6} + w_{3, j + 6} \cdot 4^{10}+ w_{4, j + 6} \cdot 4^{12} + w_{5, j + 6} \cdot 4^{23}$ \\
+    $(w_{7, j + 6} - 3) \cdot (w_{7, j + 6} - 2) \cdot (w_{7, j + 6} - 1) \cdot w_{7, j + 6} = 0$
+    $(w_{8, j + 6} - 3) \cdot (w_{8, j + 6} - 2) \cdot (w_{8, j + 6} - 1) \cdot w_{8, j + 6} = 0$
+    11 plookup constraints: $(2^3 \cdot (w_{4, j + 6}, w_{7, j + 6}), (2^5 \cdot w_{5, j + 6}, w_{8, j + 6}), (2^4 \cdot w_{6, j+6}, w_{9, j + 6}), (w_{3,j + 6}, w_{3,j+5}), (w_{4, j + 6}, w_{4, j + 5}), (w_{5, j + 6}, w_{5, j + 5}), (w_{6, j + 6}, w_{6, j + 5}), (w_{6, j + 5}, w_{1, j + 6}), (w_{7, j + 5}, w_{2, j + 6}), (w_{8, j + 5}, w_{7, j + 6}), (w_{9, j + 5}, w_{8, j + 6})$ \\
 \end{center}
 
 \paragraph{The $\Sigma_1$ function}
@@ -157,7 +168,10 @@ Constraints:
 \begin{center}
     $w_{1, j + 0} = w_{3, j + 0} + w_{4, j + 0} \cdot 2^{6} + w_{5, j + 0} \cdot 2^{11} + w_{6, j + 0} \cdot 2^{25}$ \\
     $w_{1, j + 1} = w_{2, j + 0} + w_{3, j + 1} \cdot 7^{6} + w_{4, j + 1} \cdot 7^{11} + w_{5, j + 1} \cdot 7^{25}$ \\
-    11 plookup constraints: $(2^8 \cdot (w_{3, j + 0}, w_{2, j + 0}), (2^9 \cdot w_{4, j + 0}, w_{3, j + 1}), (2^7 \cdot w_{6, j + 0}, w_{5, j + 1}), (w_{3,j + 0}, w_{2,j+0}), (w_{4, j + 0}, w_{3, j + 1}), (w_{5, j + 0}, w_{4, j + 1}), (w_{6, j + 0}, w_{5, j + 1}), (w_{6, j + 1}, (w_{3, j + 1} + w_{4, j + 1} + w_{5,j + 1}), (w_{7, j + 1}, (w_{4,j + 1} + w_{5,j + 1} + w_{2, j + 0}, (w_{8, j + 1}, (w_{5,j + 1} + w_{2,j + 0} + w_{3,j + 1}), (w_{9, j + 1}, (w_{2,j + 0} + w_{3,j + 1} + w_{4,j + 1})$ \\
+    $w_{6, j + 1} + w_{7, j + 1} \cdot 4^{14} + w_{8, j + 1} \cdot 4^{28} + w_{9, j + 1} \cdot 2^{30} = w_{3, j + 1} + w_{4, j + 1} \cdot 4^{5} + w_{5, j + 1} \cdot 4^{19} + w_{2, j + 0} \cdot 2^{26} + w_{4, j + 1} + w_{5, j + 1} \cdot 4^{14} + w_{2, j + 0} \cdot 4^{21} + w_{3, j + 1} \cdot 4^{27} + w_{5, j + 1} + w_{2, j + 0} \cdot 4^{7}+ w_{3, j + 1} \cdot 4^{13} + w_{4, j + 1} \cdot 4^{27}$ \\
+    $(w_{4, j + 1} - 3) \cdot (w_{4, j + 1} - 2) \cdot (w_{4, j + 1} - 1) \cdot w_{4, j + 1} = 0$
+    $(w_{5, j + 1} - 3) \cdot (w_{5, j + 1} - 2) \cdot (w_{5, j + 1} - 1) \cdot w_{5, j + 1} = 0$
+    11 plookup constraints: $(2^8 \cdot (w_{3, j + 0}, w_{2, j + 0}), (2^9 \cdot w_{4, j + 0}, w_{3, j + 1}), (2^7 \cdot w_{6, j + 0}, w_{5, j + 1}), (w_{3,j + 0}, w_{2,j+0}), (w_{4, j + 0}, w_{3, j + 1}), (w_{5, j + 0}, w_{4, j + 1}), (w_{6, j + 0}, w_{5, j + 1}), (w_{6, j + 2}, w_{6, j + 1}), (w_{7, j + 2}, w_{7, j + 1}), (w_{8, j + 2}, w_{7, j + 1}), (w_{9, j + 2}, w_{8, j + 1})$ \\
 \end{center}
 
 \paragraph{The Maj function}
@@ -166,8 +180,8 @@ contains subcircuit with base $4$ for $a, b ,c$.
 The value of the $ maj $ function is stored in chunks of $8$ bits.
 Constraints:
 \begin{center}
-    $w_{1, j + 4} + w_{2, j + 4} \cdot 4^8 + w_{3, j + 4} \cdot 4^{8 \cdot 2} + w_{4, j + 4} \cdot 4^{8 \cdot 3} = w_{1, j + 5} + w_{2, j + 5} + w_{5, j + 4} $ \\
-    4 plookup constraints: $( w_{6, j + 3}, w_{1, j + 4}), ( w_{7, j + 3}, w_{2, j + 4}), (w_{8, j + 3}, w_{3, j + 4}), (w_{9, j + 3}, w_{4, j + 4})$ \\
+    $w_{1, j + 4} + w_{2, j + 4} \cdot 4^8 + w_{3, j + 4} \cdot 4^{8 \cdot 2} + w_{4, j + 4} \cdot 4^{8 \cdot 3} = w_{1, j + 5} + w_{2, j + 5} + w_{5, j + 5} $ \\
+    4 plookup constraints: $( w_{6, j + 4}, w_{1, j + 4}), ( w_{7, j + 4}, w_{2, j + 4}), (w_{8, j + 4}, w_{3, j + 4}), (w_{9, j + 4}, w_{4, j + 4})$ \\
 \end{center}
 
 \paragraph{The Ch function}
@@ -177,339 +191,218 @@ The value of the $ ch $ function is stored in chunks of $8$ bits.
 Constraints:
 \begin{center}
     $w_{1, j + 2} + w_{2, j + 2} \cdot 7^8 + w_{3, j + 2} \cdot 7^{8 \cdot 2} + w_{4, j + 2} \cdot 7^{8 \cdot 3} = w_{1, j + 1} + 2 \cdot w_{2, j + 1} + 3 \cdot w_{1, j + 3}$ \\
-    4 plookup constraints: $( w_{6, j + 2}, w_{1, j + 2}), ( w_{7, j + 2}, w_{2, j + 2}), (w_{8, j + 2}, w_{3, j + 2}), (w_{9, j + 2}, w_{4, j + 2})$ \\
+    4 plookup constraints: $( w_{6, j + 3}, w_{1, j + 2}), ( w_{7, j + 3}, w_{2, j + 2}), (w_{8, j + 3}, w_{3, j + 2}), (w_{9, j + 3}, w_{4, j + 2})$ \\
 \end{center}
 
 \paragraph{Update the values $a$ and $e$}
 Constraints:
 \begin{center}
-    $w_{5, j + 2} = w_{2, j + 3} + w_{3, j + 3} + w_{6, j + 1} + w_{7, j + 1} \cdot 2^6 + w_{8, j + 1} \cdot  2^{11} + w_{9, j + 1} \cdot 2^{25} + w_{6, j + 2} + w_{7, j + 2} \cdot 2^8 + w_{8, j + 2} \cdot 2^{8 \cdot 2} + w_{9, j + 2} \cdot 2^{8 \cdot 3} + k[r] + w_{4, j + 3}$, where $r$ is a number of round. \\
-    $w_{5, j + 3} = w_{5, j + 2} - w_{2, j + 3} + w_{6, j + 4} + w_{7, j + 4} \cdot 2^2 + w_{8, j + 4} \cdot  2^{13} + w_{9, j + 4} \cdot 2^{22} + w_{6, j + 3} + w_{7, j + 3} \cdot 2^8 + w_{8, j + 3} \cdot 2^{8 \cdot 2} + w_{9, j + 3} \cdot 2^{8 \cdot 3}$
+    $w_{5, j + 3} = w_{2, j + 3} + w_{3, j + 3} + w_{6, j + 2} + w_{7, j + 2} \cdot 2^{14} + w_{8, j + 2} \cdot  2^{28} + w_{9, j + 2} \cdot 2^{30} + w_{6, j + 3} + w_{7, j + 3} \cdot 2^8 + w_{8, j + 3} \cdot 2^{8 \cdot 2} + w_{9, j + 3} \cdot 2^{8 \cdot 3} + k[r] + w_{4, j + 3}$, where $r$ is a number of round. \\
+    $w_{5, j + 4} = w_{5, j + 3} - w_{2, j + 3} + w_{6, j + 5} + w_{7, j + 5} \cdot 2^{14} + w_{8, j + 5} \cdot  2^{28} + w_{9, j + 5} \cdot 2^{30} + w_{6, j + 4} + w_{7, j + 4} \cdot 2^8 + w_{8, j + 4} \cdot 2^{8 \cdot 2} + w_{9, j + 4} \cdot 2^{8 \cdot 3}$
 \end{center}
 
 \paragraph{Cost}
-The total value of rows is $48 \cdot 4 + 7 \cdot 64 + 3 = 643$ per chunk.
+The total value of rows is $48 \cdot 5 + 8 \cdot 64 + 3 = 755$ per chunk.
 
-\subsection{SHA2-512 Circuit}
+\subsection{SHA-512 Circuit}
 \label{section:sha512}
 SHA-512 uses the similar logical functions as in \ref{section:sha256} which operates on $64$-bits words.
-Thus each input uses the same range proof which extended to 64-bits.
+Thus, the preprocessing constraints for the SHA-512` circuit is a decomposition of $k$ message blocks to $64$ bits chunks without range proofs. For `eddsa` circuit, $k = 2$.
 
-\paragraph{Range proof that $a < 2^{64}$}
-Let $a = \{ a_0, ..., a_{32} \}$, where $a_i$ is two bits.
-\begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$    & $w_2$     & $w_3$    & $w_4$    & $w_o$ \\
-        \hline
-        j + 0 & $a_{29}$ & $ a_{30}$ & $a_{31}$ & $a_{32}$ & acc   \\
-        j + 1 & $a_{25}$ & $ a_{26}$ & $a_{27}$ & $a_{28}$ & acc   \\
-        ...   &          &           &          &          &       \\
-        j + 6 & $a_4$    & $a_5$     & $a_6$    & $a_7$    & acc   \\
-        j + 7 & $a_0 $   & $a_1$     & $a_2$    & $a_3$    & a     \\
-    \end{tabular}
-\end{center}
-Range gate constraints:
-\begin{center}
-    $w_{1,i}(w_{1,i}-1)(w_{1,i}-2)(w_{1,i} -3) + w_{2,i}(w_{2,i}-1)(w_{2,i}-2)(w_{2,i} -3)
-    + w_{3,i}(w_{3,i}-1)(w_{3,i}-2)(w_{3,i} -3) + w_{4,i}(w_{4,i}-1)(w_{4,i}-2)(w_{4,i} -3)$ \\
-    $w_{o,i} = w_{o, i - 1} \cdot 4^4 + w_{4,i} \cdot 4^3 + w_{3,i} \cdot 4^2 + w_{2,i} \cdot 4 + w_{1,i}$
-\end{center}
-The range proofs are included for each input data block.
-
-\paragraph{The function $\sigma_0$} contain sparse mapping subcircuit with base $4$.
-Let $a$ be divided to 8 bits-chunks $a_0, a_1, a_2, ..., a_7$.
-The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
-We need the following lookup tables:
+\paragraph{Lookup tables} 
+We use the following lookup tables:
 \begin{enumerate}
-    \item \textbf{SHA-256 NORMALIZE4}: Read $a_i$ to $a'_i$
-    \item \textbf{SHA-512 8ROT1 64}: Read $a'_0$ to $r_1$
-    \item \textbf{SHA-512 8SHR7 64}: Read $a'_0$ to $r_3$
+\item \textbf{SHA-256 NORMALIZE4} with 2 columns and $2^{14}$ rows. 
+The first column contains all possible 14-bits words.
+The second column contains corresponding sparse representations with base $4$.
+The constraints can be used for the range check and sparse representation simultaneously.
+\item \textbf{SHA-256 NORMALIZE7} with 2 columns and $2^{14}$ rows. 
+The first column contains all possible 14-bits words.
+The second column contains corresponding sparse representations with base $7$.
+The constraints can be used for the range check and sparse representation simultaneously.
+\item \textbf{SHA-512 NORMALIZE MAJ} with 2 columns and $2^{16}$ rows. 
+The first column contains all possible 16-bits words.
+The second column contains corresponding sparse representations with base $4$.
+\item \textbf{SHA-512 NORMALIZE CH} with 2 columns and $2^{16}$ rows. 
+The first column contains all possible 16-bits words.
+The second column contains corresponding sparse representations with base $7$.
 \end{enumerate}
+
+\paragraph{Message scheduling}
+For each block of $1024$ bits of the padded message the $80$ words are constructed in the following way:
+\begin{itemize}
+\item The first $16$ words are obtained by splitting the message.
+\item The last $64$ words are obtained by using the functions $\sigma_0, \sigma_1$:
 \begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$  & $w_2$   & $w_3$  & $w_4$  & $w_o$      \\
+$W_i = \sigma_1(W_{i-2}) \oplus W_{i - 7} \oplus \sigma_0(W_{i-15}) \oplus W_{i-16}$
+\end{center}
+\end{itemize}
+Each round of the message scheduling has the following table:
+\begin{center}
+    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
+        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$  & $w_6$ & $w_7$ & $w_8$ & $w_9$  \\
         \hline
-        j + 0 & $a_0$  & $ a_1$  & $a_2$  & $a_3$  & $a_4$      \\
-        j + 1 & $a'_0$ & $a'_1$  & $a'_2$ & $a'_3$ & a          \\
-        j + 2 & $a_5 $ & $a_6$   & $a_7$  & $a_4'$ & $\sigma_0$ \\
-        j + 3 & $a'_5$ & $ a'_6$ & $a'_7$ & $r_1$  & $r_2$      \\
+        j + 0 & $a$  & $a_0$  & $a_1$ & $a_2$ & $a_3$ & $ a_4$ & $a_5$ & $a_6$  & $\hat{a}_1$ \\
+        j + 1 & $$  & $a'_0$  & $a'_1$ & $a'_2$ & $a'_3$ & $ a'_4$ & $a'_5$ & $a'_6$  & $$      \\
+        j + 2 & $W_i$  & $s'_0$  & $s'_1$ & $s'_2$ & $s'_3$ & $ s'_4$ & $\hat{s}'_4$ & $--$  & $W_j$      \\
+        j + 3 & $w$  & $s_0$  & $s_1$ & $s_2$ & $s_3$ & $ s_4$ & $$ & $$  & $$      \\
+        j + 4 & $s_0$  & $s_1$  & $s_2$ & $s_3$  & $s_4$ & $s'_2$ & $s'_3$ & $ s'_4$ & $\hat{s}'_4$      \\
+        j + 5 & $s'_0$  & $b'_0$  & $b'_1$ & $b'_2$ & $b'_3$ & $ b'_4$ & $b'_5$ & $s'_1$  & $-$  \\
+        j + 6 & $b$  & $b_0$  & $b_1$ & $b_2$ & $b_3$ & $ b_4$ & $b_5$ & $\hat{b}_0$  & $\hat{b}_5$ \\
     \end{tabular}
 \end{center}
-Sparse map gate constraints:
-\begin{center}
-    $w_{o,j+1} = w_{1,j} + w_{2,j} \cdot 2^8 + w_{3,j} \cdot 2^{8 \cdot 2} + w_{4,j} \cdot 2^{8 \cdot 3}
-    + w_{o,j} \cdot 2^{8 \cdot 4} + w_{1,j+2} \cdot 2^{8 \cdot 5} + w_{2,j+2} \cdot 2^{8 \cdot 6} + w_{3,j+2} \cdot 2^{8 \cdot 7}$ \\
-    $w_{o,j+2} =  w_{2,j+1} \cdot 4^{8-1} + w_{3,j+1} \cdot 4^{8 \cdot 2-1} + w_{4,j+1} \cdot 4^{8 \cdot 3 - 1}
-    + w_{4,j+2} \cdot 4^{8 \cdot 4 - 1} + w_{1,j+3} \cdot 4^{8 \cdot 5 - 1} + w_{2,j+3} \cdot 4^{8 \cdot 6 - 1}
-    + w_{3,j+3} \cdot 4^{8 \cdot 7 - 1} + w_{1,j+1} \cdot 4^{8 \cdot 7} + w_{2,j+1} + w_{3,j+1} \cdot 4^{8}
-    + w_{4,j+1} \cdot 4^{8 \cdot 2} +w_{4,j+2} \cdot 4^{8 \cdot 3} + w_{1,j+3} \cdot 4^{8 \cdot 4}
-    + w_{2,j+3} \cdot 4^{8 \cdot 5} + w_{3,j+3} \cdot 4^{8 \cdot 6} + w_{2,j+1} \cdot 4^{8-7}
-    + w_{3,j+1} \cdot 4^{8 \cdot 2-7} + w_{4,j+1} \cdot 4^{8 \cdot 3 - 7} + w_{4,j+2} \cdot 4^{8 \cdot 4 - 7}
-    + w_{1,j+3} \cdot 4^{8*5 - 7} + w_{2,j+3} \cdot 4^{8 \cdot 6 - 7} + w_{3,j+3} \cdot 4^{8 \cdot 7 - 7}
-    + w_{4, j+3} + w_{o, j+3}$ \\
-    10 plookup constraints \\
-\end{center}
 
-\paragraph{The function $\sigma_1$} contain sparse mapping subcircuit with base $4$.
-Let $a$ be divided to 8 bits-chunks $a_0, a_1, a_2, ..., a_7$.
-The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
-We need the following lookup tables:
+The first $16$ words require a range check. 
+We get it fo free from range-constraining chunks inside functions $\sigma_0$ and $\sigma_1$.
+Thus, for $i$ from $16$ to $80$:
 \begin{enumerate}
-    \item \textbf{SHA-256 NORMALIZE4}: Read $a_i$ to $a'_i$
-    \item \textbf{SHA-512 8ROT3 64}: Read $a'_2$ to $r_1$
-    \item \textbf{SHA-512 8ROT5 SHR6 64}: Read $a'_7 + a'_0$ to $r_2$
+\item Apply $\sigma_0$ to $W_{i-15}$.
+\item Add the following constraint for $W_i$:
+\begin{center}
+	$w_{1, j + 3} = w_{1, j + 2} + w_{9, j + 2} + w_{2, j + 3} + w_{3, j + 3} \cdot 2^{14} + w_{4, j + 3} \cdot 2^{28} + w_{5, j + 3} \cdot 2^{42} + w_{6, j + 3} \cdot 2^{56} + w_{1, j + 4} + w_{2, j + 4} \cdot 2^{14} + w_{3, j + 4} \cdot 2^{28} + w_{4, j + 4} \cdot 2^{42} + w_{5, j + 4} \cdot 2^{56}$,
+\end{center}
+\item Apply $\sigma_1$ to $W_{i-2}$.
 \end{enumerate}
+Thus, the message schedule takes $7 \cdot 64 = 448$ rows.
+
+\paragraph{The function $\sigma_0$} contains sparse mapping with base $4$.
+Let $a$ be divided to chunks $a_0, a_1, a_2, a_3, a_4, a_5, a_6$ which equals to $1, 6, 1, 14, 14, 14, 14$ bits respectively.
+The values $a'_0, a'_1, a'_2, a'_3, a'_4, a'_5, a'_6$ are in sparse form, and $a'$ is a sparse $a$.
+\textbf{SHA-256 NORMALIZE4} lookup table is used for mapping to sparse representation and range-constraining for each chunk $a_i$, where bit-length of $a_i > 3$.
+If a chunk is $14$ bits long, then it is constrained for free.
+Else the prover has to calculate the sparse representation $\hat{a}_i$ for $2^j \cdot a_i$, where $j + \texttt{len}(a_i) = 14$ and $\texttt{len}(a_i)$ is bit-length of $a_i$.
+
+Constraints:
 \begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$  & $w_2$   & $w_3$  & $w_4$  & $w_o$      \\
+    $w_{1, j + 0} = w_{2, j + 0} + w_{3,j + 0} \cdot 2 + w_{4,j + 0} \cdot 2^{7} + w_{5, j + 0} \cdot 2^{8} + w_{6, j + 0} \cdot 2^{22} + w_{7,  j + 0}\cdot 2^{36} + w_{8, j + 0} \cdot 2^{50}$ \\
+    $(w_{2, j + 0} - 1) \cdot w_{2, j + 0} = 0$ \\
+    $(w_{4, j + 0} - 1) \cdot w_{4, j + 0} = 0$ \\
+    $w_{2, j + 2} + w_{3, j + 2} \cdot 4^{14} + w_{4, j + 2} \cdot 4^{28} + w_{5, j + 2} \cdot 2^{42} + w_{6, j + 2} \cdot 4^{56} = w_{3, j + 1} + w_{4, j + 1} \cdot 4^6 + w_{5, j + 1} \cdot 4^{7} + w_{6, j + 1} \cdot 2^{21} + w_{7, j + 1} \cdot 4^{35} + w_{8, j + 1} \cdot 4^{49} + w_{2, j + 1} \cdot 4^{63} + 
+     w_{4, j + 1} + w_{5, j + 1} \cdot 4 + w_{6, j + 1} \cdot 4^{15} + w_{7, j + 1} \cdot 2^{29} + w_{8, j + 1} \cdot 4^{43} + 
+     w_{5, j + 1} + w_{6, j + 1} \cdot 4^{14} + w_{7, j + 1} \cdot 4^{28} + w_{8, j + 1} \cdot 2^{42} + w_{2, j + 1} \cdot 4^{56} + w_{3, j + 1} \cdot 4^{57} + w_{4, j + 1} \cdot 4^{63}$ \\
+    15 plookup constraints: $(w_{2, j + 0}, w_{2, j + 1}), ( 2^{8} \cdot w_{3, j + 0}, w_{9, j + 0}), (w_{3, j + 0}, w_{3, j + 1}), (w_{4, j + 0}, w_{4, j + 1}), (w_{5, j + 0}, w_{5, j + 1}), (w_{6, j + 0}, w_{6, j + 1}),  (w_{7, j + 0}, w_{7, j + 1}),  (w_{8, j + 0}, w_{8, j + 1}), (w_{2, j + 3}, w_{2, j + 2}), (w_{3, j + 3}, w_{3, j + 2}), (w_{4, j + 3}, w_{4, j + 2}), (w_{5, j + 3}, w_{5, j + 2}), (w_{6, j + 3}, w_{6, j + 2}), (2^6 \cdot w_{6, j + 3}, w_{7, j + 2})$
+\end{center}
+
+\paragraph{The function $\sigma_1$} contains sparse mapping subcircuit with base $4$.
+Let $a$ be divided to chunks $a_0, a_1, a_2, a_3, a_4, a_5$ which equals to $6, 13, 14, 14, 14, 3$ bits respectively.
+The values $a'_0, a'_1, a'_2, a'_3, a'_4, a'_5$ are in sparse form, and $a'$ is a sparse $a$.
+\textbf{SHA-256 NORMALIZE4} lookup table is used for mapping to sparse representation and range-constraining in the same way as for $\sigma_0$.
+
+Constraints:
+\begin{center}
+    $w_{1, j + 6} = w_{2, j + 6} + w_{3, j + 6} \cdot 2^{6} + w_{4, j + 6} \cdot 2^{19} + w_{5, j + 6} \cdot 2^{33} + w_{6, j + 6} \cdot 2^{47} + w_{7,  j + 6}\cdot 2^{61}$ \\
+    $(w_{7, j + 6} - 7) \cdot (w_{7, j + 6} - 6) \cdot ... \cdot w_{7, j + 6} = 0$ \\
+    $w_{1, j + 5} + w_{8, j + 5} \cdot 4^{14} + w_{6, j + 4} \cdot 4^{28} + w_{7, j + 4} \cdot 2^{42} + w_{8, j + 4} \cdot 4^{56} = w_{3, j + 5} + w_{4, j + 5} \cdot 4^{13} + w_{5, j + 5} \cdot 4^{27} + w_{6, j + 5} \cdot 2^{41} + w_{7, j + 5} \cdot 4^{55} +
+     w_{4, j + 5} + w_{5, j + 5} \cdot 4^{14} + w_{6, j + 5} \cdot 4^{28} + w_{7, j + 5} \cdot 2^{42} + w_{2, j + 5} \cdot 4^{45} + w_{3, j + 5} \cdot 4^{51} + 
+     w_{7, j + 5} + w_{2, j + 5} \cdot 4^{3} + w_{3, j + 5} \cdot 4^{9} + w_{4, j + 5} \cdot 2^{22} + w_{5, j + 5} \cdot 4^{36} + w_{6, j + 5} \cdot 4^{50}$ \\
+    15 plookup constraints: $(w_{2, j + 6}, w_{2, j + 5}), ( 2^{8} \cdot w_{2, j + 6}, w_{8, j + 6}), (w_{3, j + 6}, w_{3, j + 5}), (w_{4, j + 6}, w_{4, j + 5}), (w_{5, j + 6}, w_{5, j + 5}), (w_{6, j + 6}, w_{6, j + 5}),  (w_{7, j + 6}, w_{7, j + 5}),  (2 \cdot w_{7, j + 6}, w_{9, j + 6}), (w_{1, j + 4}, w_{1, j + 5}), (w_{2, j + 4}, w_{8, j + 5}), (w_{3, j + 4}, w_{6, j + 4}), (w_{4, j + 4}, w_{7, j + 4}), (w_{5, j + 4}, w_{8, j + 4}), (2^6 \cdot w_{5, j + 4}, w_{9, j + 4})$
+\end{center}
+
+\paragraph{Compression}
+There are $80$ rounds of compression. 
+Each round of compression has the following table:
+\begin{center}
+    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
+        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$  & $w_6$ & $w_7$ & $w_8$ & $w_9$  \\
         \hline
-        j + 0 & $a_0$  & $ a_1$  & $a_2$  & $a_3$  & $a_4$      \\
-        j + 1 & $a'_0$ & $a'_1$  & $a'_2$ & $a'_3$ & a          \\
-        j + 2 & $a_5 $ & $a_6$   & $a_7$  & $a_4'$ & $\sigma_1$ \\
-        j + 3 & $a'_5$ & $ a'_6$ & $a'_7$ & $r_1$  & $r_2$      \\
+        j + 0 & $e$ & $e_0$ & $e_1$ & $e_2 $  & $e_3$  & $e_4$ & $e_5$ & $\hat{e}_1$  & $\hat{e}_3$   \\
+        j + 1 & $--$ & $e'_0$ & $e'_1$ & $e'_2 $  & $e'_3$  & $e'_4$ & $e'_5$ & $\hat{e}_5$  & $--$   \\
+        j + 2 & $e'$  & $f'$ & $--$ & $\hat{s}'_4$ & $s'_0$ & $s'_1$ & $s'_2$ & $s'_3$ & $s'_4$ \\
+        j + 3 & $ch_{0, sparse}$  & $ch_{1, sparse}$ & $ch_{2, sparse}$ & $ch_{3, sparse}$ & $s_0$ & $s_1$ & $s_2$ & $s_3$ & $s_4$ \\
+        j + 4 & $g'$ & $--$ & $--$ & $--$ & $e_{new}$ & $ch_0$ & $ch_1$ & $ch_2$ & $ch_3$\\
+        j + 5 & $c'$  & $d$ & $h$  & $W_r$  & $a_{new}$ & $maj_3$ & $maj_0$ & $maj_1$ & $maj_2$ \\
+        j + 6 & $maj_{0,sparse}$  & $maj_{1,sparse}$ & $maj_{2,sparse}$  & $maj_{3,sparse}$  & $s_0$ & $s_1$ & $s_2$ & $s_3$ & $s_4$\\
+        j + 7 & $a'$  & $b'$ & $--$ & $\hat{s}'_4$ & $s'_0$  & $s'_1$  & $s'_2$ & $s'_3$ & $s'_4$\\
+        j + 8 & $$ & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & $a'_4$ & $a'_5$  & $ \hat{a}_5$ & $--$ \\
+        j + 9 & $a$ & $a_0$ & $a_1$ & $a_2$ & $a_3$ & $a_4$ & $a_5$  & $ \hat{a}_2$ & $\hat{a}_3$ \\
     \end{tabular}
 \end{center}
-Sparse map gate constraints:
-\begin{center}
-    $w_{o,j+1} = w_{1,j} + w_{2,j} \cdot 2^8 + w_{3,j} \cdot 2^{8 \cdot 2} + w_{4,j} \cdot 2^{8 \cdot 3}
-    + w_{o,j} \cdot 2^{8 \cdot 4} + w_{1,j+2} \cdot 2^{8 \cdot 5} + w_{2,j+2} \cdot 2^{8 \cdot 6} + w_{3,j+2} \cdot 2^{8 \cdot 7}$ \\
-    $w_{o,j+2} =  w_{1,j+1} \cdot 4^{64 -19} + w_{2,j+1} \cdot 4^{64 + (8-19)}
-    + w_{4,j+1} \cdot 4^{8 \cdot 3 - 19} + w_{4,j+2} \cdot 4^{8 \cdot 4 - 19}
-    + w_{1,j+3} \cdot 4^{8 \cdot 5 - 19} + w_{2,j+3} \cdot 4^{8 \cdot 6 - 19}
-    + w_{3,j+3} \cdot 4^{8 \cdot 7 -19} + w_{1,j+1} \cdot 4^{64  - 61)} + w_{2,j+1} \cdot 4^{64 + (8 - 61)}
-    + w_{3,j+1} \cdot 4^{64 + (8 \cdot 2 - 61)} + w_{4,j+1} \cdot 4^{64 + (8 \cdot 3- 61)}
-    + w_{4,j+2} \cdot 4^{64 + (8 \cdot 4 - 61)} + w_{1,j+3} \cdot 4^{64 + (8 \cdot 5 - 61)}
-    + w_{2,j+3} \cdot 4^{64 +(8 \cdot 6- 61)} + w_{2,j+1} \cdot 4^{8-6} + w_{3,j+1} \cdot 4^{8 \cdot 2-6}
-    + w_{4,j+1} \cdot 4^{8 \cdot 3 - 6} + w_{4,j+2} \cdot 4^{8 \cdot 4 - 6} + w_{1,j+3} \cdot 4^{8 \cdot 5 - 6}
-    + w_{2,j+3} \cdot 4^{8 \cdot 6 - 6} + w_{3,j+3} \cdot 4^{8 \cdot 7 - 6} + w_{4, j+3} + w_{o, j+3}$ \\
-    10 plookup constraints \\
-\end{center}
 
-The sparse values $\sigma_0$ and $\sigma_1$ have to be normalized.
-The final addition requires one add gate.
-Note, that $a'$ already initialized in the row $j - 2$.
-We use \textbf{SHA256 NORMALIZE4}
+\paragraph{The working variables}
+$ a,  b , c , d, e, f, g, h$ equals to the fixed initial $SHA-512$ values for the first chunk and to the sum of previous output and initial values for the rest of chunks. 
+The variables with quotes are corresponded sparse representation.
+For each chunk, the following rows are used:
 \begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_o$      \\
+    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
+        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$  & $w_6$ & $w_7$ & $w_8$ & $w_9$  \\
         \hline
-        j + 0 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & $acc$      \\
-        j + 1 & $a_0$  & $ a_1$ & $a_2$  & $a_3$  & 0          \\
-        j + 2 & $a'_4$ & $a'_5$ & $a'_6$ & $a'_7$ & $\sigma_i$ \\
-        j + 3 & $a_4$  & $ a_5$ & $a_6$  & $a_7$  &            \\
+        j + 0 & $a$ & $a'$ & $b$ & $b' $  & $d$  & $-$   & $-$ & $-$  & $-$   \\
+        j + 1 & $c$  & $c'$ & $e$ & $e'$ & $h$ & $-$ & $-$ & $-$ & $-$ \\
+        j + 2 & $f$ & $f'$ & $g$ & $g'$ & $-$ & $-$ & $-$ & $-$ & $-$\\
     \end{tabular}
 \end{center}
+For the first round, $a, a', b', c' , d, e, e', f', g', h$ are copy constrained with corresponded values from the table above.
 
-Normalize gate constraints:
-\begin{center}
-    $w_{o,j+2} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1}
-    + w_{1,j+3} \cdot 256^4$ \\
-    $+ w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7$ \\
-    $w_{o,j} = w_{o, j - 2} - (w_{4,j} \cdot 256^3 + w_{3,j} \cdot 256^2 + w_{2,j} \cdot 256 + w_{1,j})$ \\
-    $w_{o,j+1} = w_{o,j} - ( w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7)$
+For the second round, $b', c' , d, f', g', h$ are copy constrained with $a', b', c, e', f', g$ from the table.
+The values $a, e$ are copy constrained with $a_{new}, e_{new}$ from the previous round.
 
-    8 plookup constraints \\
-\end{center}
+For the third round, $c' , d, g', h$ are copy constrained with $a', b, e', f$.
+The values $a, e$ are copy constrained with $a_{new}, e_{new}$ from the previous round.
+The values $b', f'$ are copy constrained with $a', e'$ from the previous round.
+
+In the rest of the rounds the following `non-special` copy constraints are used:
+\begin{enumerate}
+\item The values $a, e$ are copy constrained with $a_{new}, e_{new}$ from the previous round.
+\item The values $b', f'$ are copy constrained with $a', e'$ from the previous round.
+\item The values $c', g'$ are copy constrained with $b', c'$ from the previous round.
+\item The values $d, h$ are copy constrained with $a', e'$ from the round $r - 3$, where $r$ is current round.
+\end{enumerate}
 
 \paragraph{The $\Sigma_0$ function}
-contain sparse mapping subcircuit with base $4$.
-Let $a$ be divided to 7-bits chunks $a_0, a_1, a_2,a_3$ and 9 bits-chunks $ a_4, a_5, a_6, a_7$.
-The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
-We need the following lookup tables:
-\begin{enumerate}
-    \item \textbf{SHA-512 9NORMALIZE4}: Read $a_i$ to $a'_i$
-    \item \textbf{SHA-512 7NORMALIZE4}: Read $a_i$ to $a'_i$
-    \item \textbf{SHA-512 9ROT6 64}: Read $a'_4$ to $r_2$
-    \item \textbf{SHA-512 9ROT2 64}: Read $a'_5$ to $r_3$
-\end{enumerate}
-\begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$  & $w_2$   & $w_3$  & $w_4$  & $w_o$      \\
-        \hline
-        j + 0 & $a_0$  & $ a_1$  & $a_2$  & $a_3$  & $a_4$      \\
-        j + 1 & $a'_0$ & $a'_1$  & $a'_2$ & $a'_3$ & a          \\
-        j + 2 & $a_5 $ & $a_6$   & $a_7$  & $a_4'$ & $\Sigma_0$ \\
-        j + 3 & $a'_5$ & $ a'_6$ & $a'_7$ & $r_1$  & $r_2$      \\
-    \end{tabular}
-\end{center}
+contains subcircuit with base $4$.
+Let $a$ be divided to chunks $a_0, a_1, a_2, a_3, a_4, a_5$ which equals to $14, 14, 6, 5, 14, 11$ bits respectively.
+The values $a'_0, a'_1, a'_2, a'_3, a'_4, a'_5$ are in sparse form, and $a'$ is a sparse $a$.
+\textbf{SHA-256 NORMALIZE4} lookup table is used for mapping to sparse representation and range-constraining in the same way as for $\sigma_0$.
 
-Sparse map gate constraints:
+Constraints:
 \begin{center}
-    $w_{o,j+1} = w_{1,j} + w_{2,j} \cdot 2^7 + w_{3,j} \cdot 2^{7 \cdot 2} + w_{4,j} \cdot 2^{7 \cdot 3}
-    + w_{o,j} \cdot 2^{7 \cdot 4} + w_{1,j+2} \cdot 2^{7 \cdot 4 + 9}
-    + w_{2,j+2} \cdot 2^{7 \cdot 4 + 9 \cdot 2} + w_{3,j+2} \cdot 2^{7 \cdot 4 + 9 \cdot 3}$ \\
-    $w_{o,j+2} =  w_{4,j+2} + w_{1,j+3} \cdot 4^9 + w_{2,j+3} \cdot 4^{9 \cdot 2}
-    + w_{3,j+3} \cdot 4^{9 \cdot 3} + w_{1,j+1} \cdot 4^{9 \cdot 4} + w_{2,j+1} \cdot 4^{9 \cdot 4 +7}$ \\
-    $+ w_{3,j+1} \cdot 4^{9 \cdot 4 +7 \cdot 2} + w_{4,j+1} \cdot 4^{9 \cdot 4 +7 \cdot 3}
-    + w_{1,j+1} \cdot 4^{64  - 34)} + w_{2,j+1} \cdot 4^{64 + (7 - 34)}
-    + w_{3,j+1} \cdot 4^{64 + (7 \cdot 2 - 34)} + w_{4,j+1} \cdot 4^{64 + (7 \cdot 3- 34)}
-    + w_{1,j+3} \cdot 4^{7 \cdot 4 + 9 - 34} + w_{2,j+3} \cdot 4^{7 \cdot 4 + 9  \cdot 2  -34}
-    + w_{3,j+3} \cdot 4^{7 \cdot 4 + 9 \cdot 3 - 34} + w_{1,j+1} \cdot 4^{64  - 39)}
-    + w_{2,j+1} \cdot 4^{64 + (7 - 39)} + w_{3,j+1} \cdot 4^{64 + (7 \cdot 2 - 39)}
-    + w_{4,j+1} \cdot 4^{64 + (7 \cdot 3- 39)} +w_{4,j+2} \cdot 4^{64 + (7 \cdot 4 - 39)}
-    + w_{2,j+3} \cdot 4^{7 \cdot 4 + 9 \cdot 2 - 39}
-    + w_{3,j+3} \cdot 4^{7 \cdot 4 + 9 \cdot 3- 39} + w_{4, j+3} + w_{o, j+3}$ \\
-    10 plookup constraints \\
+    $w_{1, j + 9} = w_{2, j + 9} + w_{3, j + 9} \cdot 2^{14} + w_{4, j + 9} \cdot 2^{28} + w_{5, j + 9} \cdot 2^{34} + w_{6, j + 9} \cdot 2^{39} + w_{7,  j + 9}\cdot 2^{53}$ \\
+    $w_{5, j + 7} + w_{6, j + 7} \cdot 4^{14} + w_{7, j + 7} \cdot 4^{28} + w_{8, j + 7} \cdot 2^{42} + w_{9, j + 7} \cdot 4^{56} = w_{4, j + 8} + w_{5, j + 8} \cdot 4^6 + w_{6, j + 8} \cdot 4^{11} + w_{7, j + 8} \cdot 2^{25} + w_{2, j + 8} \cdot 4^{36} + w_{3, j + 8} \cdot 4^{50} + 
+     w_{5, j + 8} + w_{6, j + 8} \cdot 4^{5} + w_{7, j + 8} \cdot 4^{19} + w_{2, j + 8} \cdot 2^{30} + w_{3, j + 8} \cdot 4^{44} + w_{4, j + 8} \cdot 4^{58} +
+     w_{6, j + 8} + w_{7, j + 8} \cdot 4^{14} + w_{2, j + 8} \cdot 4^{25} + w_{3, j + 8} \cdot 2^{39} + w_{4, j + 8} \cdot 4^{53} + w_{5, j + 8} \cdot 4^{59}$ \\
+    15 plookup constraints: $(w_{2, j + 9}, w_{2, j + 8}), (w_{3, j + 9}, w_{3, j + 8}), ( 2^{8} \cdot w_{4, j + 9}, w_{8, j + 9}), (w_{4, j + 9}, w_{4, j + 8}), (2^9 \cdot w_{5, j + 9}, w_{9, j + 9}), (w_{5, j + 9}, w_{5, j + 8}), (w_{6, j + 9}, w_{6, j + 8}), (2^3 \cdot w_{7, j + 9}, w_{8, j + 8}), (w_{7, j + 9}, w_{7, j + 8}), (w_{5, j + 6}, w_{5, j + 7}), (w_{6, j + 6}, w_{6, j + 7}), (w_{7, j + 6}, w_{7, j + 7}), (w_{8, j + 6}, w_{8, j + 7}), (w_{9, j + 6}, w_{9, j + 7}), (2^6 \cdot w_{9, j + 7}, w_{4, j + 7})$
 \end{center}
-
 \paragraph{The $\Sigma_1$ function}
-contain sparse mapping subcircuit with base $7$.
-Let $a$ be divided to 7-bits chunks $a_0, a_1, a_2,a_3$ and 9 bits-chunks $ a_4, a_5, a_6, a_7$.
-The values $a'_0, a'_1, a'_2,...,  a'_7$ are in sparse form, and $a'$ is a sparse $a$.
-We need the following lookup tables:
-\begin{enumerate}
-    \item \textbf{SHA-512 9NORMALIZE7}: Read $a_i$ to $a'_i$
-    \item \textbf{SHA-512 7NORMALIZE7}: Read $a_i$ to $a'_i$
-    \item \textbf{SHA-512 7ROT4 32}: Read $a'_2$ to $r_2$
-    \item \textbf{SHA-512 9ROT4 32}: Read $a'_5$ to $r_3$
-\end{enumerate}
-\begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$  & $w_2$   & $w_3$  & $w_4$  & $w_o$      \\
-        \hline
-        j + 0 & $a_0$  & $ a_1$  & $a_2$  & $a_3$  & $a_4$      \\
-        j + 1 & $a'_0$ & $a'_1$  & $a'_2$ & $a'_3$ & a          \\
-        j + 2 & $a_5 $ & $a_6$   & $a_7$  & $a_4'$ & $\Sigma_1$ \\
-        j + 3 & $a'_5$ & $ a'_6$ & $a'_7$ & $r_1$  & $r_2$      \\
-    \end{tabular}
-\end{center}
+contains subcircuit with base $7$.
+Let $a$ be divided to chunks $a_0, a_1, a_2, a_3, a_4, a_5$ which equals to $14, 4, 14, 9, 14, 9$ bits respectively.
+The values $a'_0, a'_1, a'_2, a'_3, a'_4, a'_5$ are in sparse form, and $a'$ is a sparse $a$.
+\textbf{SHA-256 NORMALIZE7} lookup table is used for mapping to sparse representation and range-constraining in the same way as for $\sigma_0$.
 
-Sparse map gate constraints:
+Constraints:
 \begin{center}
-    $w_{o,j+1} = w_{1,j} + w_{2,j} \cdot 2^7 + w_{3,j} \cdot 2^{7 \cdot 2} + w_{4,j} \cdot 2^{7 \cdot 3}
-    + w_{o,j} \cdot 2^{7 \cdot 4} + w_{1,j+2} \cdot 2^{7 \cdot 4 + 9}
-    + w_{2,j+2} \cdot 2^{7 \cdot 4 + 9 \cdot 2} + w_{3,j+2} \cdot 2^{7 \cdot 4 + 9 \cdot 3}$ \\
-    $w_{o,j+2} =  w_{3,j+1} + w_{4,j+1} \cdot 7^7 + w_{4,j+2} \cdot 7^{7 \cdot 2}
-    + w_{1,j+3} \cdot 7^{7 \cdot 2+9} + w_{2,j+3} \cdot 7^{7 \cdot 2+9 \cdot 2}
-    + w_{3,j+3} \cdot 7^{9 \cdot 3 +7 \cdot 2} + w_{1,j+1} \cdot 7^{9 \cdot 4 +7 \cdot 2}
-    + w_{2,j+1} \cdot 7^{9 \cdot 4 +7 \cdot 3} + w_{1,j+1} \cdot 7^{64  - 18)}
-    + w_{2,j+1} \cdot 7^{64 + (7 - 18)} + w_{4,j+1} \cdot 7^{7 \cdot 3 - 18}
-    + w_{4,j+2} \cdot 7^{7 \cdot 4- 18}
-    + w_{1,j+3} \cdot 7^{7 \cdot 4 + 9  - 18}
-    + w_{2,j+3} \cdot 7^{7 \cdot 4 + 9 \cdot 2 - 18}
-    + w_{3,j+3} \cdot 7^{7 \cdot 4 + 9 \cdot 3 - 18} + w_{1,j+1} \cdot 7^{64  - 41)}
-    + w_{2,j+1} \cdot 7^{64 + (7 - 41)} + w_{3,j+1} \cdot 7^{64 + (7 \cdot 2 - 41)}
-    + w_{4,j+1} \cdot 7^{64 + (7 \cdot 3- 41)} +w_{4,j+2} \cdot 7^{64 + (7 \cdot 3 + 9 - 41)}
-    + w_{2,j+3} \cdot 7^{64 + (7 \cdot 3 + 9 \cdot 2 -41)}
-    + w_{3,j+3} \cdot 7^{7 \cdot 3 + 9 \cdot 3- 41} + w_{4, j+3} + w_{o, j+3}$ \\
-    10 plookup constraints \\
-\end{center}
-
-The sparse values $\Sigma_0$ and $\Sigma_1$ have to be normalized.
-We use \textbf{SHA256 NORMALIZE4} and \textbf{SHA256 NORMALIZE7}.
-Note, that $a'$ already initialized in the row $j - 2$.
-\begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_o$      \\
-        \hline
-        j + 0 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & $a''$      \\
-        j + 1 & $a_0$  & $ a_1$ & $a_2$  & $a_3$  & $0$        \\
-        j + 2 & $a'_4$ & $a'_5$ & $a'_6$ & $a'_7$ & $\Sigma_i$ \\
-        j + 3 & $a_4$  & $ a_5$ & $a_6$  & $a_7$  &            \\
-    \end{tabular}
-\end{center}
-
-Normalize gate constraints:
-\begin{center}
-    $w_{o,j+2} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256
-    + w_{1,j+1} + w_{1,j+3} \cdot 256^4$ \\
-    $+ w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7$ \\
-    $w_{o,j} = w_{1,j-3} + w_{2,j-3} \cdot 4^7 + w_{3,j-3} \cdot 4^{7 \cdot 2}
-    + w_{4,j-3} \cdot 4^{7 \cdot 3} + w_{4,j-2} \cdot 4^{7 \cdot 4}
-    + w_{1,j-1} \cdot 7^{7 \cdot 4+9}$ \\
-    $+ w_{2,j-1} \cdot 7^{7 \cdot 4 + 9 \cdot 2}
-    + w_{2,j-1} \cdot 7^{7 \cdot 4 + 9 \cdot 3}$ for maj or ch function. For $\Sigma_1$ replace 4 with 7\\
-    $w_{o,j+1} = w_{o, j - 2} - (w_{4,j} \cdot 256^3 + w_{3,j} \cdot 256^2 + w_{2,j} \cdot 256 + w_{1,j} + w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7)$
-
-    8 plookup constraints \\
+    $w_{1, j + 0} = w_{2, j + 0} + w_{3, j + 0} \cdot 2^{14} + w_{4, j + 0} \cdot 2^{18} + w_{5, j + 0} \cdot 2^{32} + w_{6, j + 0} \cdot 2^{41} + w_{7,  j + 0}\cdot 2^{55}$ \\
+    $w_{5, j + 2} + w_{6, j + 2} \cdot 4^{14} + w_{7, j + 2} \cdot 4^{28} + w_{8, j + 2} \cdot 2^{42} + w_{9, j + 2} \cdot 4^{56} = w_{3, j + 1} + w_{4, j + 1} \cdot 4^4 + w_{5, j + 1} \cdot 4^{18} + w_{6, j + 1} \cdot 2^{27} + w_{7, j + 1} \cdot 4^{41} + w_{2, j + 1} \cdot 4^{50} + 
+     w_{4, j + 1} + w_{5, j + 1} \cdot 4^{14} + w_{6, j + 1} \cdot 4^{23} + w_{7, j + 1} \cdot 2^{37} + w_{2, j + 1} \cdot 4^{46} + w_{4, j + 1} \cdot 4^{60} +
+     w_{6, j + 1} + w_{7, j + 1} \cdot 4^{14} + w_{2, j + 1} \cdot 4^{23} + w_{3, j + 1} \cdot 2^{37} + w_{4, j + 1} \cdot 4^{41} + w_{5, j + 1} \cdot 4^{55}$ \\
+    15 plookup constraints: $(w_{2, j + 0}, w_{2, j + 1}), (w_{3, j + 0}, w_{3, j + 1}), ( 2^{10} \cdot w_{3, j + 0}, w_{8, j + 0}), (w_{4, j + 0}, w_{4, j + 1}), (2^5 \cdot w_{5, j + 0}, w_{9, j + 0}), (w_{5, j + 0}, w_{5, j + 1}), (w_{6, j + 0}, w_{6, j + 1}), (2^3 \cdot w_{7, j + 0}, w_{8, j + 1}), (w_{7, j + 0}, w_{7, j + 1}), (w_{5, j + 3}, w_{5, j + 2}), (w_{6, j + 3}, w_{6, j + 2}), (w_{7, j + 3}, w_{7, j + 2}), (w_{8, j + 3}, w_{8, j + 2}), (w_{9, j + 3}, w_{9, j + 2}), (2^6 \cdot w_{9, j + 3}, w_{4, j + 2})$
 \end{center}
 
 \paragraph{The Maj function}
-contain sparse mapping subcircuit with base $4$ for $a, b ,c$.
-Note, that the sparse chunks of $a$ we already have in $\Sigma_0$ in the circuit.
-The variables $b$ and $c$ were represented in sparse chunks in the previous rounds or it is public inputs.
+contains subcircuit with base $4$ for $a, b ,c$.
+\textbf{SHA-512 NORMALIZE MAJ} lookup table is used for mapping to sparse representation in the same way as for $\sigma_0$.
+The value of the $ maj $ function is stored in chunks of $16$ bits.
+Constraints:
 \begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$ \\
-        \hline
-        j & $a'$  & $b'$  & $c'$  &       & maj   \\
-    \end{tabular}
+    $w_{1, j + 6} + w_{2, j + 6} \cdot 4^{16} + w_{3, j + 6} \cdot 4^{16 \cdot 2} + w_{4, j + 6} \cdot 4^{16 \cdot 3} = w_{1, j + 7} + w_{2, j + 7} + w_{1, j + 5} $ \\
+    4 plookup constraints: $( w_{6, j + 5}, w_{1, j + 6}), ( w_{7, j + 5}, w_{2, j + 6}), (w_{8, j + 5}, w_{3, j + 6}), (w_{9, j + 5}, w_{4, j + 6})$ \\
 \end{center}
-Sparse map gate constraints:
-\begin{center}
-    $w_{o, j} = w_{1,j} + w_{2, j} + w_{3, j}$ \\
-\end{center}
-
-The sparse values $maj$ have to be normalized.
-We use \textbf{SHA256 MAJ NORMALIZE4}
-Note, that the sparse $maj$ already initialized in the row $j - 1$.
-\begin{center}
-    \begin{tabular}{ c|c|c|c|c|c}
-        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_o$ \\
-        \hline
-        j + 0 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & $acc$ \\
-        j + 1 & $a_0$  & $ a_1$ & $a_2$  & $a_3$  & 0     \\
-        j + 2 & $a'_4$ & $a'_5$ & $a'_6$ & $a'_7$ & $maj$ \\
-        j + 3 & $a_4$  & $ a_5$ & $a_6$  & $a_7$  &       \\
-    \end{tabular}
-\end{center}
-
-Normalize gate constraints:
-\begin{center}
-    $w_{o,j+2} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1}
-    + w_{1,j+3} \cdot 256^4$ \\
-    $+ w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7$ \\
-    $w_{o,j} = w_{o, j - 1} - (w_{4,j} \cdot 256^3 + w_{3,j} \cdot 256^2 + w_{2,j} \cdot 256 + w_{1,j})$ \\
-    $w_{o,j+1} = w_{o,j} - ( w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7)$
-
-    8 plookup constraints \\
-\end{center}
-
-
-The final addition requires one add gate.
 
 \paragraph{The Ch function}
 contain sparse mapping subcircuit with base $7$ for $e, f ,g$.
-Note, that $e$ we already have in the sparse from $\Sigma_1$ in the circuit.
-The variables $f$ and $g$ were represented in sparse form in the previous rounds or it is public inputs.
+\textbf{SHA-512 NORMALIZE CH} lookup table is used for mapping to sparse representation in the same way as for $\sigma_0$.
+The value of the $ch$ function is stored in chunks of $16$ bits.
+Constraints:
 \begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$ & $w_2$ & $w_3$ & $w_4$ & $w_o$ \\
-        \hline
-        j + 0 & $e'$  & $f'$  & $g'$  &       & ch    \\
-    \end{tabular}
-\end{center}
-Sparse map gate constraints:
-\begin{center}
-    $w_{o, j} = w_{1,j} + 2 \cdot w_{2, j} + 3 \cdot w_{3, j}$ \\
+    $w_{1, j + 3} + w_{2, j + 3} \cdot 7^{16} + w_{3, j + 3} \cdot 7^{16 \cdot 2} + w_{4, j + 3} \cdot 7^{16 \cdot 3} = w_{1, j + 2} + 2 \cdot w_{2, j + 2} + 3 \cdot w_{1, j + 4}$ \\
+    4 plookup constraints: $( w_{6, j + 4}, w_{1, j + 3}), ( w_{7, j + 4}, w_{2, j + 3}), (w_{8, j + 4}, w_{3, j + 3}), (w_{9, j + 3}, w_{4, j + 2})$ \\
 \end{center}
 
-The sparse values $ch$ have to be normalized.
-Note, that $ch$ already initialized in the row $j - 1$.
-We use \textbf{SHA256 CH NORMALIZE7}
+\paragraph{Update the values $a$ and $e$}
+Constraints:
 \begin{center}
-    \begin{tabular}{ c|c|c|c|c|c }
-        & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_o$ \\
-        \hline
-        j + 0 & $a'_0$ & $a'_1$ & $a'_2$ & $a'_3$ & $acc$ \\
-        j + 1 & $a_0$  & $ a_1$ & $a_2$  & $a_3$  & 0     \\
-        j + 2 & $a'_4$ & $a'_5$ & $a'_6$ & $a'_7$ & $ch$  \\
-        j + 3 & $a_4$  & $ a_5$ & $a_6$  & $a_7$  &       \\
-    \end{tabular}
+    $w_{5, j + 4} = w_{2, j + 5} + w_{3, j + 5} + w_{6, j + 3} \cdot 2^{14} + w_{7, j + 3} \cdot  2^{28} + w_{8, j + 3} \cdot 2^{42} + w_{9, j + 3} \cdot 2^{56} + w_{6, j + 4} + w_{7, j + 4} \cdot 2^{16} + w_{8, j + 4} \cdot 2^{16 \cdot 2} + w_{9, j + 4} \cdot 2^{16 \cdot 3} + k[r] + w_{4, j + 5}$, where $r$ is a number of round. \\
+    $w_{5, j + 5} = w_{5, j + 4} - w_{2, j + 5} + w_{5, j + 6} + w_{6, j + 6} \cdot 2^{14} + w_{7, j + 6} \cdot  2^{28} + w_{8, j + 6} \cdot 2^{42} + w_{9, j + 6} \cdot 2^{56} + w_{6, j + 5} + w_{7, j + 5} \cdot 2^{16} + w_{8, j + 5} \cdot 2^{16 \cdot 2} + w_{9, j + 5} \cdot 2^{16 \cdot 3}$
 \end{center}
 
-Normalize gate constraints:
-\begin{center}
-    $w_{o,j+2} = w_{4,j+1} \cdot 256^3 + w_{3,j+1} \cdot 256^2 + w_{2,j+1} \cdot 256 + w_{1,j+1}
-    + w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5$ \\
-    $+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7$ \\
-    $w_{o,j} = w_{o, j - 1} - (w_{4,j} \cdot 256^3 + w_{3,j} \cdot 256^2 + w_{2,j} \cdot 256 + w_{1,j})$ \\
-    $w_{o,j+1} = w_{o,j} - ( w_{1,j+3} \cdot 256^4 + w_{2,j+3} \cdot 256^5+ w_{3,j+3} \cdot 256^6 + w_{4,j+4} \cdot 256^7)$ \\
-    8 plookup constraints \\
-\end{center}
-
-The final addition requires one add gate.
-
-The updating of variables for new rounds costs 10 add gates.
-
-Producing the final hash value costs two add gates.
+\paragraph{Cost}
+The total value of rows is $64 \cdot 7 + 10 \cdot 80 + 3 = 1248$ per chunk.

@@ -37,9 +37,12 @@
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
+#include <nil/marshalling/algorithms/pack.hpp>
+#include <nil/marshalling/algorithms/unpack.hpp>
 #include <nil/marshalling/status_type.hpp>
 
 using namespace nil::crypto3;
+using namespace nil::marshalling;
 
 struct lockout {
     std::uint64_t slot;
