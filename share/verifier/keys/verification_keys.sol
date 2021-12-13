@@ -31,9 +31,9 @@ library verification_keys {
      * @param _keyId - verification key identifier used to select the appropriate proof's key
      * @return Verification key
      */
-    function getKeyById(uint256 _keyId) external pure returns (Types.VerificationKey memory) {
+    function getKeyById(uint256 _keyId) external pure returns (types.verification_key memory) {
         // added in order: qL, qR, qO, qC, qM. x coord first, followed by y coord
-        Types.VerificationKey memory vk;
+        types.verification_key memory vk;
 
         if (_keyId == 0) {
             vk = EscapeHatchVk.get_verification_key();
