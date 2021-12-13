@@ -21,7 +21,7 @@ To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a genera
         \end{center}
 	It costs $3$ rows.
     \item $k ==$ SHA-512$(data||R||A||M)$ // See section \ref{sha512}
-    It costs $?$ rows.
+    It costs $1248 \cdot 2 = 2496$ rows.
     \item $sB ?=? R + kA$:
         \begin{enumerate}
             \item Fixed-base scalar multiplication circuit is used for $sB = S$. The cell $w_{1, j + 84}$ is copy-constrained with $w_{1, j + 0}$ from the range circuit.
@@ -35,7 +35,7 @@ To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a genera
             \item Variable-base scalar multiplication circuit for $T = k \cdot A$, where cells $w_{2, j + 254}, w_{3, j + 254}$ are copy constrained with $w_{4, j + 84}, w _{5, j + 84}$ from the fixed-base scalar multiplication circuit.
         \end{enumerate}
 \end{enumerate}
-It costs $..$.
+It costs $3 + 2496 + 85 + 255 = 2839$ rows.
 \subsection{Elliptic Curves Arithmetics}
 \label{ellcurve}
 \textbf{WIP}
