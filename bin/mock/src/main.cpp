@@ -37,11 +37,10 @@
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
-#include <nil/crypto3/marshalling/multiprecision/types/integral.hpp>
-
-#include <nil/marshalling/algorithms/pack.hpp>
 #include <nil/marshalling/algorithms/unpack.hpp>
 #include <nil/marshalling/status_type.hpp>
+
+#include <nil/crypto3/marshalling/multiprecision/types/integral.hpp>
 
 using namespace nil::crypto3;
 using namespace nil::marshalling;
@@ -163,13 +162,13 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < distrib(gen); i++) {
         state.repl_data.emplace_back({.block_number = static_cast<size_t>(distrib(gen)),
-                                      .previous_bank_hash = pack<endian::little_endian>(hash_gen(), s),
-                                      .merkle_hash = pack<endian::little_endian>(hash_gen(), s),
-                                      .bank_hash = pack<endian::little_endian>(hash_gen(), s)});
+                                      .previous_bank_hash = unpack<endian::little_endian>(hash_gen(), s),
+                                      .merkle_hash = unpack<endian::little_endian>(hash_gen(), s),
+                                      .bank_hash = unpack<endian::little_endian>(hash_gen(), s)});
     }
 
     for (int i = 0; i < distrib(gen); i++) {
-        state.signatures.emplace_back(pack<endian::little_endian>(sig_gen(), s));
+        state.signatures.emplace_back(unpack<endian::little_endian>(sig_gen(), s));
     }
 
     if (s == status_type::success) {
