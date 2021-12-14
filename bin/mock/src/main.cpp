@@ -161,14 +161,15 @@ int main(int argc, char *argv[]) {
                                               .new_confirmed = distrib(gen) + state.confirmed};
 
     for (int i = 0; i < distrib(gen); i++) {
-        state.repl_data.emplace_back({.block_number = static_cast<size_t>(distrib(gen)),
-                                      .previous_bank_hash = unpack<endian::little_endian>(hash_gen(), s),
-                                      .merkle_hash = unpack<endian::little_endian>(hash_gen(), s),
-                                      .bank_hash = unpack<endian::little_endian>(hash_gen(), s)});
+        state.repl_data.emplace_back(
+            {.block_number = static_cast<size_t>(distrib(gen)),
+             .previous_bank_hash = unpack<nil::marshalling::option::little_endian>(hash_gen(), s),
+             .merkle_hash = unpack<nil::marshalling::option::little_endian>(hash_gen(), s),
+             .bank_hash = unpack<nil::marshalling::option::little_endian>(hash_gen(), s)});
     }
 
     for (int i = 0; i < distrib(gen); i++) {
-        state.signatures.emplace_back(unpack<endian::little_endian>(sig_gen(), s));
+        state.signatures.emplace_back(unpack<nil::marshalling::option::little_endian>(sig_gen(), s));
     }
 
     if (s == status_type::success) {
