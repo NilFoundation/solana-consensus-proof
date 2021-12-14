@@ -37,6 +37,8 @@
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
+#include <nil/crypto3/marshalling/multiprecision/types/integral.hpp>
+
 #include <nil/marshalling/algorithms/pack.hpp>
 #include <nil/marshalling/algorithms/unpack.hpp>
 #include <nil/marshalling/status_type.hpp>
@@ -154,40 +156,30 @@ int main(int argc, char *argv[]) {
     random_hash_generator_type hash_gen;
     random_signature_generator_type sig_gen;
 
+    status_type s;
+
     state_type<hash_type, scheme_type> state {.confirmed = static_cast<size_t>(distrib(gen)),
                                               .new_confirmed = distrib(gen) + state.confirmed};
 
     for (int i = 0; i < distrib(gen); i++) {
-        block_data<hash_type> r {.block_number = static_cast<size_t>(distrib(gen))};
-        std::vector<typename hash_type::digest_type::value_type> tmp;
-
-        multiprecision::export_bits(hash_gen(), std::back_inserter(tmp), std::numeric_limits<std::uint8_t>::digits);
-        std::copy(tmp.begin(), tmp.end(), r.previous_bank_hash.end());
-        tmp.clear();
-
-        multiprecision::export_bits(hash_gen(), std::back_inserter(tmp), std::numeric_limits<std::uint8_t>::digits);
-        std::copy(tmp.begin(), tmp.end(), r.merkle_hash.end());
-        tmp.clear();
-
-        multiprecision::export_bits(hash_gen(), std::back_inserter(tmp), std::numeric_limits<std::uint8_t>::digits);
-        std::copy(tmp.begin(), tmp.end(), r.bank_hash.end());
-        tmp.clear();
+        state.repl_data.emplace_back({.block_number = static_cast<size_t>(distrib(gen)),
+                                      .previous_bank_hash = pack<endian::little_endian>(hash_gen(), s),
+                                      .merkle_hash = pack<endian::little_endian>(hash_gen(), s),
+                                      .bank_hash = pack<endian::little_endian>(hash_gen(), s)});
     }
 
     for (int i = 0; i < distrib(gen); i++) {
-        signature_type sig;
-        std::vector<typename hash_type::digest_type::value_type> tmp;
-        multiprecision::export_bits(sig_gen(), std::back_inserter(tmp), std::numeric_limits<std::uint8_t>::digits);
-        std::copy(tmp.begin(), tmp.end(), sig.end());
-        state.signatures.push_back(sig);
+        state.signatures.emplace_back(pack<endian::little_endian>(sig_gen(), s));
     }
 
-    boost::json::value jv = {{"confirmed", state.confirmed},
-                             {"new_confirmed", state.new_confirmed},
-                             {"repl_data", state.repl_data},
-                             {"signatures", state.signatures}};
+    if (s == status_type::success) {
+        boost::json::value jv = {{"confirmed", state.confirmed},
+                                 {"new_confirmed", state.new_confirmed},
+                                 {"repl_data", state.repl_data},
+                                 {"signatures", state.signatures}};
 
-    std::cout << boost::json::serialize(jv) << std::endl;
+        std::cout << boost::json::serialize(jv) << std::endl;
+    }
 
     return 0;
 }
