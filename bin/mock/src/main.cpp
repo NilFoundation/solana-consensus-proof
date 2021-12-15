@@ -95,6 +95,7 @@ struct vote_state {
 
 template<typename Hash>
 struct block_data {
+    typedef Hash hash_type;
     typedef typename Hash::digest_type digest_type;
 
     std::size_t block_number;
