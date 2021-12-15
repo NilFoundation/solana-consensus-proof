@@ -161,11 +161,11 @@ int main(int argc, char *argv[]) {
                                               .new_confirmed = distrib(gen) + state.confirmed};
 
     for (int i = 0; i < distrib(gen); i++) {
-        state.repl_data.emplace_back(
+        state.repl_data.push_back(
             {.block_number = static_cast<size_t>(distrib(gen)),
-             .previous_bank_hash = unpack<nil::marshalling::option::little_endian>(hash_gen(), s),
+             .bank_hash = unpack<nil::marshalling::option::little_endian>(hash_gen(), s),
              .merkle_hash = unpack<nil::marshalling::option::little_endian>(hash_gen(), s),
-             .bank_hash = unpack<nil::marshalling::option::little_endian>(hash_gen(), s)});
+             .previous_bank_hash = unpack<nil::marshalling::option::little_endian>(hash_gen(), s)});
     }
 
     for (int i = 0; i < distrib(gen); i++) {
