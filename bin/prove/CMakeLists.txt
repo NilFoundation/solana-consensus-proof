@@ -38,6 +38,7 @@ target_link_libraries(${CURRENT_PROJECT_NAME}
                       crypto3::codec
                       crypto3::math
                       crypto3::multiprecision
+                      crypto3::pkpad
                       crypto3::pubkey
                       crypto3::random
                       crypto3::zk
@@ -47,7 +48,7 @@ target_link_libraries(${CURRENT_PROJECT_NAME}
                       marshalling::crypto3_multiprecision
                       marshalling::crypto3_zk
 
-                      $<$<BOOL:${Boost_FOUND}>:${Boost_LIBRARIES}>)
+                      ${Boost_LIBRARIES})
 
 target_include_directories(${CURRENT_PROJECT_NAME} PUBLIC
                            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
