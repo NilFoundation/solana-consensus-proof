@@ -25,6 +25,14 @@
 #endif
 
 #include <nil/crypto3/algebra/curves/curve25519.hpp>
+#include <nil/crypto3/algebra/curves/alt_bn128.hpp>
+#include <nil/crypto3/algebra/fields/arithmetic_params/alt_bn128.hpp>
+#include <nil/crypto3/algebra/curves/params/multiexp/alt_bn128.hpp>
+#include <nil/crypto3/algebra/curves/params/wnaf/alt_bn128.hpp>
+
+#include <nil/crypto3/zk/components/blueprint.hpp>
+#include <nil/crypto3/zk/components/algebra/curves/plonk/fixed_base_scalar_mul_5_wires.hpp>
+#include <nil/crypto3/zk/components/algebra/curves/plonk/variable_base_scalar_mul_5_wires.hpp>
 
 #include <nil/crypto3/hash/algorithm/hash.hpp>
 #include <nil/crypto3/hash/sha2.hpp>
@@ -33,6 +41,8 @@
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/redshift/preprocessor.hpp>
+#include <nil/crypto3/zk/snark/relations/non_linear_combination.hpp>
 
 #include <nil/marshalling/status_type.hpp>
 
@@ -40,8 +50,9 @@ using namespace nil::crypto3;
 
 int main(int argc, char *argv[]) {
 
-    typedef algebra::curves::curve25519 curve_type;
-    typedef typename curve_type::scalar_field_type scalar_field_type;
+    typedef hashes::sha2<256> hash_type;
+    typedef algebra::curves::alt_bn128<254> system_curve_type;
+    typedef algebra::curves::curve25519 signature_curve_type;
 
 #ifndef __EMSCRIPTEN__
     boost::program_options::options_description options("Solana 'Light-Client' State Proof Generator");
@@ -62,6 +73,18 @@ int main(int argc, char *argv[]) {
 #else
 
 #endif
+
+    using TBlueprintField = typename system_curve_type::base_field_type;
+    constexpr std::size_t WiresAmount = 5;
+    using TArithmetization = zk::snark::plonk_constraint_system<TBlueprintField, WiresAmount>;
+
+    zk::components::blueprint<TArithmetization> bp;
+    zk::components::element_g1_variable_base_scalar_mul_plonk<TBlueprintField, system_curve_type> scalar_mul(bp);
+
+    zk::snark::redshift_preprocessor<typename curve_type::base_field_type, 5, 2> preprocess;
+
+    // auto preprocessed_data = preprocess::process(cs, assignments);
+    zk::snark::redshift_prover<typename curve_type::base_field_type, 5, 2, 2, 2> prove;
 
     return 0;
 }
