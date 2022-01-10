@@ -76,15 +76,34 @@ int main(int argc, char *argv[]) {
 
     using TBlueprintField = typename system_curve_type::base_field_type;
     constexpr std::size_t WiresAmount = 5;
+    constexpr typename system_curve_type::template g1_type<>::value_type B =
+        system_curve_type::template g1_type<>::value_type::one();
     using TArithmetization = zk::snark::plonk_constraint_system<TBlueprintField, WiresAmount>;
 
     zk::components::blueprint<TArithmetization> bp;
-    zk::components::element_g1_variable_base_scalar_mul_plonk<TBlueprintField, system_curve_type> scalar_mul(bp);
 
-    zk::snark::redshift_preprocessor<typename curve_type::base_field_type, 5, 2> preprocess;
+    using component_type = zk::components::element_g1_fixed_base_scalar_mul<system_curve_type, TArithmetization>;
 
-    // auto preprocessed_data = preprocess::process(cs, assignments);
-    zk::snark::redshift_prover<typename curve_type::base_field_type, 5, 2, 2, 2> prove;
+    component_type scalar_mul_component(bp, B);
+
+    scalar_mul_component.generate_gates();
+
+    typename system_curve_type::scalar_field_type::value_type a =
+        system_curve_type::scalar_field_type::value_type::one();
+    typename system_curve_type::template g1_type<>::value_type P =
+        system_curve_type::template g1_type<>::value_type::one();
+
+    scalar_mul_component.generate_assignments(a, P);
+
+    auto cs = bp.get_constraint_system();
+
+    auto assignments = bp.full_variable_assignment();
+
+    typedef zk::snark::redshift_preprocessor<typename system_curve_type::base_field_type, 5, 1> preprocess_type;
+
+    auto preprocessed_data = preprocess_type::process(cs, assignments);
+    typedef zk::snark::redshift_prover<typename system_curve_type::base_field_type, 5, 5, 1, 5> prove_type;
+    auto proof = prove_type::process(preprocessed_data, cs, assignments);
 
     return 0;
 }
