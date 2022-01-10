@@ -31,6 +31,7 @@
 #include <nil/crypto3/algebra/curves/params/wnaf/alt_bn128.hpp>
 
 #include <nil/crypto3/zk/components/blueprint.hpp>
+#include <nil/crypto3/zk/components/hashes/plonk/poseidon_5_wires.hpp>
 #include <nil/crypto3/zk/components/algebra/curves/plonk/fixed_base_scalar_mul_5_wires.hpp>
 #include <nil/crypto3/zk/components/algebra/curves/plonk/variable_base_scalar_mul_5_wires.hpp>
 
@@ -82,9 +83,9 @@ int main(int argc, char *argv[]) {
 
     zk::components::blueprint<TArithmetization> bp;
 
-    using component_type = zk::components::element_g1_fixed_base_scalar_mul<system_curve_type, TArithmetization>;
-
-    component_type scalar_mul_component(bp, B);
+    zk::components::element_g1_fixed_base_scalar_mul<TArithmetization, system_curve_type>
+        scalar_mul_component(bp, B);
+    zk::components::poseidon_plonk<TArithmetization, system_curve_type> poseidon_component(bp, B);
 
     scalar_mul_component.generate_gates();
 
