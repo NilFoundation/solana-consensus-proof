@@ -46,6 +46,7 @@ target_link_libraries(${CURRENT_PROJECT_NAME}
                       crypto3::algebra
                       crypto3::multiprecision
                       crypto3::pubkey
+                      crypto3::pkpad
 
                       marshalling::core
                       marshalling::crypto3_multiprecision
