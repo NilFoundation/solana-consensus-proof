@@ -166,11 +166,7 @@ abstract contract FriVerifier is memory_access_utils, fri {
         ctx[MM_TRACE_GENERATOR] = genTraceDomain;
     }
 
-    function getPublicInputHash(uint256[] memory publicInput)
-    internal
-    pure
-    virtual
-    returns (bytes32);
+    function getPublicInputHash(uint256[] memory publicInput) internal pure virtual returns (bytes32);
 
     function oodsConsistencyCheck(uint256[] memory ctx) internal view virtual;
 

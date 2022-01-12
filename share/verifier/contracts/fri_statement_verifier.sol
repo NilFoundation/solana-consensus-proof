@@ -25,8 +25,7 @@ import "fri_statement_contract.sol";
   The first layer is computed from decommitments, the last layer is computed by evaluating the
   fully committed polynomial, and the mid-layers are provided in the proof only as hashed data.
 */
-abstract contract fri_statement_verifier is memory_access_utils, horner_evaluator
-{
+abstract contract fri_statement_verifier is memory_access_utils, horner_evaluator {
     fri_statement_contract friStatementContract;
 
     constructor(address friStatementContractAddress) internal {
