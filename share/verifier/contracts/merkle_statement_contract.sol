@@ -14,9 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //---------------------------------------------------------------------------//
-pragma solidity ^0.6.11;
+pragma solidity >=0.6.11;
 
-import "./components/FactRegistry.sol";
 import "./merkle_verifier.sol";
 
 contract merkle_statement_contract is merkle_verifier {

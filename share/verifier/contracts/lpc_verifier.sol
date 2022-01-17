@@ -29,12 +29,12 @@ import "./fri_verifier.sol";
  * @title Turbo Plonk proof verification contract
  * @dev Top level Plonk proof verification contract, which allows Plonk proof to be verified
  */
-contract TurboVerifier is FriVerifier {
+abstract contract lpc_verifier is fri_verifier {
     using bn254_crypto for types.g1_point;
     using bn254_crypto for types.g2_point;
     using transcript for transcript.transcript_data;
 
-    function verify(bytes calldata, uint256 size) external override {
+    function verify(bytes calldata, uint256 size) external {
         types.verification_key memory vk = verification_keys.getKeyById(size);
         uint256 num_public_inputs = vk.num_inputs;
 

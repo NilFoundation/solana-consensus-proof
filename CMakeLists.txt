@@ -43,6 +43,10 @@ add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs")
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs/marshalling")
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/bin")
 
+add_custom_target(verifier
+                  COMMAND truffle compile
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/share/verifier)
+
 if(BUILD_TESTS)
     add_subdirectory(test)
 endif()
