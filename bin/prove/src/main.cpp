@@ -217,6 +217,8 @@ int main(int argc, char *argv[]) {
         if (boost::filesystem::exists(vm["input"].as<std::string>())) {
             boost::filesystem::load_string_file(vm["input"].as<std::string>(), string);
         }
+    } else {
+        std::cin >> string;
     }
 #else
     std::cin >> string;
