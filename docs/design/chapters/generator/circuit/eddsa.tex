@@ -13,6 +13,11 @@ To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a genera
                 j + 2 & $z_{17}$ & $z_{18}$ & $z_{19}$ & $z_{20}$ & $z_{21}$ & $z_{22}$ & $z_{23}$ & $z_{24}$ & $z_{25}$ \\
             \end{tabular}
         \end{center}
+        Evaluations:
+        \begin{center}
+        $z_0 = s + 2^{253} - L$ is decomposed into 10-bit windows $k_0 + 2^{10} \cdot k_1 + 2^{10 \cdot 2} \cdot k_2 + ... + 2^{10 \cdot 25} \cdot k_{25}$ \\
+        $z_i = (z_{i - 1} - k_{i - 1}) / 2^{10}$
+        \end{center}
         Constraints:
         \begin{center}
             $w_{1, j} = w_{0,j} + 2^{253} - L $ \\
@@ -26,16 +31,22 @@ To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a genera
         \begin{enumerate}
             \item Fixed-base scalar multiplication circuit is used for $sB = S$. The cell $w_{0, j + 84}$ is copy-constrained with $w_{0, j + 0}$ from the range circuit.
             \item One addition is used for $S + (-R)$. The coordinates of $R$ and $T = S + (-R)$ are placed on the last row of fixed-base scalar multiplication circuit.
+                    \begin{center}
+    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
+    j + 0 & $x_s$  & $x_r$ & $y_r$ & $x_t$ & $y_t$ & $y_s$ & $--$ & $--$ & $--$   \\
+    \end{tabular}
+\end{center}
                 In total, three constraints are used for addition:
                 \begin{center}
-                    $w_{3, j + 84}\cdot (1 + d w_{6, j + 84} \cdot (-w_{1, j + 84}) \cdot w_{7, j + 84} \cdot w_{2, j + 84}) = w_{6, j + 84} \cdot w_{2, j + 84} + (-w_{1, j + 84}) \cdot w_{7, j + 84}$ \\
-                    $w_{4, j + 84} \cdot (1 - d w_{6, j + 84} \cdot (-w_{1, j + 84}) \cdot w_{7, j + 84} \cdot w_{2, j + 84}) = w_{6, j + 84} \cdot (-w_{1, j + 84}) + w_{2, j + 84} \cdot w_{7, j + 84}$ \\
-                    $(- w_{1, j + 84})^2 + w_{2, j + 84}^2 = 1 - d \cdot w_{1, j + 84}^2 \cdot w_{2, j + 84}^2$
+                    $w_{3, j + 0}\cdot (1 + d w_{0, j + 0} \cdot (-w_{1, j + 0}) \cdot w_{5, j + 0} \cdot w_{2, j + 0}) = w_{0, j + 0} \cdot w_{2, j + 0} + (-w_{1, j + 0}) \cdot w_{5, j + 0}$ \\
+                    $w_{4, j + 0} \cdot (1 - d w_{0, j + 0} \cdot (-w_{1, j + 0}) \cdot w_{5, j + 0} \cdot w_{2, j + 0}) = w_{0, j + 0} \cdot (-w_{1, j + 0}) + w_{2, j + 0} \cdot w_{5, j + 0}$ \\
+                    $(- w_{1, j + 0})^2 + w_{2, j + 0}^2 = 1 - d \cdot w_{1, j + 0}^2 \cdot w_{2, j + 0}^2$
+                    $w_{1, j + 0}, w_{5, j + 0}$ are copy-constrained with $w_{6, j + 84}, w_{7, j + 84}$ from fixed-base multiplication circuit.
                 \end{center}
-            \item Variable-base scalar multiplication circuit for $T = k \cdot A$, where cells $w_{1, j + 254}, w_{2, j + 254}$ are copy constrained with $w_{3, j + 84}, w _{5, j + 84}$ from the fixed-base scalar multiplication circuit.
+            \item Variable-base scalar multiplication circuit for $T = k \cdot A$, where cells $w_{1, j + 254}, w_{2, j + 254}$ are copy constrained with $w_{3, j + 0}, w _{5, j + 0}$.
         \end{enumerate}
 \end{enumerate}
-It costs $3 + 2496 + 85 + 255 = 2839$ rows.
+It costs $3 + 2496 + 85 + 255 + 1 = 2840$ rows.
 \subsection{Elliptic Curves Arithmetics}
 \label{ellcurve}
 \textbf{WIP}
@@ -48,7 +59,7 @@ Affine coordinates are used for points.
 Let $d$ be equal to $121665/121666$.
 
 \paragraph{Fixed-base scalar multiplication circuit}:
-We precompute all values $w(B,s,k) = k_i \cdot 8^s B$, where $k_i \in \{ 0,..7 \}$, $s \in \{0,.., 84\}$.
+We precompute all values $w(B,s',k) = k_i \cdot 8^{s'} B$, where $k_i \in \{ 0,..7 \}$, $s' \in \{0,.., 84\}$.
 \begin{center}
     \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
         & $w_0$  & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$ & $w_6$ & $w_7$ & $w_8$  \\
@@ -56,8 +67,15 @@ We precompute all values $w(B,s,k) = k_i \cdot 8^s B$, where $k_i \in \{ 0,..7 \
         j + 0  & $acc$  & $b_{252}$ & $b_{251}$ & $b_{250}$ & $u_1$ & $v_1$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
         j + 1  & $acc$  & $b_{249}$ & $b_{248}$ & $b_{247}$ & $u_1$ & $v_1$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
         ...    &             &             &             &             &      & & & &  \\
-        j + 84 & $s$  & $x_r$ & $y_r$ & $x_t$ & $y_t$ & $b_{0}$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
+        j + 84 & $s$  & $--$ & $--$ & $--$ & $--$ & $b_{0}$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
     \end{tabular}
+\end{center}
+Evaluations:
+\begin{center}
+The values $b_i$, $i = 0,.., 252$ are binary representation of the scalar $s$ and $acc$ in each row is an accumulator for these bits.\\
+$(u_1, v_1) = (b_{i + 2} \cdot 2^2 + b_{i + 1}\cdot 2 + b_i) \cdot B$ for each row.\\
+ $(x_{acc_{j + 0}}, y_{acc_{j + 0}}) = (u_{1_{j + 0}}, v_{1_{j + 0}}) $ \\
+ $(x_{acc_{j + k}}, y_{acc_{j + k}}) = (u_{1_{j + k}}, v_{1_{j + k}}) + (x_{acc_{j + k - 1}}, y_{acc_{j + k - 1}}) $ \\
 \end{center}
 
 Define the following functions:
@@ -128,11 +146,18 @@ Constraints:
         \hline
         j + 0  & $acc$  & $b_{511}$ & $b_{510}$ & $x_2$   & $y_2$ & $b_{509}$  & $x_3$ & $y_3$ & $b_{508}$    \\
         j + 1  & $acc$ & $x_1$  & $ y_1$  & $x_4$ & $ y_4$ & $b_{507}$  & $x_5$ & $y_5$ & $b_{506}$ \\
-        j + 2  & $acc$  & $--$ & $--$  & $x_6$ & $y_6$ & $b_{505}$ & $x_7$ & $y_7$  & $b_{504}$  \\
+        j + 2  & $acc$  & $x_1$ & $y_1$  & $x_6$ & $y_6$ & $b_{505}$ & $x_7$ & $y_7$  & $b_{504}$  \\
         ...     &             &            &           &             &           \\
-        j + 253  & $acc$ & $x_1$  & $ y_1$  & $x_4$ & $ y_4$ & $b_{3}$  & $x_3$ & $y_3$ & $b_{2}$ \\
-        j + 254  & $k$ & $x_0$ & $y_0$ & $x_2$ & $y_2$ & $b_{1}$   & $x_1$ & $y_1$  & $b_{0}$    \\
+        j + 253  & $acc$ & $x_1$  & $ y_1$  & $x_{508}$ & $ y_{508}$ & $b_{3}$  & $x_{509}$ & $y_{509}$ & $b_{2}$ \\
+        j + 254  & $k$ & $x_{512}$ & $y_{512}$ & $x_{510}$ & $y_{510}$ & $b_{1}$   & $x_{511}$ & $y_{511}$  & $b_{0}$    \\
     \end{tabular}
+\end{center}
+Evaluations:
+\begin{center}
+The values $b_i$, $i = 0,.., 511$ are binary representation of the scalar $k$ and $acc$ in each row is an accumulator for these bits.\\
+ The values $(x_1, y_1) = A$.\\
+ $(x_2, y_2) = 2 (b_{511} \cdot (x_1, y_1)) + b_{510} \cdot (x_1, y_1)$ \\
+  $(x_i, y_i) = 2 (x_{i - 1}, y_{i - 1}) + b_{512 - i} \cdot (x_1, y_1)$ \\
 \end{center}
 
 Define the following functions:
@@ -160,6 +185,8 @@ Constraints:
         \end{itemize}
     \item For $j + z$, $z \equiv 1 \mod 2$:
         \begin{itemize}
+        	\item $w_{1, j + z} = w_{1, j + z - 1}$
+        	\item $w_{2, j + z} = w_{2, j + z - 1}$
         	 \item $(w_{5, j + z} - 1) \cdot w_{5, j + z} = 0$
         	 \item $(w_{8, j + z} - 1) \cdot w_{8, j + z} = 0$
             \item $w_{0, j + z} = w_{0, j + z - 1} \cdot 2^2 + w_{5, j + z} \cdot 2 + w_{8, j + z}$
@@ -170,6 +197,8 @@ Constraints:
         \end{itemize}
     \item For $j + z$, $z \equiv 0 \mod 2, z \neq 0$:
         \begin{itemize}
+        	\item $w_{1, j + z} = w_{1, j + z - 1}$
+        	\item $w_{2, j + z} = w_{2, j + z - 1}$
             \item $(w_{5, j + z} - 1) \cdot w_{5, j + z} = 0$
         	 \item $(w_{8, j + z} - 1) \cdot w_{8, j + z} = 0$
             \item $w_{0, j + z} = w_{0, j + z - 1} \cdot 2^2 + w_{5, j + z} \cdot 2 + w_{8, j + z}$
