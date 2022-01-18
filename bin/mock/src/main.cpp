@@ -117,6 +117,11 @@ struct state_type {
     std::vector<signature_type> signatures;
 };
 
+template<std::size_t DigestBits>
+void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, static_digest<DigestBits> const &c) {
+    jv = std::to_string(c);
+}
+
 template<typename Hash>
 void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, block_data<Hash> const &c) {
     jv = {{"block_number", c.block_number},
@@ -162,11 +167,10 @@ int main(int argc, char *argv[]) {
                                               .new_confirmed = distrib(gen) + state.confirmed};
 
     for (int i = 0; i < distrib(gen); i++) {
-        state.repl_data.push_back(
-            {.block_number = static_cast<size_t>(distrib(gen)),
-             .bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
-             .merkle_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
-             .previous_bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s)});
+        state.repl_data.push_back({.block_number = static_cast<size_t>(distrib(gen)),
+                                   .bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
+                                   .merkle_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
+                                   .previous_bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s)});
     }
 
     for (int i = 0; i < distrib(gen); i++) {
