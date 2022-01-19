@@ -31,9 +31,9 @@ For each block of $512$ bits of the padded message the 64 words are constructed 
 \begin{itemize}
 \item The first $16$ words are obtained by splitting the message.
 \item The last $48$ words are obtained by using the functions $\sigma_0, \sigma_1$:
-\begin{center}
-$W_i = \sigma_1(W_{i-2}) \oplus W_{i - 7} \oplus \sigma_0(W_{i-15}) \oplus W_{i-16}$
-\end{center}
+\begin{equation}\label{word}
+W_i = \sigma_1(W_{i-2}) \oplus W_{i - 7} \oplus \sigma_0(W_{i-15}) \oplus W_{i-16}
+\end{equation}
 \end{itemize}
 Each round of the message scheduling has the following table:
 \begin{center}
@@ -47,7 +47,14 @@ Each round of the message scheduling has the following table:
         j + 4 & $b$  & $b_0$  & $b_1$ & $b_2$ & $b_3$ & $ \hat{b}_0$ & $\hat{b}_1$ & $\hat{b}_3$  & $$ 
     \end{tabular}
 \end{center}
-
+Evaluations:
+\begin{center}
+Let $b$ be $W_{i-2}$ and $a$ be $W_{i-15}$ from \ref{word}.
+The values $W_i$ and $W_j$ in the table corresponds to $W_{i - 7}$ and $W_{i - 16}$ respectively from \ref{word}.
+From the round $r = 2$ the copy constraints are used for values $b$ and $w$ from round $r - 2$.
+The copy constraints for $W_{i-7}, W_{i-15}$ and $W_{i -16}$ are used in a similar way.
+The output of round $W_i$ from \ref{word} is $w$.
+\end{center}
 The first $16$ words require a range check. 
 We get it fo free from range-constraining chunks inside functions $\sigma_0$ and $\sigma_1$.
 Thus, for $i$ from $16$ to $63$:
@@ -67,6 +74,8 @@ The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form, and $a'$ is a sparse $a$
 \textbf{SHA-256 NORMALIZE4} lookup table is used for mapping to sparse representation and range-constraining for each chunk $a_i$, where bit-length of $a_i > 3$.
 If a chunk is $14$ bits long, then it is constrained for free.
 Else the prover has to calculate the sparse representation $\hat{a}_i$ for $2^j \cdot a_i$, where $j + \texttt{len}(a_i) = 14$ and $\texttt{len}(a_i)$ is bit-length of $a_i$.
+The tuple $\{ s'_0, s'_1, s'_2, s'_3\}$ is a sparse representation of the result of $\sigma_0$ and the tuple $\{ s_0, s_1, s_2, s_3\}$  is a normal representation.
+The size of elements of these tuples equals to $\{14, 14, 2, 2\}$ bits respectively.
 
 Constraints:
 \begin{center}
@@ -82,6 +91,8 @@ Constraints:
 Let $a$ be divided to chunks $a_0, a_1, a_2, a_3$ which equals to $10, 7, 2, 13$ bits respectively.
 The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form and $a'$ is a sparse $a$.
 \textbf{SHA-256 NORMALIZE4} lookup table is used for mapping to sparse representation and range-constraining in the same way as for $\sigma_0$.
+The tuple $\{ s'_0, s'_1, s'_2, s'_3\}$ is a sparse representation of the result of $\sigma_1$ and the tuple $\{ s_0, s_1, s_2, s_3\}$  is a normal representation.
+The size of elements of these tuples equals to $\{14, 14, 2, 2\}$ bits respectively.
 
 Constraints:
 \begin{center}
@@ -145,6 +156,8 @@ In the rest of the rounds the following `non-special` copy constraints are used:
 contains subcircuit with base $4$.
 Let $a$ be divided to chunks $a_0, a_1, a_2, a_3$ which equals to $2, 11, 9, 10$ bits respectively.
 The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form and $a'$ is a sparse $a$.
+The tuple $\{ s'_0, s'_1, s'_2, s'_3\}$ is a sparse representation of the result of $\Sigma_0$ and the tuple $\{ s_0, s_1, s_2, s_3\}$  is a normal representation.
+The size of elements of these tuples equals to $\{14, 14, 2, 2\}$ bits respectively.
 \textbf{SHA-256 NORMALIZE4} lookup table is used for mapping to sparse representation and range-constraining in the same way as for $\sigma_0$.
 
 Constraints:
@@ -162,6 +175,8 @@ Constraints:
 contains subcircuit with base $7$.
 Let $a$ be divided to chunks $a_0, a_1, a_2, a_3$ which equals to $6, 5, 14, 7$ bits respectively.
 The values $a'_0, a'_1, a'_2, a'_3$ are in sparse form, and $a'$ is a sparse $a$.
+The tuple $\{ s'_0, s'_1, s'_2, s'_3\}$ is a sparse representation of the result of $\Sigma_1$ and the tuple $\{ s_0, s_1, s_2, s_3\}$  is a normal representation.
+The size of elements of these tuples equals to $\{14, 14, 2, 2\}$ bits respectively.
 \textbf{SHA-256 NORMALIZE7} lookup table is used for mapping to sparse representation and range-constraining in the same way as for $\sigma_0$.
 
 Constraints:
@@ -177,7 +192,7 @@ Constraints:
 \paragraph{The Maj function}
 contains subcircuit with base $4$ for $a, b ,c$.
 \textbf{SHA-256 NORMALIZE MAJ} lookup table is used for mapping to sparse representation in the same way as for $\sigma_0$.
-The value of the $ maj $ function is stored in chunks of $8$ bits.
+The value of the $ maj $ function is stored in chunks of $8$ bits $\{maj_0, maj_1, maj_2, maj_3 \}$ and the corresponded sparse value is $\{maj_{0, sparse}, maj_{1, sparse}, maj_{2, sparse}, maj_{3, sparse} \}$
 Constraints:
 \begin{center}
     $w_{0, j + 4} + w_{1, j + 4} \cdot 4^8 + w_{2, j + 4} \cdot 4^{8 \cdot 2} + w_{3, j + 4} \cdot 4^{8 \cdot 3} = w_{0, j + 5} + w_{1, j + 5} + w_{4, j + 5} $ \\
@@ -187,7 +202,7 @@ Constraints:
 \paragraph{The Ch function}
 contain sparse mapping subcircuit with base $7$ for $e, f ,g$.
 \textbf{SHA-256 NORMALIZE CH} lookup table is used for mapping to sparse representation in the same way as for $\sigma_0$.
-The value of the $ ch $ function is stored in chunks of $8$ bits.
+The value of the $ ch $ function is stored in chunks of $8$ bits $\{ch_0, ch_1, ch_2, ch_3 \}$ and the corresponded sparse value is $\{ch_{0, sparse}, ch_{1, sparse}, ch_{2, sparse}, ch_{3, sparse} \}$
 Constraints:
 \begin{center}
     $w_{0, j + 2} + w_{1, j + 2} \cdot 7^8 + w_{2, j + 2} \cdot 7^{8 \cdot 2} + w_{3, j + 2} \cdot 7^{8 \cdot 3} = w_{0, j + 1} + 2 \cdot w_{1, j + 1} + 3 \cdot w_{0, j + 3}$ \\
@@ -195,6 +210,9 @@ Constraints:
 \end{center}
 
 \paragraph{Update the values $a$ and $e$}
+The values $a_{new}$ and $e_{new}$ are output of the round.
+The value $W_r$ is a word, where $r$ is a number of round.
+It has to be copy-constrained with the word $W_r$ in the message scheduling.
 Constraints:
 \begin{center}
     $w_{4, j + 3} = w_{1, j + 3} + w_{2, j + 3} + w_{5, j + 2} + w_{6, j + 2} \cdot 2^{14} + w_{7, j + 2} \cdot  2^{28} + w_{8, j + 2} \cdot 2^{30} + w_{5, j + 3} + w_{6, j + 3} \cdot 2^8 + w_{7, j + 3} \cdot 2^{8 \cdot 2} + w_{8, j + 3} \cdot 2^{8 \cdot 3} + k[r] + w_{3, j + 3}$, where $r$ is a number of round. \\
@@ -208,6 +226,7 @@ The total value of rows is $48 \cdot 5 + 8 \cdot 64 + 3 = 755$ per chunk.
 \label{section:sha512}
 SHA-512 uses the similar logical functions as in \ref{section:sha256} which operates on $64$-bits words.
 Thus, the preprocessing constraints for the SHA-512` circuit is a decomposition of $k$ message blocks to $64$ bits chunks without range proofs. For `eddsa` circuit, $k = 2$.
+All evaluations are similar to SHA-256 circuit.
 
 \paragraph{Lookup tables} 
 We use the following lookup tables:
