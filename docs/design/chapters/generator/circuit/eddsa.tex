@@ -25,8 +25,16 @@ To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a genera
             $w_{8,j+2} \cdot 2^7 $ is range-constrained by 10-bits plookup table.
         \end{center}
 	It costs $3$ rows.
-    \item $k ==$ SHA-512$(data||R||A||M)$ // See section \ref{sha512}
-    It costs $1248 \cdot 2 = 2496$ rows.
+    \item $k == $ SHA-512$(data||R||A||M)$ // See section \ref{sha512}
+     \begin{center}
+    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
+    j + 0 & $k_0$  & $k_1$ & $k_2$ & $k_3$ & $k_4$ & $k_5$ & $--$ & $--$ & $--$   \\
+    j + 1 & $k_6$  & $k_7$ & $k$ & $$ & $$ & $$ & $--$ & $--$ & $--$   \\
+    \end{tabular}
+\end{center}
+	The tuple $\{k_0, k _1, ..., k_7 \}$ is copy-constrained with tuple $\{h_0, h_1, ..., h_7\}$ from HSA-512 circuit.
+	The constraint $w_{3, j + 1} = w_{0, j + 0} \cdot 2^{7 \cdot 64} + w_{1, j + 0}\cdot 2^{6 \cdot 64}  + w_{2, j + 0}\cdot 2^{5 \cdot 64}  + w_{3, j + 0}\cdot 2^{4 \cdot 64}  + w_{4, j + 0}\cdot 2^{3 \cdot 64}  + w_{5, j + 0} \cdot 2^{2 \cdot 64}  + w_{0, j + 1} \cdot 2^{64} + w_{1, j + 1}$
+    It costs $1248 \cdot 2 + 1 = 2497$ rows.
     \item $sB ?=? R + kA$:
         \begin{enumerate}
             \item Fixed-base scalar multiplication circuit is used for $sB = S$. The cell $w_{0, j + 84}$ is copy-constrained with $w_{0, j + 0}$ from the range circuit.

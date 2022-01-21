@@ -124,6 +124,7 @@ Each round of compression has the following table:
 
 \paragraph{The working variables}
 $ a,  b , c , d, e, f, g, h$ equals to the fixed initial $SHA-256$ values for the first chunk and to the sum of previous output and initial values for the rest of chunks. 
+The values for chunk $c, c \neg 1$ are copy-constrained with output from previous round.
 The variables with quotes are corresponded sparse representation.
 For each chunk, the following rows are used:
 \begin{center}
@@ -210,7 +211,6 @@ Constraints:
 \end{center}
 
 \paragraph{Update the values $a$ and $e$}
-The values $a_{new}$ and $e_{new}$ are output of the round.
 The value $W_r$ is a word, where $r$ is a number of round.
 It has to be copy-constrained with the word $W_r$ in the message scheduling.
 Constraints:
@@ -218,6 +218,37 @@ Constraints:
     $w_{4, j + 3} = w_{1, j + 3} + w_{2, j + 3} + w_{5, j + 2} + w_{6, j + 2} \cdot 2^{14} + w_{7, j + 2} \cdot  2^{28} + w_{8, j + 2} \cdot 2^{30} + w_{5, j + 3} + w_{6, j + 3} \cdot 2^8 + w_{7, j + 3} \cdot 2^{8 \cdot 2} + w_{8, j + 3} \cdot 2^{8 \cdot 3} + k[r] + w_{3, j + 3}$, where $r$ is a number of round. \\
     $w_{4, j + 4} = w_{4, j + 3} - w_{1, j + 3} + w_{5, j + 5} + w_{6, j + 5} \cdot 2^{14} + w_{7, j + 5} \cdot  2^{28} + w_{8, j + 5} \cdot 2^{30} + w_{5, j + 4} + w_{6, j + 4} \cdot 2^8 + w_{7, j + 4} \cdot 2^{8 \cdot 2} + w_{8, j + 4} \cdot 2^{8 \cdot 3}$
 \end{center}
+
+\paragraph{Output of the round}\label{sha-out}
+\begin{center}
+    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
+        & $w_0$  & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$ & $w_6$ & $w_7$ & $w_8$  \\
+        \hline
+        j + 0 & $\overline{a}$  & $\overline{b}$ & $\overline{c}$ & $\overline{d}$ & $\overline{e}$ & $\overline{f}$ & $-$ & $-$ & $-$ \\
+        j + 1 & $h_0$ & $h_1$ & $h_2$ & $h_3$  & $h_4$  & $h_5$   & $-$ & $-$  & $-$   \\
+        j + 2 & $a$ & $b$ & $c$ & $d$ & $e$ & $f$ & $-$ & $-$ & $-$\\
+        j + 3 & $h_6$ & $h_7$ & $\overline{g}$ & $\overline{h}$ & $g$ & $h$ & $-$ & $-$ & $-$\\
+    \end{tabular}
+\end{center}
+Evaluations:
+\begin{center}
+The values $\overline{\xi}$ copy constrained with initial working variables of this round.
+The values  $a, b, c, d, e, f, g, h$ copy constrained with variables from the compression.
+The output of the round is $h_0, h_1, .., h_7$
+\end{center}
+Constraints:
+\begin{center}
+    $w_{0, j + 1} = w_{0, j + 0} + w_{0, j + 2}$ \\
+    $w_{1, j + 1} = w_{1, j + 0} + w_{1, j + 2}$ \\
+    $w_{2, j + 1} = w_{2, j + 0} + w_{2, j + 2}$ \\
+    $w_{3, j + 1} = w_{3, j + 0} + w_{3, j + 2}$ \\
+    $w_{4, j + 1} = w_{4, j + 0} + w_{4, j + 2}$ \\
+    $w_{5, j + 1} = w_{5, j + 0} + w_{5, j + 2}$ \\
+    $w_{0, j + 3} = w_{2, j + 3} + w_{4, j + 3}$ \\
+    $w_{1, j + 3} = w_{3, j + 3} + w_{5, j + 3}$ \\
+\end{center}
+
+
 
 \paragraph{Cost}
 The total value of rows is $48 \cdot 5 + 8 \cdot 64 + 3 = 755$ per chunk.
@@ -422,6 +453,9 @@ Constraints:
     $w_{4, j + 4} = w_{1, j + 5} + w_{2, j + 5} + w_{5, j + 3} \cdot 2^{14} + w_{6, j + 3} \cdot  2^{28} + w_{7, j + 3} \cdot 2^{42} + w_{8, j + 3} \cdot 2^{56} + w_{5, j + 4} + w_{6, j + 4} \cdot 2^{16} + w_{7, j + 4} \cdot 2^{16 \cdot 2} + w_{8, j + 4} \cdot 2^{16 \cdot 3} + k[r] + w_{3, j + 5}$, where $r$ is a number of round. \\
     $w_{4, j + 5} = w_{4, j + 4} - w_{1, j + 5} + w_{4, j + 6} + w_{5, j + 6} \cdot 2^{14} + w_{6, j + 6} \cdot  2^{28} + w_{7, j + 6} \cdot 2^{42} + w_{8, j + 6} \cdot 2^{56} + w_{5, j + 5} + w_{6, j + 5} \cdot 2^{16} + w_{7, j + 5} \cdot 2^{16 \cdot 2} + w_{8, j + 5} \cdot 2^{16 \cdot 3}$
 \end{center}
+
+\paragraph{Output of the round}
+The final calculations uses the same table and constraints as in \ref{sha-out}.
 
 \paragraph{Cost}
 The total value of rows is $64 \cdot 7 + 10 \cdot 80 + 3 = 1248$ per chunk.
