@@ -29,7 +29,7 @@ import "./fri_verifier.sol";
  * @title Turbo Plonk proof verification contract
  * @dev Top level Plonk proof verification contract, which allows Plonk proof to be verified
  */
-abstract contract lpc_verifier is fri_verifier {
+contract verifier is fri {
     using bn254_crypto for types.g1_point;
     using bn254_crypto for types.g2_point;
     using transcript for transcript.transcript_data;

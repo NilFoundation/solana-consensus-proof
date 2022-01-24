@@ -1,0 +1,7 @@
+{
+  "name": "evm-solana-verification",
+  "version": "1.0.0",
+  "dependencies": {
+    "@truffle/hdwallet-provider": "^2.0.1"
+  }
+}
