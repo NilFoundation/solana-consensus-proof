@@ -176,7 +176,9 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < distrib(gen); i++) {
         typename private_key_type::private_key_type pk = pack<nil::marshalling::option::little_endian>(hash_gen(), s);
-        state.signatures.emplace_back(sign<scheme_type>(hash_gen(), private_key_type(pk)));
+        typename hash_type::digest_type data = pack<nil::marshalling::option::little_endian>(hash_gen(), s);
+
+        state.signatures.emplace_back(sign<scheme_type>(data, private_key_type(pk)));
     }
 
     if (s == status_type::success) {
