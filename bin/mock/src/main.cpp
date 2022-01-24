@@ -32,8 +32,6 @@
 #include <nil/crypto3/hash/algorithm/hash.hpp>
 #include <nil/crypto3/hash/sha2.hpp>
 
-#include <nil/crypto3/multiprecision/cpp_int/import_export.hpp>
-
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
@@ -135,24 +133,27 @@ int main(int argc, char *argv[]) {
     typedef hashes::sha2<256> hash_type;
     typedef algebra::curves::curve25519 curve_type;
     typedef typename curve_type::template g1_type<> group_type;
-    typedef pubkey::eddsa<group_type, pubkey::EddsaVariant::basic, void> scheme_type;
+    typedef pubkey::eddsa<group_type, pubkey::eddsa_type::basic, void> scheme_type;
+    typedef pubkey::public_key<scheme_type> public_key_type;
+    typedef pubkey::private_key<scheme_type> private_key_type;
     typedef typename pubkey::public_key<scheme_type>::signature_type signature_type;
 
-    typedef multiprecision::number<multiprecision::cpp_int_backend<hash_type::digest_bits, hash_type::digest_bits,
+    typedef multiprecision::number<multiprecision::cpp_int_backend<hash_type::digest_bits,
+                                                                   hash_type::digest_bits,
                                                                    multiprecision::unsigned_magnitude>>
         hash_number_type;
 
-    typedef multiprecision::number<multiprecision::cpp_int_backend<pubkey::public_key<scheme_type>::signature_bits,
-                                                                   pubkey::public_key<scheme_type>::signature_bits,
+    typedef multiprecision::number<multiprecision::cpp_int_backend<public_key_type::signature_bits,
+                                                                   public_key_type::signature_bits,
                                                                    multiprecision::unsigned_magnitude>>
         signature_number_type;
 
     typedef boost::random::independent_bits_engine<boost::random::mt19937, hash_type::digest_bits, hash_number_type>
         random_hash_generator_type;
 
-    typedef boost::random::independent_bits_engine<
-        boost::random::mt19937, pubkey::public_key<scheme_type>::signature_bits, signature_number_type>
-        random_signature_generator_type;
+    typedef boost::random::
+        independent_bits_engine<boost::random::mt19937, public_key_type::signature_bits, signature_number_type>
+            random_signature_generator_type;
 
     boost::random::random_device rd;     // Will be used to obtain a seed for the random number engine
     boost::random::mt19937 gen(rd());    // Standard mersenne_twister_engine seeded with rd()
@@ -174,7 +175,8 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < distrib(gen); i++) {
-        state.signatures.emplace_back(pack<nil::marshalling::option::little_endian>(sig_gen(), s));
+        typename private_key_type::private_key_type pk = pack<nil::marshalling::option::little_endian>(hash_gen(), s);
+        state.signatures.emplace_back(sign<scheme_type>(hash_gen(), private_key_type(pk)));
     }
 
     if (s == status_type::success) {

@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
     typedef algebra::curves::alt_bn128<254> system_curve_type;
     typedef algebra::curves::curve25519 signature_curve_type;
     typedef typename signature_curve_type::template g1_type<> group_type;
-    typedef pubkey::eddsa<group_type, pubkey::EddsaVariant::basic, void> signature_scheme_type;
+    typedef pubkey::eddsa<group_type, pubkey::eddsa_type::basic, void> signature_scheme_type;
     typedef typename pubkey::public_key<signature_scheme_type>::signature_type signature_type;
 
     state_type<hash_type, signature_scheme_type> state;
