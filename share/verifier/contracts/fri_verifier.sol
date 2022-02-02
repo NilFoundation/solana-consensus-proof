@@ -63,10 +63,7 @@ abstract contract fri_verifier is memory_access_utils, fri, verifier_channel {
     event LogBool(bool val);
     event LogDebug(uint256 val);
 
-    function airSpecificInit(uint256[] memory publicInput)
-    internal
-    view
-    virtual
+    function airSpecificInit(uint256[] memory publicInput) internal view virtual
     returns (uint256[] memory ctx, uint256 logTraceLength);
 
     uint256 internal constant PROOF_PARAMS_N_QUERIES_OFFSET = 0;
