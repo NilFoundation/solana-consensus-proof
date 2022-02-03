@@ -50,52 +50,15 @@
 
 using namespace nil::crypto3;
 
-struct lockout {
-    std::uint64_t slot;
-    std::uint32_t confirmation_count;
-};
-
-struct block_timestamp {
-    std::uint64_t slot;
-    std::time_t timestamp;
-};
-
-template<typename SignatureSchemeType>
+template<typename Hash>
 struct vote_state {
-    typedef SignatureSchemeType scheme_type;
-    typedef pubkey::private_key<scheme_type> private_key_type;
-    typedef pubkey::public_key<scheme_type> public_key_type;
-
-    /// the node that votes in this account
-    public_key_type node_pubkey;
-
-    /// the signer for vote transactions
-    public_key_type authorized_voter;
-
-    /// the signer for withdrawals
-    public_key_type authorized_withdrawer;
-
-    /// percentage (0-100) that represents what part of a rewards
-    ///  payout should be given to this VoteAccount
-    std::uint8_t commission;
-
-    /// when the authorized voter was set/initialized
-    std::uint64_t authorized_voter_epoch;
-
-    /// history of prior authorized voters and the epoch ranges for which
-    ///  they were set
-    boost::circular_buffer<std::tuple<public_key_type, std::uint64_t, std::uint64_t, std::uint64_t>> prior_voters;
-
-    std::deque<lockout> votes;
-
-    boost::optional<std::uint64_t> root_slot;
-
-    /// history of how many credits earned by the end of each epoch
-    ///  each tuple is (Epoch, credits, prev_credits)
-    std::vector<std::tuple<std::uint64_t, std::uint64_t, std::uint64_t>> epoch_credits;
-
-    /// most recent timestamp submitted with a vote
-    block_timestamp last_timestamp;
+    typedef Hash hash_type;
+    /// A stack of votes starting with the oldest vote
+    std::vector<std::uint64_t> slots;
+    /// signature of the bank's state at the last slot
+    typename Hash::digest_type hash;
+    /// processing timestamp of last slot
+    std::uint32_t timestamp;
 };
 
 template<typename Hash>
@@ -107,7 +70,7 @@ struct block_data {
     digest_type bank_hash;
     digest_type merkle_hash;
     digest_type previous_bank_hash;
-    //    std::vector<vote_state> votes; </// Not implemented yet. Requires Solana replication protocol changes.
+    std::vector<vote_state<Hash>> votes;
 };
 
 template<typename Hash, typename SignatureSchemeType>
