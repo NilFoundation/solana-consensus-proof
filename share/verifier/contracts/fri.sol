@@ -104,7 +104,7 @@ contract fri is memory_access_utils, horner_evaluator, fri_layer {
             // Layer is done, verify the current layer and move to next layer.
             // ctx[mmMerkleQueue: merkleQueueIdx) holds the indices
             // and values of the merkle leaves that need verification.
-            verifyMerkle(
+            verify_merkle(
                 channelPtr,
                 merkleQueuePtr,
                 bytes32(ctx[MM_FRI_COMMITMENTS + friStep - 1]),

@@ -116,7 +116,7 @@ contract fri_statement_contract is fri_layer {
             friCtx
         );
 
-        verifyMerkle(channelPtr, merkleQueuePtr, bytes32(expectedRoot), nQueries);
+        verify_merkle(channelPtr, merkleQueuePtr, bytes32(expectedRoot), nQueries);
 
 //        bytes32 factHash;
 //        assembly {

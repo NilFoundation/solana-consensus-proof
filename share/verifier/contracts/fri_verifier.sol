@@ -385,7 +385,7 @@ abstract contract fri_verifier is memory_access_utils, fri, verifier_channel {
             mstore(channelPtr, proofPtr)
         }
 
-        verifyMerkle(channelPtr, merkleQueuePtr, merkleRoot, nUniqueQueries);
+        verify_merkle(channelPtr, merkleQueuePtr, merkleRoot, nUniqueQueries);
     }
 
     /*
