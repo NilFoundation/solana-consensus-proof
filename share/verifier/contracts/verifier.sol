@@ -259,8 +259,7 @@ contract verifier is fri {
             mstore(add(lhs, 0x20), sub(q, mload(add(lhs, 0x20))))
         }
 
-        if (vk.contains_recursive_proof)
-        {
+        if (vk.contains_recursive_proof) {
             // If the proof itself contains an accumulated proof,
             // we will have extracted two G1 elements `recursive_P1`, `recursive_p2` from the public inputs
 
@@ -314,10 +313,7 @@ contract verifier is fri {
      * @return proof - proof deserialized into the proof struct
      */
     function deserialize_proof(uint256 num_public_inputs, types.verification_key memory vk)
-    internal
-    pure
-    returns (types.proof memory proof)
-    {
+    internal pure returns (types.proof memory proof) {
         uint256 p = bn254_crypto.r_mod;
         uint256 q = bn254_crypto.p_mod;
         uint256 data_ptr;
