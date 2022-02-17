@@ -35,6 +35,8 @@ function estimateGas(address, abi, proof) {
     contract.methods.verify(proof).estimateGas({gas: 5000000}, function (error, gasAmount) {
         if (gasAmount === 5000000) {
             console.log('Method ran out of gas');
+        } else {
+            console.log(gasAmount);
         }
     });
 }
