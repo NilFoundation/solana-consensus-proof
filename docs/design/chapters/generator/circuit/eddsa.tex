@@ -1,6 +1,6 @@
 \subsection{Ed25519 Circuit}
 \label{section:eddsa}
-
+ 
 To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a generator $B$ do:
 \begin{enumerate}
     \item Prove that $s$ in the range $L = 2^{252}+27742317777372353535851937790883648493$.
@@ -25,16 +25,8 @@ To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a genera
             $w_{8,j+2} \cdot 2^7 $ is range-constrained by 10-bits plookup table.
         \end{center}
 	It costs $3$ rows.
-    \item $k == $ SHA-512$(data||R||A||M)$ // See section \ref{sha512}
-     \begin{center}
-    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
-    j + 0 & $k_0$  & $k_1$ & $k_2$ & $k_3$ & $k_4$ & $k_5$ & $--$ & $--$ & $--$   \\
-    j + 1 & $k_6$  & $k_7$ & $k$ & $$ & $$ & $$ & $--$ & $--$ & $--$   \\
-    \end{tabular}
-\end{center}
-	The tuple $\{k_0, k _1, ..., k_7 \}$ is copy-constrained with tuple $\{h_0, h_1, ..., h_7\}$ from HSA-512 circuit.
-	The constraint $w_{3, j + 1} = w_{0, j + 0} \cdot 2^{7 \cdot 64} + w_{1, j + 0}\cdot 2^{6 \cdot 64}  + w_{2, j + 0}\cdot 2^{5 \cdot 64}  + w_{3, j + 0}\cdot 2^{4 \cdot 64}  + w_{4, j + 0}\cdot 2^{3 \cdot 64}  + w_{5, j + 0} \cdot 2^{2 \cdot 64}  + w_{0, j + 1} \cdot 2^{64} + w_{1, j + 1}$
-    It costs $1248 \cdot 2 + 1 = 2497$ rows.
+    \item $k = \{k_0, k _1, ..., k_7 \} == $ SHA-512$(data||R||A||M)$ // See section \ref{sha512}
+    It costs $1248 \cdot 2 = 2496$ rows.
     \item $sB ?=? R + kA$:
         \begin{enumerate}
             \item Fixed-base scalar multiplication circuit is used for $sB = S$. The cell $w_{0, j + 84}$ is copy-constrained with $w_{0, j + 0}$ from the range circuit.
@@ -65,6 +57,46 @@ This section instantiates the arithmetic of edwards25519 curve:
 \end{center}
 Affine coordinates are used for points.
 Let $d$ be equal to $121665/121666$.
+
+\paragraph{Computations over a non-native field.}
+Let $F_p$ be an edwards25519 field, i.e. the size of the field is $2^{255} - 19$.
+In order to provide computations over non-native $F_p$ we use constraints over native field $F_k$.
+Let $k < p$ be a prime number, which size is $254$ bits.
+Additionally, we compute an integer $t$, such that $2^t \cdot k \geq p^2 + p$.
+In our case, $t = 257$.
+Now, we want to check equality:
+\begin{center}
+$a\cdot b = p \cdot q + r, r = a\cdot b \mod p$
+\end{center}
+Each positive integer $a, b, q, r$ is divided into $13$ limbs, where the sizes of limbs are $20, 20, ..., 20, 15$ bits respectively, where $15$ is the least significant bits.
+To check that $a, b, q$ and $r$ are less than $p$, we use range proofs.
+For this purpose, a lookup table with two columns is used.
+The first column contains all integers in the range $[0, 2^{20})$, and the second column contains almost all zeros except $18$ ones from $2^{15} - 19$ to $2^{15} - 1$.
+\begin{enumerate}
+\item The limbs $a_0, a_1, ..., a_{12}$ are range-constrained by the lookup table.
+\item The value $a_{12} \cdot 2^5$ are range-constrained by the lookup table.
+\item $ (\sum_{i = 0}^{11} (a_i - 2^{20} + 1) \cdot (\xi \cdot (\sum_{i = 0}^{11} (a_i - 2^{20} + 1) - 1) = 0$
+\item $\xi \cdot (\sum_{i = 0}^{11} (a_i - 2^{20} + 1) + (1 - \xi \cdot (\sum_{i = 0}^{11} (a_i - 2^{20} + 1))\cdot c - 1 = 0$, where $c$ is corresponding second column's value for $a_12$.
+\end{enumerate}
+Then we constrain the equation modulo $n$ and $2^t$ as follows:
+\begin{enumerate}
+\item $(a\cdot b) \mod n = (p \cdot q + r) \mod n$
+\item $a'_0 = a_{12} + a_{11} \cdot 2^{15} + a_{10} \cdot 2^{35} + a_9 \cdot 2^{55}$, $a'_1 = a_8 + a_7 \cdot 2^{20} + a_6 \cdot 2^{40}$, $a'_1 = a_5 + a_4 \cdot 2^{20} + a_3 \cdot 2^{40}$, $a'_1 = a_2 + a_1 \cdot 2^{20} + a_0 \cdot 2^{40}$.
+The new limbs for  $b, q$, and $r$ are constructed similarly.
+\item Let $p'$ be $-p \mod 2^t$ and $p' = p'_{0} + p'_{1}\cdot 2^{75} + p'_2 \cdot 2^{135}+ p'_3 \cdot 2^{195}$. The limbs $p'_0, p'_1, p'_2$ and $p'_3$ are circuits parameters.
+\item Compute the following limbs:
+	\begin{enumerate}
+	\item $t_0 = a'_0 \cdot b'_0 + p'_0 \cdot q'_0$
+	\item $t_1 = a'_1 \cdot b'_0 + a'_0 \cdot b'_1 + p'_0 \cdot q'_1 + p'_1 \cdot q'_0$
+	\item $t_2 = a'_2 \cdot b'_0 + a'_0 \cdot b'_2 + a'_1 \cdot b'_1 + p'_0 \cdot q'_2 + p'_2 \cdot q'_0+ p'_1 		\cdot q'_1$
+	\item $t_3 = a'_3 \cdot b'_0 + a'_0 \cdot b'_3 + a'_1 \cdot b'_2 + a'_1 \cdot b'_2 + p'_0 \cdot q'_3 + p'_3 	\cdot q'_0+ p'_1 \cdot q'_2 + p'_2 \cdot q'_1$
+	\item $t_4 = a'_3 \cdot b'_1 + a'_1 \cdot b'_3 + a'_2 \cdot b'_2 + p'_1 \cdot q'_3 + p'_3 \cdot q'_1+ p'_2 			\cdot q'_2$
+	\end{enumerate}
+\item $u_0 = t_0 - r_0 + t_1 \cdot 2^{75} - r_1 \cdot 2^{75} = v_0 \cdot 2^{135}$
+\item $u_1 = t_2 - r_2 + t_3 \cdot 2^{60} - r_3 \cdot 2^{60} + t_4 \cdot 2^{120} - r_4 \cdot 2^{120} + v_0 = v_1 \cdot 2^{122}$
+\item The value $v_0$ has to be less than $2^{68}$ and $v_1 \le 2^{78}$.
+\end{enumerate}
+
 
 \paragraph{Fixed-base scalar multiplication circuit}:
 We precompute all values $w(B,s',k) = k_i \cdot 8^{s'} B$, where $k_i \in \{ 0,..7 \}$, $s' \in \{0,.., 84\}$.
