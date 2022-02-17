@@ -59,8 +59,8 @@ Affine coordinates are used for points.
 Let $d$ be equal to $121665/121666$.
 
 \paragraph{Computations over a non-native field.}
-Let $F_p$ be an edwards25519 field, i.e. the size of the field is $2^{255} - 19$.
-In order to provide computations over non-native $F_p$ we use constraints over native field $F_k$.
+Let $\mathbb{F}_p$ be an edwards25519 field, i.e. the size of the field is $2^{255} - 19$.
+In order to provide computations over non-native $\mathbb{F}_p$ we use constraints over native field $\mathbb{F}_k$.
 Let $k < p$ be a prime number, which size is $254$ bits.
 Additionally, we compute an integer $t$, such that $2^t \cdot k \geq p^2 + p$.
 In our case, $t = 257$.
@@ -80,7 +80,7 @@ The first column contains all integers in the range $[0, 2^{20})$, and the secon
 \end{enumerate}
 Then we constrain the equation modulo $n$ and $2^t$ as follows:
 \begin{enumerate}
-\item $(a\cdot b) \mod n = (p \cdot q + r) \mod n$
+\item $(a\cdot b) \mod k = (p \cdot q + r) \mod k$
 \item $a'_0 = a_{12} + a_{11} \cdot 2^{15} + a_{10} \cdot 2^{35} + a_9 \cdot 2^{55}$, $a'_1 = a_8 + a_7 \cdot 2^{20} + a_6 \cdot 2^{40}$, $a'_1 = a_5 + a_4 \cdot 2^{20} + a_3 \cdot 2^{40}$, $a'_1 = a_2 + a_1 \cdot 2^{20} + a_0 \cdot 2^{40}$.
 The new limbs for  $b, q$, and $r$ are constructed similarly.
 \item Let $p'$ be $-p \mod 2^t$ and $p' = p'_{0} + p'_{1}\cdot 2^{75} + p'_2 \cdot 2^{135}+ p'_3 \cdot 2^{195}$. The limbs $p'_0, p'_1, p'_2$ and $p'_3$ are circuits parameters.
@@ -97,6 +97,23 @@ The new limbs for  $b, q$, and $r$ are constructed similarly.
 \item The value $v_0$ has to be less than $2^{68}$ and $v_1 \le 2^{78}$.
 \end{enumerate}
 
+The proof of the addition of the numbers from $\mathbb{F}_p$ proceeds as in the multiplication.
+We check an equation modulo $k$ and $2^t$:
+\begin{center}
+$a + b = p\cdot q + r$
+\end{center}
+We use the range proofs as above for $a, b$, and $r$.
+Since the value $q$ can be equal to $0$ or $1$, we use the short-range check without any lookups.
+The second part of the proof can be implemented as the following:
+\begin{enumerate}
+\item $(a\cdot b) \mod k = (p \cdot q + r) \mod k$
+\item $a_0 \cdot b_0 + p'\cdot q_0 - r_0 = v \cdot 2^3$, where $p'$ is $- p \mod 2^3$.
+\item Range-check that $v \leq 2^{27}$.
+\end{enumerate} 
+It is possible to extend to $n < p$ additions.
+Thus, the value $q$ is equal to an amount of additions minus 1, $t = q + 2$.
+The number of $t_i $ is increased by depending on $t$.
+In our case, it is enough ...
 
 \paragraph{Fixed-base scalar multiplication circuit}:
 We precompute all values $w(B,s',k) = k_i \cdot 8^{s'} B$, where $k_i \in \{ 0,..7 \}$, $s' \in \{0,.., 84\}$.
