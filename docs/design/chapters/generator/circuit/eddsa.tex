@@ -113,7 +113,17 @@ The second part of the proof can be implemented as the following:
 It is possible to extend to $n < p$ additions.
 Thus, the value $q$ is equal to an amount of additions minus 1, $t = q + 2$.
 The number of $t_i $ is increased by depending on $t$.
-In our case, it is enough ...
+Particularly, the scalar multiplication proceeds as an extension of additions.
+
+However, we need more special cases of non-native arithmetics for the elliptic curve's multiplication circuits.
+\begin{enumerate}
+\item Let $a^2 \mp b^2 \mp c = p \cdot q + r$, where $c$ is constant. 
+We change a range check for q to q < 2p.
+The total amount of the limbs does not change, but the last limb has to be checked by multiplication to $2^4$.
+\item Let $2 \cdot a \cdot b$.
+This case is similar to the case from step 1.
+\item ...
+\end{enumerate}
 
 \paragraph{Fixed-base scalar multiplication circuit}:
 We precompute all values $w(B,s',k) = k_i \cdot 8^{s'} B$, where $k_i \in \{ 0,..7 \}$, $s' \in \{0,.., 84\}$.
