@@ -8,7 +8,7 @@ cm_project(prove WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM C CXX)
 
 if(NOT Boost_FOUND AND NOT CMAKE_CROSSCOMPILING)
     cm_find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options thread system)
-elseif(CMAKE_CROSSCOMPILING)
+elseif(CMAKE_CROSSCOMPILING AND NOT TARGET boost)
     include(ExternalProject)
     set(Boost_LIBRARIES boost_random)
     externalproject_add(boost
@@ -73,6 +73,6 @@ if(APPLE OR NOT ${CMAKE_TARGET_ARCHITECTURE} STREQUAL ${CMAKE_HOST_SYSTEM_PROCES
                           XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM}")
 elseif(CMAKE_CROSSCOMPILING AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     set_target_properties(${CURRENT_PROJECT_NAME} PROPERTIES
-                          COMPILE_FLAGS "-s USE_BOOST_HEADERS=1"
-                          LINK_FLAGS "-s USE_BOOST_HEADERS=1")
+                          COMPILE_FLAGS "-s USE_BOOST_HEADERS -s USE_PTHREADS -s PROXY_TO_PTHREAD"
+                          LINK_FLAGS "-s USE_BOOST_HEADERS -s USE_PTHREADS -s PROXY_TO_PTHREAD")
 endif()

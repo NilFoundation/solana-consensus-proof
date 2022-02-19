@@ -8,7 +8,7 @@ cm_project(mock WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM C CXX)
 
 if(NOT Boost_FOUND AND NOT CMAKE_CROSSCOMPILING)
     cm_find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options random thread system)
-elseif(CMAKE_CROSSCOMPILING)
+elseif(CMAKE_CROSSCOMPILING AND NOT TARGET boost)
     include(ExternalProject)
     set(Boost_LIBRARIES boost_random)
     externalproject_add(boost
