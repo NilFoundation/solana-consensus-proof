@@ -124,10 +124,10 @@ The new limbs for  $b, q$, and $r$ are constructed similarly.
     \end{tabular}
 \end{center}
 
-Let $s_a$  be $(w_{1, j + 0} + w_{2, j + 0} + w_{3, j + 0} + w_{4, j + 0} + w_{5, j + 0} + w_{6, j + 0} + w_{7, j + 0} + w_{2, j + 1} + w_{3, j + 1}, w_{4, j + 1}, w_{5, j + 1} + w_{6, j + 1} - 12 \cdot (2^20 - 1))$.
-Let $s_b$  be $(w_{1, j + 2} + w_{2, j + 2} + w_{3, j + 2} + w_{4, j + 2} + w_{5, j + 2} + w_{6, j + 2} + w_{7, j + 2} + w_{2, j + 3} + w_{3, j + 3}, w_{4, j + 3}, w_{5, j + 3} + w_{6, j + 3} - 12 \cdot (2^20 - 1))$.
-Let $s_q$  be $(w_{1, j + 4} + w_{2, j + 4} + w_{3, j + 4} + w_{4, j + 4} + w_{5, j + 4} + w_{6, j + 4} + w_{7, j + 4} + w_{2, j + 5} + w_{3, j + 5}, w_{4, j + 5}, w_{5, j + 5} + w_{6, j + 5} - 12 \cdot (2^20 - 1))$.
-Let $s_r$  be $(w_{1, j + 6} + w_{2, j + 6} + w_{3, j + 6} + w_{4, j + 6} + w_{5, j + 6} + w_{6, j + 6} + w_{7, j + 6} + w_{2, j + 7} + w_{3, j + 7}, w_{4, j + 7}, w_{5, j + 7} + w_{6, j + 7} - 12 \cdot (2^20 - 1))$.
+Let $s_a$  be $(w_{1, j + 0} + w_{2, j + 0} + w_{3, j + 0} + w_{4, j + 0} + w_{5, j + 0} + w_{6, j + 0} + w_{7, j + 0} + w_{2, j + 1} + w_{3, j + 1}, w_{4, j + 1}, w_{5, j + 1} + w_{6, j + 1} - 12 \cdot (2^20 - 1))$. \\
+Let $s_b$  be $(w_{1, j + 2} + w_{2, j + 2} + w_{3, j + 2} + w_{4, j + 2} + w_{5, j + 2} + w_{6, j + 2} + w_{7, j + 2} + w_{2, j + 3} + w_{3, j + 3}, w_{4, j + 3}, w_{5, j + 3} + w_{6, j + 3} - 12 \cdot (2^20 - 1))$. \\
+Let $s_q$  be $(w_{1, j + 4} + w_{2, j + 4} + w_{3, j + 4} + w_{4, j + 4} + w_{5, j + 4} + w_{6, j + 4} + w_{7, j + 4} + w_{2, j + 5} + w_{3, j + 5}, w_{4, j + 5}, w_{5, j + 5} + w_{6, j + 5} - 12 \cdot (2^20 - 1))$. \\
+Let $s_r$  be $(w_{1, j + 6} + w_{2, j + 6} + w_{3, j + 6} + w_{4, j + 6} + w_{5, j + 6} + w_{6, j + 6} + w_{7, j + 6} + w_{2, j + 7} + w_{3, j + 7}, w_{4, j + 7}, w_{5, j + 7} + w_{6, j + 7} - 12 \cdot (2^20 - 1))$. \\
 Constraints:
 \begin{itemize}
 \item  $s_a \cdot (w_{8, j + 0} \cdot s_a - 1) = 0$
@@ -176,7 +176,7 @@ Lookup constraints:
 
 Copy constraints:
 \begin{center}
-$(w_{0, j + 8}, w_{0, j + 4}), (w_{1, j + 8}, w_{0, j + 5}), (w_{2, j + 8}, w_{1, j + 5}), (w_{6, j + 8}, w_{0, j + 6}), (w_{7, j + 8}, w_{1, j + 4}), (w_{8, j + 8}, w_{2, j + 4}), (w_{0, j + 9}, w_{0, j + 3}), (w_{1, j + 9}, w_{1, j + 3}), (w_{2, j + 9}, w_{3, j + 4}), (w_{3, j + 9}, w_{1, j + 2}), (w_{4, j + 9}, w_{2, j + 2}), (w_{5, j + 9}, w_{3, j + 2}), (w_{7, j + 9}, w_{0, j + 11}), (w_{8, j + 9}, w_{4, j + 11}), (w_{0, j + 10}, w_{0, j + 0}), (w_{1, j + 10}, w_{0, j + 1}), (w_{2, j + 10}, w_{1, j + 1}), (w_{3, j + 10}, w_{0, j + 2}), (w_{4, j + 10}, w_{1, j + 0}), (w_{5, j + 10}, w_{2, j + 0}), (w_{6, j + 10}, w_{3, j + 0})$
+$(w_{0, j + 8}, w_{0, j + 4}), (w_{1, j + 8}, w_{0, j + 5}), (w_{2, j + 8}, w_{1, j + 5}), $\\$ (w_{6, j + 8}, w_{0, j + 6}), (w_{7, j + 8}, w_{1, j + 4}), (w_{8, j + 8}, w_{2, j + 4}), (w_{0, j + 9}, w_{0, j + 3}), $\\$(w_{1, j + 9}, w_{1, j + 3}), (w_{2, j + 9}, w_{3, j + 4}), (w_{3, j + 9}, w_{1, j + 2}), (w_{4, j + 9}, w_{2, j + 2}), $\\$(w_{5, j + 9}, w_{3, j + 2}), (w_{7, j + 9}, w_{0, j + 11}), (w_{8, j + 9}, w_{4, j + 11}), (w_{0, j + 10}, w_{0, j + 0}),$\\$ (w_{1, j + 10}, w_{0, j + 1}), (w_{2, j + 10}, w_{1, j + 1}), (w_{3, j + 10}, w_{0, j + 2}), (w_{4, j + 10}, w_{1, j + 0}),$\\$ (w_{5, j + 10}, w_{2, j + 0}), (w_{6, j + 10}, w_{3, j + 0})$
 \end{center}
 
 The proof of the addition of the numbers from $\mathbb{F}_p$ proceeds as in the multiplication.
@@ -288,26 +288,49 @@ Constraints:
         \end{itemize}
 \end{itemize}
 
-\paragraph{Variable-base scalar multiplication circuit}:
+\paragraph{Decomposition circuit}
+The decomposition circuit is a specific function for SHA-512, which prepares output to the non-native variable base scalar multiplication.
+Let $\{ k_0, k_1, k_2, ..., k_7\}$ be a SHA-512 output.
+Suppose that we want to constrain $k_0 + k_1 \cdot 2^{64} + ...+ k_7 \cdot 2^{448} = L \cdot q + r$, where $L = 2^{252}+27742317777372353535851937790883648493$.
+The size of each $k_i$ is range-constrained by SHA-512 circuit.
+Since each degree of two can be reduced modulo $L$ on the circuit definition's step, the value $q$ is range-constrained by $2^67$ and $t = 69$.
+Thus, the $q$ decomposed to $q_0, q_1, q_2, q_3$, which corresponds to $20, 20, 20, 7$ bits.
+\paragraph{Non-native decomposition circuit}
 \begin{center}
     \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
         & $w_0$  & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$ & $w_6$ & $w_7$ & $w_8$  \\
         \hline
-        j + 0  & $acc$  & $b_{511}$ & $b_{510}$ & $x_2$   & $y_2$ & $b_{509}$  & $x_3$ & $y_3$ & $b_{508}$    \\
-        j + 1  & $acc$ & $x_1$  & $ y_1$  & $x_4$ & $ y_4$ & $b_{507}$  & $x_5$ & $y_5$ & $b_{506}$ \\
-        j + 2  & $acc$  & $x_1$ & $y_1$  & $x_6$ & $y_6$ & $b_{505}$ & $x_7$ & $y_7$  & $b_{504}$  \\
-        ...     &             &            &           &             &           \\
-        j + 253  & $acc$ & $x_1$  & $ y_1$  & $x_{508}$ & $ y_{508}$ & $b_{3}$  & $x_{509}$ & $y_{509}$ & $b_{2}$ \\
-        j + 254  & $k$ & $x_{512}$ & $y_{512}$ & $x_{510}$ & $y_{510}$ & $b_{1}$   & $x_{511}$ & $y_{511}$  & $b_{0}$    \\
+        j + 0  & $r_0$  & $r_1$ & $r_2$ & $r_3$ & $r_4$ & $r_5$ & $r_6$& $r_7$ & $r_8$   \\
+        j + 1  & $r_9$  & $r_{10}$ & $r_{11}$ & $r_{12}$ & $r$ & $\xi$ & $c$& $$ & $$   \\
+        j + 2  & $q_0$ & $q_1$& $q_2$  & $q_3$ & $v_0$ & $v_1$ & $v_2$ & $v_3$ & $$   \\
+        j + 3  & $k_0$ & $k_1$ & $k_2$& $k_3$  & $k_4$ & $k_5$ & $k_6$ & $k_7$ & $v$   \\
     \end{tabular}
 \end{center}
-Evaluations:
-\begin{center}
-The values $b_i$, $i = 0,.., 511$ are binary representation of the scalar $k$ and $acc$ in each row is an accumulator for these bits.\\
+Let $s_r$  be $(w_{0, j + 0} + w_{1, j + 0} + w_{2, j + 0} + w_{3, j + 0} + w_{4, j + 0} + w_{5, j + 0} + w_{6, j + 0} + w_{7, j + 0} + w_{8, j + 0}, w_{0, j + 1}, w_{1, j + 1} + w_{2, j + 1} - 12 \cdot (2^20 - 1))$. \\
+Constraints:
+\begin{itemize}
+\item $w_{0, j + 3} + w_{1, j + 3} \cdot 2^{64} + w_{2, j + 3} \cdot 2^{128} + w_{3, j + 3} \cdot 2^{192} + w_{4, j + 3} \cdot (2^{256} \mod k) + w_{5, j + 3} \cdot (2^{320} \mod k) + w_{6, j + 3} \cdot (2^{384} \mod k) + w_{7, j + 3} \cdot (2^{448} \mod k) - (w_{0, j + 2} \cdot 2^{47} + w_{1, j + 2} \cdot 2^{27} + w_{2, j + 2} \cdot 2^{7} + w_{3, j + 2}) \cdot L + (w_{4, j + 1}) = 0$
+\item $w_{4, j + 1} = w_{3, j + 1} + w_{2, j + 1} \cdot 2^{13} + w_{1, j + 1} \cdot 2^{33} + w_{0, j + 1} \cdot 2^{53} + w_{8, j + 0} \cdot 2^{73} + w_{7, j + 0} \cdot 2^{93} + w_{6, j + 0} \cdot 2^{113} + w_{5, j + 0} \cdot 2^{133} + w_{4, j + 0} \cdot 2^{153} + w_{3, j + 0} \cdot 2^{173} + w_{2, j + 0} \cdot 2^{193} + w_{1, j + 0} \cdot 2^{213} + w_{0, j + 0} \cdot 2^{233}$
+\item $s_r \cdot (w_{5, j + 1} \cdot s_r - 1) = 0$
+\item $w_{5, j + 1} \cdot (s_r) + (1 - w_{5, j + 1} \cdot s_r) \cdot w_{6, j + 1} - 1 = 0$
+\item $w_{0, j + 3} + w_{1, j + 3} \cdot 2^{64} + (w_{0, j + 2} \cdot 2^{47} + w_{1, j + 2} \cdot 2^{27} + w_{2, j + 2} \cdot 2^{7} + w_{3, j + 2}) \cdot (-p \mod 2^t) - (w_{3, j + 1} + w_{2, j + 1} \cdot 2^{13} + w_{1, j + 1} \cdot 2^{33} + w_{0, j + 1} \cdot 2^{53}) = v \cdot 2^{69}$
+\item $w_{8, j + 3} = w_{4, j + 2} \cdot 2^{41} + w_{5, j + 2} \cdot 2^{21} + w_{6, j + 2} \cdot 2 + w_{7, j + 2}$
+\item $(w_{8, j + 2} - 1) \cdot w_{8, j + 2} = 0$
+\end{itemize}
+Lookup constraints:
+\begin{itemize}
+\item $(w_{0, j + 0}), (w_{1, j + 0}), (w_{2, j + 0}), (w_{3, j + 0}), (w_{4, j + 0}), (w_{5, j + 0}), (w_{6, j + 0}), (w_{7, j + 0}), (w_{8, j + 0}), (w_{0, j + 1}), (w_{1, j + 1}), (w_{2, j + 1}), (w_{3, j + 1}, w_{6, j + 1}), (w_{3, j + 1} \cdot 2^{7})$
+\item $(w_{0, j + 2}), (w_{1, j + 2}), (w_{2, j + 2}), (w_{3, j + 2}),(w_{3, j + 2} \cdot 2^{13})$
+\item $(w_{4, j + 2}), (w_{5, j + 2}), (w_{6, j + 2}), (w_{7, j + 2})$
+\end{itemize}
+
+\paragraph{Variable-base scalar multiplication}:
+
+The values $b_i$, $i = 0,.., 511$ are binary representation of the scalar $k = \{ k_0, k_1, .., k_7\}$.\\
+
  The values $(x_1, y_1) = A$.\\
  $(x_2, y_2) = 2 (b_{511} \cdot (x_1, y_1)) + b_{510} \cdot (x_1, y_1)$ \\
   $(x_i, y_i) = 2 (x_{i - 1}, y_{i - 1}) + b_{512 - i} \cdot (x_1, y_1)$ \\
-\end{center}
 
 Define the following functions:
 \begin{enumerate}
@@ -317,56 +340,3 @@ Define the following functions:
     \item $\phi_2: (b, x_1, y_1, x_2, y_2, y_3) \mapsto $ \\
         $y_3 \cdot ((y_1^2 - x_1^2)\cdot(2 - y_1^2 + x_1^2) - 2dx_1y_1(y_1^2+x_1^2) \cdot x_2y_2b ) - (2x_1y_1\cdot(2 - y_1^2 +x_1^2)\cdot x_2b + (y_1^2 + x_1^2)\cdot(y_1^2 - x_1^2)\cdot (y_2b + (1 - b)))$
 \end{enumerate}
-
-Constraints:
-\begin{itemize}
-    \item For $j + 0$:
-        \begin{itemize}
-        	 \item $(w_{1, j + 0} - 1) \cdot w_{1, j + 0} = 0$ 
-        	 \item $(w_{2, j + 0} - 1) \cdot w_{2, j + 0} = 0$
-        	 \item $(w_{5, j + 0} - 1) \cdot w_{5, j + 0} = 0$ 
-        	 \item $(w_{8, j + 0} - 1) \cdot w_{8, j + 0} = 0$ 
-            \item $w_{0, j + 0} = w_{1, j} \cdot 2^3 + w_{2, j + 0} \cdot 2^2 + w_{5, j + 0} \cdot 2 + w_{8, j + 0}$
-            \item $\phi_1(w_{2, j + 0}, w_{1, j + 1} \cdot w_{1, j + 0}, (w_{2, j + 1} \cdot w_{1, j + 0} + (1 - w_{1, j + 0})), w_{1, j + 1}, w_{2, j + 1}, w_{3, j + 0})$
-            \item $\phi_2(w_{2, j + 0}, w_{1, j + 1} \cdot w_{1, j + 0}, (w_{2, j + 1} \cdot w_{1, j + 0} + (1 - w_{1, j + 0})), w_{1, j + 1}, w_{2, j + 1}, w_{4, j + 0})$
-            \item $\phi_1(w_{5, j + 0}, w_{3, j + 0}, (w_{4, j + 0}, w_{1, j + 1}, w_{2, j + 1}, w_{6, j + 0})$
-            \item $\phi_2(w_{5, j + 0}, w_{3, j + 0}, (w_{4, j + 0}, w_{1, j + 1}, w_{2, j + 1}, w_{7, j + 0})$
-        \end{itemize}
-    \item For $j + z$, $z \equiv 1 \mod 2$:
-        \begin{itemize}
-        	\item $w_{1, j + z} = w_{1, j + z - 1}$
-        	\item $w_{2, j + z} = w_{2, j + z - 1}$
-        	 \item $(w_{5, j + z} - 1) \cdot w_{5, j + z} = 0$
-        	 \item $(w_{8, j + z} - 1) \cdot w_{8, j + z} = 0$
-            \item $w_{0, j + z} = w_{0, j + z - 1} \cdot 2^2 + w_{5, j + z} \cdot 2 + w_{8, j + z}$
-            \item $\phi_1(w_{8, j + z - 1}, w_{6, j + z - 1}, w_{7, j + z - 1}, w_{1, j + z}, w_{2, j + z}, w_{3, j + z})$
-            \item $\phi_2(w_{8, j + z - 1}, w_{6, j + z - 1}, w_{7, j + z - 1}, w_{1, j + z}, w_{2, j + z}, w_{4, j + z})$
-            \item $\phi_1(w_{5, j + z}, w_{3, j + z}, w_{4, j + z}, w_{1, j + z}, w_{2, j + z}, w_{6, j + z})$
-            \item $\phi_2(w_{5, j + z}, w_{3, j + z}, w_{4, j + z}, w_{1, j + z}, w_{2, j + z}, w_{7, j + z})$         
-        \end{itemize}
-    \item For $j + z$, $z \equiv 0 \mod 2, z \neq 0$:
-        \begin{itemize}
-        	\item $w_{1, j + z} = w_{1, j + z - 1}$
-        	\item $w_{2, j + z} = w_{2, j + z - 1}$
-            \item $(w_{5, j + z} - 1) \cdot w_{5, j + z} = 0$
-        	 \item $(w_{8, j + z} - 1) \cdot w_{8, j + z} = 0$
-            \item $w_{0, j + z} = w_{0, j + z - 1} \cdot 2^2 + w_{5, j + z} \cdot 2 + w_{8, j + z}$
-            \item $\phi_1(w_{8, j + z - 1}, w_{6, j + z - 1}, w_{7, j + z - 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{3, j + z})$
-            \item $\phi_2(w_{8, j + z - 1}, w_{6, j + z - 1}, w_{7, j + z - 1}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{4, j + z})$
-            \item $\phi_1(w_{5, j + z}, w_{3, j + z}, w_{4, j + z}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{6, j + z})$
-            \item $\phi_2(w_{5, j + z}, w_{3, j + z}, w_{4, j + z}, w_{1, j + z - 1}, w_{2, j + z - 1}, w_{7, j + z})$         
-        \end{itemize}
-    \item For $j + 254$:
-        \begin{itemize}
-        	 \item $(w_{5, j + z} - 1) \cdot w_{5, j + z} = 0$
-        	 \item $(w_{8, j + z} - 1) \cdot w_{8, j + z} = 0$
-            \item $w_{0, j + 254} = w_{0, j + 253} \cdot 2^2 + w_{5, j + 254} \cdot 2 + w_{8, j + 254}$
-            \item $\phi_1(w_{8, j + 253}, w_{6, j + 253}, w_{7, j + 253}, w_{1, j + 253}, w_{2, j + 253}, w_{1, j + 254})$
-            \item $\phi_2(w_{8, j + 253}, w_{6, j + 253}, w_{7, j + 253}, w_{1, j + 253}, w_{2, j + 253}, w_{4, j + 254})$
-            \item $\phi_1(w_{5, j + 254}, w_{3, j + 254}, w_{4, j + 254}, w_{1, j + 253}, w_{2, j + 253}, w_{6, j + 254})$
-            \item $\phi_2(w_{5, j + 254}, w_{3, j + 254}, w_{4, j + 254}, w_{1, j + 253}, w_{2, j + 253}, w_{7, j + 254})$
-            \item $\phi_1(w_{8, j + 254}, w_{6, j + 254}, w_{7, j + 254}, w_{1, j + 253}, w_{2, j + 253}, w_{1, j + 254})$
-            \item $\phi_2(w_{8, j + 254}, w_{6, j + 254}, w_{7, j + 254}, w_{1, j + 253}, w_{2, j + 253}, w_{2, j + 254})$ 
-        \end{itemize}
-
-\end{itemize}
