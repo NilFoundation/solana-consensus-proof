@@ -75,6 +75,7 @@ The first column contains all integers in the range $[0, 2^{20})$, and the secon
 \begin{enumerate}
 \item The limbs $a_0, a_1, ..., a_{12}$ are range-constrained by the lookup table.
 \item The value $a_{12} \cdot 2^5$ are range-constrained by the lookup table.
+\item Let $\xi = (\sum_{i = 0}^{11} (a_i - 2^{20} + 1))^{-1}$.
 \item $ (\sum_{i = 0}^{11} (a_i - 2^{20} + 1) \cdot (\xi \cdot (\sum_{i = 0}^{11} (a_i - 2^{20} + 1) - 1) = 0$
 \item $\xi \cdot (\sum_{i = 0}^{11} (a_i - 2^{20} + 1) + (1 - \xi \cdot (\sum_{i = 0}^{11} (a_i - 2^{20} + 1))\cdot c - 1 = 0$, where $c$ is corresponding second column's value for $a_12$.
 \end{enumerate}
@@ -89,13 +90,94 @@ The new limbs for  $b, q$, and $r$ are constructed similarly.
 	\item $t_0 = a'_0 \cdot b'_0 + p'_0 \cdot q'_0$
 	\item $t_1 = a'_1 \cdot b'_0 + a'_0 \cdot b'_1 + p'_0 \cdot q'_1 + p'_1 \cdot q'_0$
 	\item $t_2 = a'_2 \cdot b'_0 + a'_0 \cdot b'_2 + a'_1 \cdot b'_1 + p'_0 \cdot q'_2 + p'_2 \cdot q'_0+ p'_1 		\cdot q'_1$
-	\item $t_3 = a'_3 \cdot b'_0 + a'_0 \cdot b'_3 + a'_1 \cdot b'_2 + a'_1 \cdot b'_2 + p'_0 \cdot q'_3 + p'_3 	\cdot q'_0+ p'_1 \cdot q'_2 + p'_2 \cdot q'_1$
+	\item $t_3 = a'_3 \cdot b'_0 + a'_0 \cdot b'_3 + a'_1 \cdot b'_2 + a'_2 \cdot b'_1 + p'_0 \cdot q'_3 + p'_3 	\cdot q'_0+ p'_1 \cdot q'_2 + p'_2 \cdot q'_1$
 	\item $t_4 = a'_3 \cdot b'_1 + a'_1 \cdot b'_3 + a'_2 \cdot b'_2 + p'_1 \cdot q'_3 + p'_3 \cdot q'_1+ p'_2 			\cdot q'_2$
 	\end{enumerate}
-\item $u_0 = t_0 - r_0 + t_1 \cdot 2^{75} - r_1 \cdot 2^{75} = v_0 \cdot 2^{135}$
-\item $u_1 = t_2 - r_2 + t_3 \cdot 2^{60} - r_3 \cdot 2^{60} + t_4 \cdot 2^{120} - r_4 \cdot 2^{120} + v_0 = v_1 \cdot 2^{122}$
+\item $u_0 = t_0 - r'_0 + t_1 \cdot 2^{75} - r'_1 \cdot 2^{75} = v_0 \cdot 2^{135}$
+\item $u_1 = t_2 - r'_2 + t_3 \cdot 2^{60} - r'_3 \cdot 2^{60} + t_4 \cdot 2^{120} + v_0 = v_1 \cdot 2^{122}$
 \item The value $v_0$ has to be less than $2^{68}$ and $v_1 \le 2^{78}$.
+\begin{enumerate}
+	\item $v_0 = v_{0,3} + v_{0,2} \cdot 2^{8} + v_{0,1} \cdot 2^{28} + v_{0,0} \cdot 2^{48}$
+	\item Lookup constraints: $(v_{0,3}), (v_{0,2}), (v_{0,1}), (v_{0,0}), (v_{0,3} \cdot 2^{12})$
+	\item $v_1 = v_{1,3} + v_{1,2} \cdot 2^{18} + v_{1,1} \cdot 2^{38} + v_{1,0} \cdot 2^{58}$
+	\item Lookup constraints: $(v_{1,3}), (v_{1,2}), (v_{1,1}), (v_{1,0}), (v_{1,3} \cdot 2^{2})$
 \end{enumerate}
+\end{enumerate}
+
+\paragraph{Non-native miltiplication circuit for $a \cdot b$}
+\begin{center}
+    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
+        & $w_0$  & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$ & $w_6$ & $w_7$ & $w_8$  \\
+        \hline
+        j + 0  & $a'_0$  & $a_0$ & $a_1$ & $a_2$ & $a_3$ & $a_4$ & $a_5$ & $a_6$ & $\xi$   \\
+        j + 1  & $a'_1$  & $a'_2$ & $a_7$ & $a_{8}$ & $a_{9}$ & $a_{10}$ & $a_{11}$ & $a_{12}$ & $c$   \\
+        j + 2  & $b'_0$ & $b_0$  & $b_1$ & $b_2$ & $b_3$ & $b_4$ & $b_5$ & $b_6$ & $\xi$   \\
+        j + 3  & $b'_1$ & $b'_2$  & $b_7$  & $b_8$ & $b_9$ & $b_{10}$ & $b_{11}$ & $b_{12}$ & $c$   \\
+        j + 4  & $q'_0$  & $q_0$  & $q_1$ & $q_2$ & $q_3$ & $q_4$ & $q_5$ & $q_6$ & $\xi$   \\
+        j + 5  & $q'_1$ & $q'_2$& $q_7$  & $q_8$ & $q_9$ & $q_{10}$ & $q_{11}$ & $q_{12}$ & $c$   \\
+        j + 6  & $r'_0$& $r_0$  & $r_1$ & $r_2$ & $r_3$ & $r_4$ & $r_5$ & $r_6$ & $\xi$   \\
+        j + 7  & $r'_1$ & $r'_3$& $r_7$  & $r_8$ & $r_9$ & $r_{10}$ & $r_{11}$ & $r_{12}$ & $c$   \\
+        j + 8  & $q'_0$ & $q'_1$ & $q'_2$& $r'_3$  & $r'_2$ & $r'_1$ & $r'_0$ & $q_0$ & $q_1$   \\
+        j + 9  & $b'_1$ & $b'_2$& $q_2$  & $b_0$ & $b_1$ & $b_2$ & $--$ & $v_0$ & $v_1$   \\
+        j + 10  & $a'_0$  & $a'_1$ & $a'_2$ & $b'_0$ & $a_0$ & $a_1$ & $a_2$ & $v_{0, 3}$ & $v_{1, 3}$   \\
+        j + 11  & $v_0$  & $v_{0, 0}$ & $v_{0, 1}$ & $v_{0,2}$ & $v_1$ & $v_{1,0}$ & $v_{1, 1}$ & $v_{1, 2}$ & $--$   \\
+    \end{tabular}
+\end{center}
+
+Let $s_a$  be $(w_{1, j + 0} + w_{2, j + 0} + w_{3, j + 0} + w_{4, j + 0} + w_{5, j + 0} + w_{6, j + 0} + w_{7, j + 0} + w_{2, j + 1} + w_{3, j + 1}, w_{4, j + 1}, w_{5, j + 1} + w_{6, j + 1} - 12 \cdot (2^20 - 1))$.
+Let $s_b$  be $(w_{1, j + 2} + w_{2, j + 2} + w_{3, j + 2} + w_{4, j + 2} + w_{5, j + 2} + w_{6, j + 2} + w_{7, j + 2} + w_{2, j + 3} + w_{3, j + 3}, w_{4, j + 3}, w_{5, j + 3} + w_{6, j + 3} - 12 \cdot (2^20 - 1))$.
+Let $s_q$  be $(w_{1, j + 4} + w_{2, j + 4} + w_{3, j + 4} + w_{4, j + 4} + w_{5, j + 4} + w_{6, j + 4} + w_{7, j + 4} + w_{2, j + 5} + w_{3, j + 5}, w_{4, j + 5}, w_{5, j + 5} + w_{6, j + 5} - 12 \cdot (2^20 - 1))$.
+Let $s_r$  be $(w_{1, j + 6} + w_{2, j + 6} + w_{3, j + 6} + w_{4, j + 6} + w_{5, j + 6} + w_{6, j + 6} + w_{7, j + 6} + w_{2, j + 7} + w_{3, j + 7}, w_{4, j + 7}, w_{5, j + 7} + w_{6, j + 7} - 12 \cdot (2^20 - 1))$.
+Constraints:
+\begin{itemize}
+\item  $s_a \cdot (w_{8, j + 0} \cdot s_a - 1) = 0$
+\item $w_{8, j + 0} \cdot (s_a) + (1 - w_{8, j + 0} \cdot s_a) \cdot w_{8, j + 1} - 1 = 0$
+\item $w_{0, j + 0} = w_{7, j + 1} + w_{6, j + 1} \cdot 2^{15} + w_{5, j + 1} \cdot 2^{35} + w_{4, j + 1} \cdot 2^{55}$
+\item $w_{0, j + 1} = w_{3, j + 1} + w_{2, j + 1} \cdot 2^{20} + w_{7, j + 0} \cdot 2^{40}$
+\item $w_{1, j + 1} = w_{6, j + 0} + w_{5, j + 0} \cdot 2^{20} + w_{4, j + 0} \cdot 2^{40}$
+
+\item  $s_b \cdot (w_{8, j + 2} \cdot s_b - 1) = 0$
+\item $w_{8, j + 2} \cdot (s_b) + (1 - w_{8, j + 2} \cdot s_b) \cdot w_{8, j + 3} - 1 = 0$
+\item $w_{0, j + 2} = w_{7, j + 3} + w_{6, j + 3} \cdot 2^{15} + w_{5, j + 3} \cdot 2^{35} + w_{4, j + 3} \cdot 2^{55}$
+\item $w_{0, j + 3} = w_{3, j + 3} + w_{2, j + 3} \cdot 2^{20} + w_{7, j + 2} \cdot 2^{40}$
+\item $w_{1, j + 3} = w_{6, j + 2} + w_{5, j + 2} \cdot 2^{20} + w_{4, j + 2} \cdot 2^{40}$
+
+\item  $s_q \cdot (w_{8, j + 4} \cdot s_q - 1) = 0$
+\item $w_{8, j + 4} \cdot (s_q) + (1 - w_{8, j + 4} \cdot s_q) \cdot w_{8, j + 5} - 1 = 0$
+\item $w_{0, j + 4} = w_{7, j + 5} + w_{6, j + 5} \cdot 2^{15} + w_{5, j + 5} \cdot 2^{35} + w_{4, j + 5} \cdot 2^{55}$
+\item $w_{0, j + 5} = w_{3, j + 5} + w_{2, j + 5} \cdot 2^{20} + w_{7, j + 4} \cdot 2^{40}$
+\item $w_{1, j + 5} = w_{6, j + 4} + w_{5, j + 4} \cdot 2^{20} + w_{4, j + 4} \cdot 2^{40}$
+
+\item  $s_r \cdot (w_{8, j + 6} \cdot s_r - 1) = 0$
+\item $w_{8, j + 6} \cdot (s_r) + (1 - w_{8, j + 6} \cdot s_r) \cdot w_{8, j + 7} - 1 = 0$
+\item $w_{4, j + 8} = w_{7, j + 7} + w_{6, j + 7} \cdot 2^{15} + w_{5, j + 7} \cdot 2^{35} + w_{4, j + 7} \cdot 2^{55}$
+\item $w_{0, j + 7} = w_{3, j + 7} + w_{2, j + 7} \cdot 2^{20} + w_{7, j + 6} \cdot 2^{40}$
+\item $w_{1, j + 7} = w_{6, j + 6} + w_{5, j + 6} \cdot 2^{20} + w_{4, j + 6} \cdot 2^{40}$
+\item $w_{1, j + 7} = w_{1, j + 6} + w_{2, j + 6} \cdot 2^{20} + w_{3, j + 6} \cdot 2^{40}$
+
+\item $w_{3, j + 8} - w_{1, j + 7} = 0$
+\item $w_{5, j + 8} - w_{0, j + 7} = 0$
+
+\item $w_{0, j + 10} \cdot w_{3, j + 10} + p'_0 \cdot w_{0, j + 8} - w_{6, j + 8} + 2^{75} \cdot (w_{1, j + 10} \cdot w_{3, j + 10} + w_{0, j + 10} \cdot w_{0, j + 9} + p'_0 \cdot w_{1, j + 8} + p'_1 \cdot w_{0, j + 8}) - w_{5, j + 8}\ dot 2^{75} - w_{7, j + 9} \cdot 2^{135} = 0$
+\item $w_{2, j + 10} \cdot w_{3, j + 10} + w_{0, j + 10} \cdot w_{1, j + 9} + w_{1, j + 10} \cdot w_{0, j + 9} + p'_0 \cdot w_{2, j + 8} + p'_2 \cdot w_{0, j + 8} + p'_1 \cdot w_{1, j + 8} - w_{4, j + 8} + 2^{60} \cdot ((w_{4, j + 10} \cdot 2^{40} + w_{5, j + 10} \cdot 2^{20} + w_{6, j + 10}) \cdot w_{3, j + 10} + w_{0, j + 10} \cdot (w_{3, j + 9} \cdot 2^{40} + w_{4, j + 9} \cdot 2^{20} + w_{5, j + 9}) + w_{1, j + 10} \cdot w_{1, j + 9} + w_{2, j + 10} \cdot w_{0, j + 9} + p'_0 \cdot (w_{7, j + 8} \cdot 2^{40} + w_{8, j + 8} \cdot 2^{20} + w_{2, j + 9}) + p'_3 \cdot w_{0, j + 8} + p'_1 \cdot w_{2, j + 8} + p'_2 \cdot w_{1, j + 8}) - 2^{60} \cdot w_{3, j + 8} + 2^{120} \cdot ((w_{4, j + 10} \cdot 2^{40} + w_{5, j + 10} \cdot 2^{20} + w_{6, j + 10}) \cdot w_{0, j + 9} + w_{1, j + 10} \cdot(w_{3, j + 9} \cdot 2^{40} + w_{4, j + 9} \cdot 2^{20} + w_{5, j + 9}) + w_{2, j + 10} \cdot w_{1, j + 9} + p'_1 \cdot (w_{7, j + 8} \cdot 2^{40} + w_{8, j + 8} \cdot 2^{20} + w_{2, j + 9}) + p'_3 \cdot w_{1, j + 8} + p'_2 \cdot w_{2, j + 8}) + w_{7, j + 9} - 2^{122} \cdot w_{8, j + 9} = 0$
+\item $w_{4, j + 11} = w_{5, j + 11} \cdot 2^{58} + w_{6, j + 11} \cdot 2^{38} + w_{7, j + 11} \cdot 2^{18} + w_{8, j + 10}$
+\item $w_{0, j + 11} = w_{1, j + 11} \cdot 2^{48} + w_{2, j + 11} \cdot 2^{28} + w_{3, j + 11} \cdot 2^8 + w_{7, j +10}$
+\end{itemize}
+
+Lookup constraints:
+\begin{itemize}
+\item $(w_{1, j + 0}), (w_{2, j + 0}), (w_{3, j + 0}, (w_{4, j + 0}), (w_{5, j + 0}), (w_{6, j + 0}), (w_{7, j + 0}), (w_{2, j + 1}), (w_{3, j + 1}), (w_{4, j + 1}), (w_{5, j + 1}), (w_{6, j + 1}), (w_{7, j + 1}, w_{8, j + 1}), (w_{7, j + 1} \cdot 2^{5})$
+\item $(w_{1, j + 2}), (w_{2, j + 2}), (w_{3, j + 2}, (w_{4, j + 2}), (w_{5, j + 2}), (w_{6, j + 2}), (w_{7, j + 2}), (w_{2, j + 3}), (w_{3, j + 3}), (w_{4, j + 3}), (w_{5, j + 3}), (w_{6, j + 3}), (w_{7, j + 3}, w_{8, j + 3}), (w_{7, j + 3} \cdot 2^{5})$
+\item $(w_{1, j + 4}), (w_{2, j + 4}), (w_{3, j + 4}, (w_{4, j + 4}), (w_{5, j + 4}), (w_{6, j + 4}), (w_{7, j + 4}), (w_{2, j + 5}), (w_{3, j + 5}), (w_{4, j + 5}), (w_{5, j + 5}), (w_{6, j + 5}), (w_{7, j + 5}, w_{8, j + 5}), (w_{7, j + 5} \cdot 2^{5})$
+\item $(w_{1, j + 6}), (w_{2, j + 6}), (w_{3, j + 6}, (w_{4, j + 6}), (w_{5, j + 6}), (w_{6, j + 6}), (w_{7, j + 6}), (w_{2, j + 7}), (w_{3, j + 7}), (w_{4, j + 7}), (w_{5, j + 7}), (w_{6, j + 7}), (w_{7, j + 7}, w_{8, j + 7}), (w_{7, j + 7} \cdot 2^{5})$
+\item $(w_{1, j + 11}), (w_{2, j + 11}), (w_{3, j + 11}), (w_{7, j + 10}), (w_{7, j + 10} \cdot 2^{12})$
+\item $(w_{5, j + 11}), (w_{6, j + 11}), (w_{7, j + 11}), (w_{8, j + 10}), (w_{8, j + 10} \cdot 2^{2})$
+\end{itemize}
+
+Copy constraints:
+\begin{center}
+$(w_{0, j + 8}, w_{0, j + 4}), (w_{1, j + 8}, w_{0, j + 5}), (w_{2, j + 8}, w_{1, j + 5}), (w_{6, j + 8}, w_{0, j + 6}), (w_{7, j + 8}, w_{1, j + 4}), (w_{8, j + 8}, w_{2, j + 4}), (w_{0, j + 9}, w_{0, j + 3}), (w_{1, j + 9}, w_{1, j + 3}), (w_{2, j + 9}, w_{3, j + 4}), (w_{3, j + 9}, w_{1, j + 2}), (w_{4, j + 9}, w_{2, j + 2}), (w_{5, j + 9}, w_{3, j + 2}), (w_{7, j + 9}, w_{0, j + 11}), (w_{8, j + 9}, w_{4, j + 11}), (w_{0, j + 10}, w_{0, j + 0}), (w_{1, j + 10}, w_{0, j + 1}), (w_{2, j + 10}, w_{1, j + 1}), (w_{3, j + 10}, w_{0, j + 2}), (w_{4, j + 10}, w_{1, j + 0}), (w_{5, j + 10}, w_{2, j + 0}), (w_{6, j + 10}, w_{3, j + 0})$
+\end{center}
 
 The proof of the addition of the numbers from $\mathbb{F}_p$ proceeds as in the multiplication.
 We check an equation modulo $k$ and $2^t$:
