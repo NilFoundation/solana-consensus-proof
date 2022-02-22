@@ -4,49 +4,17 @@
 To verify a signature $(R,s)$ on a message $M$ using public key $A$ and a generator $B$ do:
 \begin{enumerate}
     \item Prove that $s$ in the range $L = 2^{252}+27742317777372353535851937790883648493$.
-        \begin{center}
-    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
-        & $w_0$  & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$ & $w_6$ & $w_7$ & $w_8$  \\
-            \hline
-                j + 0 & $s$ & $z_0$ & $z_1$ & $z_2$ & $z_3$ & $z_4$ & $z_5$ & $z_6$ & $z_7$ \\
-                j + 1 & $z_8$ & $z_{9}$ & $z_{10}$ & $z_{11}$ & $z_{12}$ & $z_{13}$ & $z_{14}$ & $z_{15}$ & $z_{16}$ \\
-                j + 2 & $z_{17}$ & $z_{18}$ & $z_{19}$ & $z_{20}$ & $z_{21}$ & $z_{22}$ & $z_{23}$ & $z_{24}$ & $z_{25}$ \\
-            \end{tabular}
-        \end{center}
-        Evaluations:
-        \begin{center}
-        $z_0 = s + 2^{253} - L$ is decomposed into 10-bit windows $k_0 + 2^{10} \cdot k_1 + 2^{10 \cdot 2} \cdot k_2 + ... + 2^{10 \cdot 25} \cdot k_{25}$ \\
-        $z_i = (z_{i - 1} - k_{i - 1}) / 2^{10}$
-        \end{center}
-        Constraints:
-        \begin{center}
-            $w_{1, j} = w_{0,j} + 2^{253} - L $ \\
-            Each $w_{i,k} - 2^{10} \cdot w_{i + a, k + b} $, where $i = 1,..,8$ for $k = 0$, $i = 0,..,8$ for $k = 1$ and $i = 0,..,7$ for $k = 2$, $(i + 1) = b \cdot 9 + a$  is range-constrained by 10-bits plookup table. \\
-            $w_{8,j+2} \cdot 2^7 $ is range-constrained by 10-bits plookup table.
-        \end{center}
-	It costs $3$ rows.
+	It costs $2$ rows.
     \item $k = \{k_0, k _1, ..., k_7 \} == $ SHA-512$(data||R||A||M)$ // See section \ref{sha512}
     It costs $1248 \cdot 2 = 2496$ rows.
     \item $sB ?=? R + kA$:
         \begin{enumerate}
             \item Fixed-base scalar multiplication circuit is used for $sB = S$. The cell $w_{0, j + 84}$ is copy-constrained with $w_{0, j + 0}$ from the range circuit.
-            \item One addition is used for $S + (-R)$. The coordinates of $R$ and $T = S + (-R)$ are placed on the last row of fixed-base scalar multiplication circuit.
-                    \begin{center}
-    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
-    j + 0 & $x_s$  & $x_r$ & $y_r$ & $x_t$ & $y_t$ & $y_s$ & $--$ & $--$ & $--$   \\
-    \end{tabular}
-\end{center}
-                In total, three constraints are used for addition:
-                \begin{center}
-                    $w_{3, j + 0}\cdot (1 + d w_{0, j + 0} \cdot (-w_{1, j + 0}) \cdot w_{5, j + 0} \cdot w_{2, j + 0}) = w_{0, j + 0} \cdot w_{2, j + 0} + (-w_{1, j + 0}) \cdot w_{5, j + 0}$ \\
-                    $w_{4, j + 0} \cdot (1 - d w_{0, j + 0} \cdot (-w_{1, j + 0}) \cdot w_{5, j + 0} \cdot w_{2, j + 0}) = w_{0, j + 0} \cdot (-w_{1, j + 0}) + w_{2, j + 0} \cdot w_{5, j + 0}$ \\
-                    $(- w_{1, j + 0})^2 + w_{2, j + 0}^2 = 1 - d \cdot w_{1, j + 0}^2 \cdot w_{2, j + 0}^2$
-                    $w_{1, j + 0}, w_{5, j + 0}$ are copy-constrained with $w_{6, j + 84}, w_{7, j + 84}$ from fixed-base multiplication circuit.
-                \end{center}
+            \item One addition is used for $S + (-R)$. 
             \item Variable-base scalar multiplication circuit for $T = k \cdot A$, where cells $w_{1, j + 254}, w_{2, j + 254}$ are copy constrained with $w_{3, j + 0}, w _{5, j + 0}$.
         \end{enumerate}
 \end{enumerate}
-It costs $3 + 2496 + 85 + 255 + 1 = 2840$ rows.
+It costs $2 + 2496 + 10880 + 93 + 4 + 50957 = 64 432$ rows.
 \subsection{Elliptic Curves Arithmetics}
 \label{ellcurve}
 \textbf{WIP}
