@@ -326,17 +326,38 @@ Lookup constraints:
 
 \paragraph{Variable-base scalar multiplication}:
 
-The values $b_i$, $i = 0,.., 511$ are binary representation of the scalar $k = \{ k_0, k_1, .., k_7\}$.\\
-
- The values $(x_1, y_1) = A$.\\
- $(x_2, y_2) = 2 (b_{511} \cdot (x_1, y_1)) + b_{510} \cdot (x_1, y_1)$ \\
-  $(x_i, y_i) = 2 (x_{i - 1}, y_{i - 1}) + b_{512 - i} \cdot (x_1, y_1)$ \\
-
-Define the following functions:
+The values $b_i$, $i = 0,.., 252$ are binary representation of the scalar $k'$.\\
+The values $(x_1, y_1) = A$.\\
+$(x_2, y_2) = 2 (b_{252} \cdot (x_1, y_1)) + b_{251} \cdot (x_1, y_1)$ \\
+$(x_i, y_i) = 2 (x_{i - 1}, y_{i - 1}) + b_{253 - i} \cdot (x_1, y_1)$, for $i \in \{ 3,..., 253\}$ \\
+For $(x_i, y_i)$ the following is checked:
 \begin{enumerate}
-    \item $\phi_1: (b, x_1, y_1, x_2, y_2, x_3) \mapsto $ \\
-        $x_3 \cdot ((y_1^2 - x_1^2)\cdot(2 - y_1^2 + x_1^2) + 2dx_1y_1(y_1^2+x_1^2) \cdot x_2y_2b ) - (2x_1y_1\cdot(2 - y_1^2 +x_1^2)\cdot (y_2b + (1 - b)) + (y_1^2 + x_1^2)\cdot(y_1^2 - x_1^2)\cdot x_2 b)$
-
-    \item $\phi_2: (b, x_1, y_1, x_2, y_2, y_3) \mapsto $ \\
-        $y_3 \cdot ((y_1^2 - x_1^2)\cdot(2 - y_1^2 + x_1^2) - 2dx_1y_1(y_1^2+x_1^2) \cdot x_2y_2b ) - (2x_1y_1\cdot(2 - y_1^2 +x_1^2)\cdot x_2b + (y_1^2 + x_1^2)\cdot(y_1^2 - x_1^2)\cdot (y_2b + (1 - b)))$
+    \item $x_3 \cdot ((y_1^2 - x_1^2)\cdot(2 - y_1^2 + x_1^2) + 2dx_1y_1(y_1^2+x_1^2) \cdot x_2y_2b ) - (2x_1y_1\cdot(2 - y_1^2 +x_1^2)\cdot (y_2b + (1 - b)) + (y_1^2 + x_1^2)\cdot(y_1^2 - x_1^2)\cdot x_2 b)$
+    \item $y_3 \cdot ((y_1^2 - x_1^2)\cdot(2 - y_1^2 + x_1^2) - 2dx_1y_1(y_1^2+x_1^2) \cdot x_2y_2b ) - (2x_1y_1\cdot(2 - y_1^2 +x_1^2)\cdot x_2b + (y_1^2 + x_1^2)\cdot(y_1^2 - x_1^2)\cdot (y_2b + (1 - b)))$
 \end{enumerate}
+This can be implemented in the following algorithm:
+\begin{enumerate}
+\item $t_0 = (y_1^2 - x_1^2)$. (11 rows)
+\item $t_1 = (2 - y_1^2 + x_1^2)$. (11 rows)
+\item $t_2 = (t_0 \cdot t_1)$. (11 rows)
+\item $t_3 = (y_1^2 + x_1^2)$. (11 rows)
+\item $t_4 = 2 \cdot x_1 \cdot y_1$. (11 rows)
+\item $t_5 = b \cdot x_2 \cdot y_2$. (11 rows)
+\item $t_6 = t_3 \cdot t_4$. (11 rows)
+\item $t_7 = t_6 \cdot t_3$. (11 rows)
+\item $t_8 = d \cdot t_7$. (9 rows)
+\item $t_9 = (t_8 + t_2) \cdot x_3$. (13 rows)
+\item $z_0 = t_4 \cdot t_1$. (11 rows)
+\item $z_1 = z_0 \cdot (y_2\cdot b + (1 - b))$. (11 rows)
+\item $z_2 = t_3 \cdot t_0$. (11 rows)
+\item $z_3 = b \cdot z_2 \cdot x_2$. (11 rows)
+\item $t_9 - z_3 == z_1$. (7 rows)
+
+\item $c_0 = y_3 \cdot (t_2 - t_8)$. (13 rows)
+\item $d_0 = b \cdot z_0 \cdot x_2$. (11 rows)
+\item $d_1 =  z_2 \cdot (y_2 \cdot b + (1-b)))$. (11 rows)
+\item $c_0 - d_0 == d_1$. (7 rows)
+\end{enumerate}
+
+Thus, it costs $203$ rows per bit. 
+Totally, it is $50 953 + 4 $ rows.
