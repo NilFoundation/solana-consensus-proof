@@ -204,89 +204,47 @@ We change a range check for q to q < 2p.
 The total amount of the limbs does not change, but the last limb has to be checked by multiplication to $2^4$.
 \item Let $2 \cdot a \cdot b$.
 This case is similar to the case from step 1.
-\item ...
 \end{enumerate}
 
 \paragraph{Fixed-base scalar multiplication circuit}:
-We precompute all values $w(B,s',k) = k_i \cdot 8^{s'} B$, where $k_i \in \{ 0,..7 \}$, $s' \in \{0,.., 84\}$.
-\begin{center}
-    \begin{tabular}{ c|c|c|c|c|c|c|c|c|c }
-        & $w_0$  & $w_1$  & $w_2$  & $w_3$  & $w_4$  & $w_5$ & $w_6$ & $w_7$ & $w_8$  \\
-        \hline
-        j + 0  & $acc$  & $b_{252}$ & $b_{251}$ & $b_{250}$ & $u_1$ & $v_1$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
-        j + 1  & $acc$  & $b_{249}$ & $b_{248}$ & $b_{247}$ & $u_1$ & $v_1$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
-        ...    &             &             &             &             &      & & & &  \\
-        j + 84 & $s$  & $--$ & $--$ & $--$ & $--$ & $b_{0}$ & $x_{acc}$ & $y_{acc}$ & $--$   \\
-    \end{tabular}
-\end{center}
-Evaluations:
-\begin{center}
-The values $b_i$, $i = 0,.., 252$ are binary representation of the scalar $s$ and $acc$ in each row is an accumulator for these bits.\\
-$(u_1, v_1) = (b_{i + 2} \cdot 2^2 + b_{i + 1}\cdot 2 + b_i) \cdot B$ for each row.\\
- $(x_{acc_{j + 0}}, y_{acc_{j + 0}}) = (u_{1_{j + 0}}, v_{1_{j + 0}}) $ \\
- $(x_{acc_{j + k}}, y_{acc_{j + k}}) = (u_{1_{j + k}}, v_{1_{j + k}}) + (x_{acc_{j + k - 1}}, y_{acc_{j + k - 1}}) $ \\
-\end{center}
-
-Define the following functions:
+We precompute all values $(u'_{s', i}, v'_{s', i}) = w(B,s',k) = k_i \cdot 8^{s'} B$, where $k_i \in \{ 0,..7 \}$, $s' \in \{0,.., 84\}$.
+The values $b_i$, $i = 0,.., 252$ are binary representation of the scalar $s$.\\
+$(u, v) = (b_{i + 2} \cdot 2^2 + b_{i + 1}\cdot 2 + b_i) \cdot B$.\\
+ $(x_{acc_{0}}, y_{acc_{0}}) = (u, v) $ \\
+ $(x_{acc_{j + k}}, y_{acc_{j + k}}) = (u_{j + k}, v_{j + k}) + (x_{acc_{j + k - 1}}, y_{acc_{j + k - 1}}) $ \\:
 \begin{enumerate}
-    \item $\phi_1: (x_1, x_2, x_3, x_4) \mapsto $ \\
-        $x_3 \cdot (-u'_0 \cdot x_2 \cdot x_1 + u'_0 \cdot x_1 + u'_0 \cdot x_2
-        - u'_0 + u'_2 \cdot x_1 \cdot x_2 - u'_2\cdot x_2 + u'_4 \cdot x_1 \cdot x_2
-        - u'_4\cdot x_2 -u'_6 \cdot x_1 \cdot x_2 + u'_1 \cdot x_2 \cdot x_1
-        - u'_1 \cdot x_1 - u'_1 \cdot x_2 + u'_1  - u'_3 \cdot x_1 \cdot x_2 + u'_3\cdot x_2
-        - u'_5 \cdot x_1 \cdot x_2 + u'_5\cdot x_2 + u'_7 \cdot x_1 \cdot x_2) -
-        (x_4 - u'_0 \cdot x_2 \cdot x_1 + u'_0 \cdot x_1 + u'_0 \cdot x_2
-        - u'_0 + u'_2 \cdot x_1 \cdot x_2 - u'_2\cdot x_2 + u'_4 \cdot x_1 \cdot x_2
-        - u'_4\cdot x_2 -u'_6 \cdot x_1 \cdot x_2)$
-    \item $\phi_2: (x_1, x_2, x_3, x_4) \mapsto $ \\
-        $x_3 \cdot (-v'_0 \cdot x_2 \cdot x_1 + v'_0 \cdot x_1 + v'_0 \cdot x_2
-        - v'_0 + v'_2 \cdot x_1 \cdot x_2 -v'_2 \cdot x_2 + v'_4 \cdot x_1 \cdot x_2
-        - v'_4 \cdot x_2 - v'_6 \cdot x_1 \cdot x_2 + v'_1 \cdot x_2 \cdot x_1
-        - v'_1 \cdot x_1 - v'_1 \cdot x_2 + v'_1  - v'_3 \cdot x_1 \cdot x_2
-        + v'_3 \cdot x_2 - v'_5 \cdot x_1 \cdot x_2 + v'_5 \cdot x_2
-        + v'_7 \cdot x_1 \cdot x_2) - (x_4 - v'_0 \cdot x_2 \cdot x_1
-        + v'_0 \cdot x_1 + v'_0 \cdot x_2 - v'_0 + v'_2 \cdot x_1 \cdot x_2
-        - v'_2 \cdot x_2 + v'_4 \cdot x_1 \cdot x_2 - v'_4 \cdot x_2 - v'_6 \cdot x_1 \cdot x_2) $
-    \item $\phi_3: (x_1, x_3, x_4, x_5, x_6) \mapsto $ \\
-        $x_1 \cdot (1 + d \cdot x_3 \cdot x_4 \cdot x_5 \cdot x_6)
-        - (x_3 \cdot x_6 + x_4 \cdot x_5)$
-    \item $\phi_4: (x_2, x_3, x_4, x_5, x_6) \mapsto $ \\
-        $x_2 \cdot (1 - d \cdot x_3 \cdot x_4 \cdot x_5 \cdot x_6) - (x_3 \cdot x_5 + x_4 \cdot x_6)$
+    \item 
+        $b_i \cdot ((-u'_0 + u'_2 + u'_4 - u'_6 + u'_1 - u'_3 + u'_7 - u'_5) \cdot b_{i + 2} \cdot b_{i + 1} + (u'_0 - u'_1) \cdot b_{i + 2} + (u'_0 - u'_2 - u'_4 - u'_1 + u'_3 + u'_5) \cdot b_{i + 1} - u'_0 + u'_1 ) -
+        (u - (u'_0 + u'_2 + u'_4 -u'_6) \cdot b_{i + 1} \cdot b_{i + 2} + u'_0 \cdot b_{i + 2} + (u'_0 - u'_2 - u'_4) \cdot b_{i + 1}
+        - u'_0)$
+    \item 
+	$b_i \cdot ((-v'_0 + v'_2 + v'_4 - v'_6 + v'_1 - v'_3 + v'_7 - v'_5) \cdot b_{i + 2} \cdot b_{i + 1} + (v'_0 - v'_1) \cdot \cdot b_{i + 2} + (v'_0 - v'_2 - v'_4 - v'_1 + v'_3 + v'_5) \cdot \cdot b_{i + 1} - v'_0 + v'_1 ) -
+        (v - (v'_0 + v'_2 + v'_4 - v'_6) \cdot b_{i + 1} \cdot b_{i + 2} + v'_0 \cdot b_{i + 2} + (v'_0 - v'_2 - v'_4) \cdot b_{i + 1}
+        - v'_0)$
+    \item 
+        $x_2 \cdot (1 + d \cdot x_1 \cdot y_1 \cdot u \cdot v) - (u \cdot y_1 + v \cdot x_1)$
+    \item 
+        $y_2 \cdot (1 - d \cdot x_1 \cdot y_1 \cdot u \cdot v) - (u \cdot x_1 + v \cdot y_1)$
 \end{enumerate}
 
-Constraints:
-\begin{itemize}
-    \item For $j + 0$:
-        \begin{itemize}
-            \item $(w_{1, j + 0} - 1) \cdot w_{1, j + 0} = 0$ 
-        	 \item $(w_{2, j + 0} - 1) \cdot w_{2, j + 0} = 0$
-        	 \item $(w_{3, j + 0} - 1) \cdot w_{3, j + 0} = 0$ 
-            \item $w_{0, j + 0} = w_{1, j + 0} \cdot 2^2 + w_{2, j + 0} \cdot 2 + w_{3, j + 0}$
-            \item $\phi_1(w_{1, j + 0}, w_{2, j + 0}, w_{3, j + 0}, w_{4, j + 0}) = 0$, where $(u'_{i}, v'_{i}) = w(B, j + 0, i)$
-            \item $\phi_2(w_{1, j + 0}, w_{2, j + 0}, w_{3, j + 0}, w_{5, j + 0}) = 0$, where $(u'_{i}, v'_{i}) = w(B, j + 0, i)$
-            \item $w_{6, j + 0} = w_{4, j + 0}$
-            \item $w_{7, j + 0} = w_{5, j + 0}$
-        \end{itemize}
-    \item For $j + z$, $z \neq 0$, $z \neq 84$:
-        \begin{itemize}
-            \item $(w_{1, j + z} - 1) \cdot w_{1, j + z} = 0$ 
-        	 \item $(w_{2, j + z} - 1) \cdot w_{2, j + z} = 0$
-        	 \item $(w_{3, j + z} - 1) \cdot w_{3, j + z} = 0$ 
-            \item $w_{0, j + z} = w_{0, j + z - 1} \cdot 2^3 + w_{1, j + z} \cdot 2^2 + w_{2, j + z} \cdot 2 + w_{3, j + z}$
-            \item $\phi_1(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{4, j + z}) = 0$, where $(u'_{i}, v'_{i}) = w(B, j + z, i)$
-            \item $\phi_2(w_{1, j + z}, w_{2, j + z}, w_{3, j + z}, w_{5, j + z }) = 0$, where $(u'_{i}, v'_{i}) = w(B, j + z, i)$
-            \item $\phi_3(w_{6, j + z}, w_{6, j + z - 1}, w_{7, j + z - 1}, w_{4, j + z}, w_{5, j + z }) = 0$
-            \item $\phi_4(w_{7, j + z}, w_{6, j + z - 1}, w_{7, j + z - 1}, w_{4, j + z}, w_{5, j + z }) = 0$
-        \end{itemize}
-
-    \item For $j + 84$:
-        \begin{itemize}
-        	 \item $(w_{5, j + 84} - 1) \cdot w_{5, j + 84} = 0$ 
-            \item $w_{0, j + 84} = w_{0, j + 83} \cdot 2 + w_{5, j + 84}$
-            \item $\phi_3(w_{6, j + z}, w_{6, j + z - 1}, w_{7, j + z - 1}, w_{5, j + 84} \cdot x_B, w_{5, j + 84} \cdot y_B + (1 - w_{5, j + 84}) ) = 0$
-            \item $\phi_4(w_{7, j + z}, w_{6, j + z - 1}, w_{7, j + z - 1}, w_{5, j + 84} \cdot x_B, w_{5, j + 84} \cdot y_B + (1 - w_{5, j + 84}) ) = 0$, where $B = (x_B, y_B)$.
-        \end{itemize}
-\end{itemize}
+Per $3$ bits $b_{i + 2}, b_{i + 1}, b_i$:
+\begin{enumerate}
+\item $b_i \cdot ((-u'_0 + u'_2 + u'_4 - u'_6 + u'_1 - u'_3 + u'_7 - u'_5) \cdot b_{i + 2} \cdot b_{i + 1} + (u'_0 - u'_1) \cdot b_{i + 2} + (u'_0 - u'_2 - u'_4 - u'_1 + u'_3 + u'_5) \cdot b_{i + 1} - u'_0 + u'_1 ) - (u - (u'_0 + u'_2 + u'_4 -u'_6) \cdot b_{i + 1} \cdot b_{i + 2} + u'_0 \cdot b_{i + 2} + (u'_0 - u'_2 - u'_4) \cdot b_{i + 1}- u'_0)$ (3 rows)
+\item $b_i \cdot ((-v'_0 + v'_2 + v'_4 - v'_6 + v'_1 - v'_3 + v'_7 - v'_5) \cdot b_{i + 2} \cdot b_{i + 1} + (v'_0 - v'_1) \cdot \cdot b_{i + 2} + (v'_0 - v'_2 - v'_4 - v'_1 + v'_3 + v'_5) \cdot \cdot b_{i + 1} - v'_0 + v'_1 ) - (v - (v'_0 + v'_2 + v'_4 - v'_6) \cdot b_{i + 1} \cdot b_{i + 2} + v'_0 \cdot b_{i + 2} + (v'_0 - v'_2 - v'_4) \cdot b_{i + 1} - v'_0)$ (3 rows)
+\item $t_0 = u \cdot v$ (11 rows)
+\item $t_1 =  x_1 \cdot y_1$ (11 rows)
+\item $t_2 = t_0 \cdot t_1$ (11 rows)
+\item $t_3 = d \cdot t_2$ (9 rows)
+\item $t_4 = x_2 \cdot (1 + t_3)$ (11 rows)
+\item $z_0 = u \cdot y_1$ (11 rows)
+\item $z_1 = v \cdot x_1$ (11 rows)
+\item $t_4 - z_1 == z_0$ (7 rows)
+\item $c_0 = y_2 \cdot (1 - t_3)$ (11 rows)
+\item $d_0 = u \cdot x_1$ (11 rows)
+\item $d_1 = v \cdot y_1$ (11 rows)
+\item $c_0 - d_1 == d_0$ (7 rows)
+\end{enumerate}
+Totally, it costs $10 880$ rows.
 
 \paragraph{Decomposition circuit}
 The decomposition circuit is a specific function for SHA-512, which prepares output to the non-native variable base scalar multiplication.
