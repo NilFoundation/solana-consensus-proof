@@ -2,9 +2,11 @@
 
 This introduces a description for Solana's 'Light-Client' state proof generator.
 
-Crucial components which define this part design and performance are:
+This part's crucial components are defined by Solana's replication protocol
+design and consist of:
 \begin{enumerate}
     \item Input data format ('Light-Client' state data structure).
+    \item Transaction auxiliary proof.
     \item Proof system used for the proof generation.
     \item Circuit definition used for the proof system.
 \end{enumerate}
@@ -65,6 +67,43 @@ Validator state-representing data structure (\texttt{vote\_state}) supposes such
 a state to begin being handled by Solana replication protocol (or its
 implementation) for handling the tracking of votes state being unchanged 'till
 the end of epoch.
+
+\section{Transaction Proof}
+
+Since state proof sequence is represented as a short Merkle-tree fingerprint and 
+does not allow to check transactions without additional mechanisms (as described
+in \ref{subsec:stateseq}), there is a need to introduce additional transaction 
+proof as simple Merkle-tree inclusion proofs with low verification costs. 
+
+Recall the current state representation on the Ethereum side. 
+$H(T_{n_1, n_2})$ is a Merkle tree root of blocks $\{n_1, ..., n_2\}$.
+Each block $n_i$ contains transactions tree $Tx_{n_i}$ with a root $H(Tx_{n_i})$.
+
+The prover wants to show that transaction $tx$ was included in the block $n_i$.
+Let $D_{n_1, n_2}$ be a hash table.
+\begin{enumerate}
+    \item If transaction can be spent only once (i.e. it is not a "state-check" transaction):
+        \begin{enumerate}
+            \item Check that $D_{n_1, n_2}$ does not contain $H(tx)$. 
+        \end{enumerate}
+    \item The prover provides path of $tx$ to the $H(Tx_{n_i})$ and shows that $H(Tx_{n_i})$ is included in $n_i$.
+    \item The prover provides the path of $H(n_i)$ to the $H(T_{n_1, n_2})$.
+    \item If transaction can be spent only once:
+        \begin{enumerate}
+            \item Add $H(tx)$ to $D_{n_1, n_2}$. 
+        \end{enumerate}
+\end{enumerate} 
+This is enough to prove that the transaction was included in the confirmed state. 
+
+\begin{remark}
+    Transaction proof can be included in the original state-proof circuit.
+    In this case, a state prover can include as many transaction proofs as they desire.
+    It (almost) does not influence the resulting verification costs and proof size.
+\end{remark}
+
+The transaction proof contains $\log(n_2 - n_1) + \log(k)$ hashes where $k$ is number of transactions in the block. 
+Note that only the transaction's hash value will be written to Ethereum's storage.
+All required information is available to the light client.
 
 \input{chapters/generator/proof/introduction}
 \input{chapters/generator/proof/optimizations}
