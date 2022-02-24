@@ -1,4 +1,20 @@
 \subsection{Validator Set Proof Circuit}
-\label{section:validators}
+
+Let $E_1$, $E_2$ are two consecutive epochs. $E_1$ is confirmed on the Ethereum side and $E_2$ is not.
+
+To prove the validator set $S_2$ of $E_2$, the prover does the following:
+\begin{enumerate}
+	\item for $i$ from ${v_1, ..., v_m} = S$:
+	\begin{enumerate}
+		\item Show the inclusion proof of the last stake-change transaction to $v_i$ (no later than the end of $E_1$).
+		\item Show that the there wasn't any stake update since the last delegate transaction $tx_{last}$.
+		That means verifying all transactions between $tx_{last}$ and the beggining of $E_2$.
+	\end{enumerate}
+\end{enumerate}
+
+Such an approach provides additional overhead to the prover.
+The proof of correct validator set will be simplified after implementation of the "Simple Payment and State Verification"\footnote{\url{https://docs.solana.com/proposals/simple-payment-and-state-verification}} proposal.
+
+This leads to the circuit defined as follows:
 
 WIP

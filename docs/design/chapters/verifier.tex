@@ -12,8 +12,40 @@ Crucial components which define this part design are:
 
 \section{Verification Logic Architecture}
 
+\subsection{State Proof Sequence Maintenance}
+\label{subsec:stateseq}
+
+To verify the validator set within the state proof submitted is derived from 
+original Solana's genesis data, it is supposed to maintain validator's set state
+proofs sequence on in-EVM side in a data structure as follows.
+
+Let $B_{n_1}$ be the last state confirmed on Ethereum. Let us say some prover 
+wants to confirm a new $B_{n_2}$ state. Denote by $H_{B}$ the hash of a state $B$.
+So a Merkle Tree $T_{n_1, n_2}$ from the set $\{H_{B_{n_1}}, ..., H_{B_{n_2}}\}$
+
+
+The state proof sequence correctness statement contains (but not bounded by) the following points:
+\begin{algorithm}
+    \caption{Proving Statement}
+    \label{circuit}
+    \begin{enumerate}
+        \item Show that the validator set is correct.
+        \item Show that the $B_{n_1}$ corresponds to the last confirmed state on Ethereum.
+        \item for $i$ from the interval $[n_1 + 1, n_2 - 1]$:
+        \begin{enumerate}
+            \item Show that $B_{i}$ contains $H_{B_{i - 1}}$ as a hash of the previous state.
+        \end{enumerate}
+        \item for $i$ from the interval $[n_2, n_2 + 32]$:
+        \begin{enumerate}
+            \item Show that $B_{i}$ contains $H_{B_{i - 1}}$ as a hash of the previous state.
+            \item Show that there are enough valid signatures from the current validator set for $B_{i}$.
+        \end{enumerate}
+        \item Build a Merkle Tree $T_{n_1, n_2}$ from the set $\{H_{B_{n_1}}, ..., H_{B_{n_2}}\}$.
+    \end{enumerate}
+\end{algorithm}
+
+$T_{n_1, n_2}$ allows to provide a successful transaction from $\{B_{n_1}, ..., B_{n_2}\}$ to the Ethereum-based proof verificator later.
+
 \section{Verification Logic API Reference}
 
 \section{Input Data Structures}
-
-
