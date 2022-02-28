@@ -235,7 +235,7 @@ library fri_verifier_adapted {
         local_vars_type memory local_vars;
         local_vars.s = new uint256[](2);
         local_vars.y = new uint256[](2);
-        local_vars.x = field_math.pow_small(fri_params.D_omegas[0], transcript_updated.get_integral_challenge_be(transcript, 8), modulus);
+        local_vars.x = field_math.pow_small(fri_params.D_omegas[0], transcript.get_integral_challenge_be(transcript, 8), modulus);
 
         for (uint256 i = 0; i < 4; i++) {
             //            local_vars.alpha = transcript_updated.get_field_challenge(transcript, modulus);

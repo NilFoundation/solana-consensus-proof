@@ -25,7 +25,7 @@ import './types.sol';
  * @title Transcript library
  * @dev Generates Plonk random challenges
  */
-library transcript_updated {
+library transcript {
 
     struct transcript_data {
         bytes32 current_challenge;

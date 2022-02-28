@@ -18,20 +18,18 @@
 pragma solidity >=0.6.0;
 pragma experimental ABIEncoderV2;
 
-import './cryptography/bn254.sol';
 import './cryptography/polynomial.sol';
 import './cryptography/types.sol';
 import './cryptography/transcript.sol';
 import './keys/verification_keys.sol';
 import "./fri_verifier.sol";
+import "./fri.sol";
 
 /**
  * @title Turbo Plonk proof verification contract
  * @dev Top level Plonk proof verification contract, which allows Plonk proof to be verified
  */
 contract verifier is fri {
-    using bn254_crypto for types.g1_point;
-    using bn254_crypto for types.g2_point;
     using transcript for transcript.transcript_data;
 
     function verify(bytes calldata, uint256 size) external {
