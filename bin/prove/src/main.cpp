@@ -31,10 +31,10 @@
 #include <nil/crypto3/algebra/curves/params/multiexp/alt_bn128.hpp>
 #include <nil/crypto3/algebra/curves/params/wnaf/alt_bn128.hpp>
 
-#include <nil/crypto3/zk/components/blueprint.hpp>
-#include <nil/crypto3/zk/components/hashes/plonk/poseidon_5_wires.hpp>
-#include <nil/crypto3/zk/components/algebra/curves/plonk/fixed_base_scalar_mul_5_wires.hpp>
-#include <nil/crypto3/zk/components/algebra/curves/plonk/variable_base_scalar_mul_5_wires.hpp>
+#include <nil/crypto3/zk/blueprint/plonk.hpp>
+
+#include <nil/crypto3/zk/components/hashes/poseidon/plonk/poseidon_9_wires.hpp>
+#include <nil/crypto3/zk/components/algebra/curves/edwards/plonk/fixed_base_scalar_mul_9_wires.hpp>
 
 #include <nil/crypto3/hash/algorithm/hash.hpp>
 #include <nil/crypto3/hash/sha2.hpp>
@@ -44,7 +44,8 @@
 
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/preprocessor.hpp>
-#include <nil/crypto3/zk/snark/relations/non_linear_combination.hpp>
+
+#include <nil/crypto3/zk/math/non_linear_combination.hpp>
 
 #include <nil/marshalling/status_type.hpp>
 
@@ -196,11 +197,11 @@ int main(int argc, char *argv[]) {
     constexpr std::size_t WiresAmount = 5;
     constexpr typename system_curve_type::template g1_type<>::value_type B =
         system_curve_type::template g1_type<>::value_type::one();
-    using TArithmetization = zk::snark::plonk_constraint_system<TBlueprintField, WiresAmount>;
+    using TArithmetization = zk::snark::plonk_constraint_system<TBlueprintField>;
 
-    zk::components::blueprint<TArithmetization> bp;
+    nil::crypto3::zk::blueprint<TArithmetization> bp;
 
-    zk::components::element_g1_fixed_base_scalar_mul<TArithmetization, system_curve_type> scalar_mul_component(bp, B);
+    zk::components::element_g1_fixed_base_scalar_mul<TBlueprintField, system_curve_type> scalar_mul_component(bp, {B});
     zk::components::poseidon_plonk<TArithmetization, system_curve_type> poseidon_component(bp);
 
     scalar_mul_component.generate_gates();
