@@ -54,10 +54,12 @@ using namespace nil::crypto3;
 template<typename Hash>
 struct vote_state {
     typedef Hash hash_type;
+    typedef typename Hash::digest_type digest_type;
+
     /// A stack of votes starting with the oldest vote
     std::vector<std::uint64_t> slots;
     /// signature of the bank's state at the last slot
-    typename Hash::digest_type hash;
+    digest_type hash;
     /// processing timestamp of last slot
     std::uint32_t timestamp;
 };
