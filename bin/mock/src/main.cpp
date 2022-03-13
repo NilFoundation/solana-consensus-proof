@@ -90,7 +90,13 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, block_data<
     jv = {{"block_number", c.block_number},
           {"bank_hash", c.bank_hash},
           {"merkle_hash", c.merkle_hash},
-          {"previous_bank_hash", c.previous_bank_hash}};
+          {"previous_bank_hash", c.previous_bank_hash},
+          {"votes", c.votes}};
+}
+
+template<typename Hash>
+void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, vote_state<Hash> const &c) {
+    jv = {{"slots", c.slots}, {"hash", c.hash}, {"timestamp", c.timestamp}};
 }
 
 int main(int argc, char *argv[]) {
