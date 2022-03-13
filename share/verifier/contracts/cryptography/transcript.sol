@@ -59,8 +59,8 @@ library transcript {
         require(length <= 32);
         self.current_challenge = keccak256(abi.encodePacked(self.current_challenge));
         return (uint256(self.current_challenge) & (((uint256(1) << (length * 8)) - 1) <<
-        (uint256(256) - length * 8))) >>
-        (uint256(256) - length * 8);
+                (uint256(256) - length * 8))) >>
+            (uint256(256) - length * 8);
     }
 
     function get_field_challenge(
