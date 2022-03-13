@@ -47,9 +47,11 @@
 
 #include <nil/crypto3/zk/math/non_linear_combination.hpp>
 
+#include <nil/marshalling/algorithms/pack.hpp>
 #include <nil/marshalling/status_type.hpp>
 
 using namespace nil::crypto3;
+using namespace nil::marshalling;
 
 template<typename Hash>
 struct vote_state {
@@ -87,6 +89,21 @@ struct state_type {
     std::vector<block_data<hash_type>> repl_data;
     std::vector<signature_type> signatures;
 };
+
+template<typename Hash>
+block_data<Hash> tag_invoke(boost::json::value_to_tag<vote_state<Hash>>, const boost::json::value &jv) {
+    auto &o = jv.as_object();
+    return {.slots = o.at("slots").as_array(),
+            .hash =
+                [&](const boost::json::array &v) {
+                    typename Hash::digest_type ret;
+                    for (int i = 0; i < v.size(); i++) {
+                        ret[i] = v[i].as_uint64();
+                    }
+                    return ret;
+                }(o.at("hash").as_array()),
+            .timestamp = o.at("timestamp").as_uint64()};
+}
 
 template<typename Hash>
 block_data<Hash> tag_invoke(boost::json::value_to_tag<block_data<Hash>>, const boost::json::value &jv) {
@@ -136,10 +153,7 @@ state_type<Hash, SignatureSchemeType> tag_invoke(boost::json::value_to_tag<state
                 [&](const boost::json::value &arr) {
                     std::vector<typename pubkey::public_key<SignatureSchemeType>::signature_type> ret;
                     for (const boost::json::value &val : arr.as_array()) {
-                        typename pubkey::public_key<SignatureSchemeType>::signature_type sig;
-                        std::istringstream istr(val.as_string().data());
-                        istr >> sig;
-                        ret.emplace_back(sig);
+                        ret.emplace_back(pack<option::little_endian>(val.as_string().begin(), val.as_string().end()));
                     }
                     return ret;
                 }(o.at("signatures"))};
