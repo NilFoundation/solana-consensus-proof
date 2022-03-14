@@ -25,16 +25,16 @@
 #include <boost/program_options.hpp>
 #endif
 
+// #include <nil/crypto3/zk/math/non_linear_combination.hpp>
+
+#include <nil/marshalling/algorithms/pack.hpp>
+#include <nil/marshalling/status_type.hpp>
+
 #include <nil/crypto3/algebra/curves/curve25519.hpp>
 #include <nil/crypto3/algebra/curves/alt_bn128.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/alt_bn128.hpp>
 #include <nil/crypto3/algebra/curves/params/multiexp/alt_bn128.hpp>
 #include <nil/crypto3/algebra/curves/params/wnaf/alt_bn128.hpp>
-
-#include <nil/crypto3/zk/blueprint/plonk.hpp>
-
-#include <nil/crypto3/zk/components/hashes/poseidon/plonk/poseidon_9_wires.hpp>
-#include <nil/crypto3/zk/components/algebra/curves/edwards/plonk/fixed_base_scalar_mul_9_wires.hpp>
 
 #include <nil/crypto3/hash/algorithm/hash.hpp>
 #include <nil/crypto3/hash/sha2.hpp>
@@ -42,13 +42,12 @@
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
+#include <nil/crypto3/zk/blueprint/plonk.hpp>
+#include <nil/crypto3/zk/assignment/plonk.hpp>
+#include <nil/crypto3/zk/components/hashes/poseidon/plonk/poseidon_9_wires.hpp>
+#include <nil/crypto3/zk/components/algebra/curves/edwards/plonk/fixed_base_scalar_mul_9_wires.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/preprocessor.hpp>
-
-#include <nil/crypto3/zk/math/non_linear_combination.hpp>
-
-#include <nil/marshalling/algorithms/pack.hpp>
-#include <nil/marshalling/status_type.hpp>
 
 using namespace nil::crypto3;
 using namespace nil::marshalling;
@@ -213,12 +212,23 @@ int main(int argc, char *argv[]) {
     constexpr std::size_t WiresAmount = 5;
     constexpr typename system_curve_type::template g1_type<>::value_type B =
         system_curve_type::template g1_type<>::value_type::one();
-    using TArithmetization = zk::snark::plonk_constraint_system<TBlueprintField>;
+    using ArithmetizationType = zk::snark::plonk_constraint_system<TBlueprintField>;
 
-    nil::crypto3::zk::blueprint<TArithmetization> bp;
+    zk::blueprint<ArithmetizationType> bp;
+    zk::blueprint_private_assignment_table<ArithmetizationType, WitnessColumns> private_assignment;
+    zk::blueprint_public_assignment_table<ArithmetizationType, SelectorColumns,
+        PublicInputColumns, ConstantColumns> public_assignment;
 
-    zk::components::element_g1_fixed_base_scalar_mul<TBlueprintField, system_curve_type> scalar_mul_component(bp, {B});
-    zk::components::poseidon_plonk<TArithmetization, system_curve_type> poseidon_component(bp);
+    using scalar_mul_component_type = zk::components::element_g1_fixed_base_scalar_mul<
+        ArithmetizationType, system_curve_type,
+        0, 1, 2, 3, 4, 5, 6, 7, 8>;
+
+    using poseidon_component_type = zk::components::poseidon_plonk<
+        ArithmetizationType, system_curve_type,
+        0, 1, 2, 3, 4, 5, 6, 7, 8>;
+
+    scalar_mul_component_type scalar_mul_component(bp, {B});
+    poseidon_component_type poseidon_component(bp, {});
 
     scalar_mul_component.generate_gates();
 
