@@ -61,7 +61,7 @@ contract TestFRIVerifier_d1024 {
         params.V = V;
         (fri_verifier.proof_type memory proof, uint256 proof_size) = fri_verifier.parse_proof_be(raw_proof, 0);
         Assert.equal(raw_proof.length, proof_size, "Proof length is not correct");
-        bool result = fri_verifier.verifyProof(proof, tr_state, params);
+        bool result = fri_verifier.verify(proof, tr_state, params);
         Assert.equal(true, result, "Proof is not correct");
     }
 

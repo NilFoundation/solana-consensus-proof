@@ -350,7 +350,7 @@ library fri_verifier {
     }
 
     //
-    function verifyProof(
+    function verify(
         proof_type memory proof,
         transcript.transcript_data memory tr_state,
         params_type memory fri_params

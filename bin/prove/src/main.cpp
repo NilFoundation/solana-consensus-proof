@@ -25,32 +25,69 @@
 #include <boost/program_options.hpp>
 #endif
 
-// #include <nil/crypto3/zk/math/non_linear_combination.hpp>
-
-#include <nil/marshalling/algorithms/pack.hpp>
-#include <nil/marshalling/status_type.hpp>
-
-#include <nil/crypto3/algebra/curves/curve25519.hpp>
 #include <nil/crypto3/algebra/curves/alt_bn128.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/alt_bn128.hpp>
 #include <nil/crypto3/algebra/curves/params/multiexp/alt_bn128.hpp>
 #include <nil/crypto3/algebra/curves/params/wnaf/alt_bn128.hpp>
 
+#include <nil/crypto3/zk/blueprint/plonk.hpp>
+
+#include <nil/crypto3/zk/components/algebra/curves/edwards/plonk/variable_base_endo_scalar_mul_15_wires.hpp>
+#include <nil/crypto3/zk/components/hashes/poseidon/plonk/poseidon_15_wires.hpp>
+
 #include <nil/crypto3/hash/algorithm/hash.hpp>
+#include <nil/crypto3/hash/keccak.hpp>
 #include <nil/crypto3/hash/sha2.hpp>
 
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
-#include <nil/crypto3/zk/blueprint/plonk.hpp>
-#include <nil/crypto3/zk/assignment/plonk.hpp>
-#include <nil/crypto3/zk/components/hashes/poseidon/plonk/poseidon_9_wires.hpp>
-#include <nil/crypto3/zk/components/algebra/curves/edwards/plonk/fixed_base_scalar_mul_9_wires.hpp>
+#include <nil/crypto3/zk/algorithms/generate.hpp>
+
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/preprocessor.hpp>
 
+#include <nil/crypto3/zk/math/non_linear_combination.hpp>
+
 using namespace nil::crypto3;
 using namespace nil::marshalling;
+
+typedef algebra::curves::alt_bn128<254> curve_type;
+typedef typename curve_type::base_field_type field_type;
+constexpr static const std::size_t m = 2;
+constexpr static const std::size_t k = 1;
+
+constexpr static const std::size_t table_rows_log = 4;
+constexpr static const std::size_t table_rows = 1 << table_rows_log;
+constexpr static const std::size_t permutation_size = 4;
+constexpr static const std::size_t usable_rows = 1 << table_rows_log;
+
+struct redshift_params {
+    using merkle_hash_type = hashes::keccak_1600<512>;
+    using transcript_hash_type = hashes::keccak_1600<512>;
+
+    constexpr static const std::size_t witness_columns = 3;
+    constexpr static const std::size_t public_input_columns = 1;
+    constexpr static const std::size_t constant_columns = 0;
+    constexpr static const std::size_t selector_columns = 2;
+
+    constexpr static const std::size_t lambda = 40;
+    constexpr static const std::size_t r = table_rows_log - 1;
+    constexpr static const std::size_t m = 2;
+};
+
+constexpr static const std::size_t table_columns =
+    redshift_params::witness_columns + redshift_params::public_input_columns;
+
+typedef zk::commitments::fri<::field_type, redshift_params::merkle_hash_type, redshift_params::transcript_hash_type, m>
+    fri_type;
+
+typedef zk::snark::redshift_params<::field_type,
+                                   redshift_params::witness_columns,
+                                   redshift_params::public_input_columns,
+                                   redshift_params::constant_columns,
+                                   redshift_params::selector_columns>
+    circuit_params;
 
 template<typename Hash>
 struct vote_state {
@@ -152,7 +189,10 @@ state_type<Hash, SignatureSchemeType> tag_invoke(boost::json::value_to_tag<state
                 [&](const boost::json::value &arr) {
                     std::vector<typename pubkey::public_key<SignatureSchemeType>::signature_type> ret;
                     for (const boost::json::value &val : arr.as_array()) {
-                        ret.emplace_back(pack<option::little_endian>(val.as_string().begin(), val.as_string().end()));
+                        typename pubkey::public_key<SignatureSchemeType>::signature_type sig;
+                        std::istringstream istr(val.as_string().data());
+                        istr >> sig;
+                        ret.emplace_back(sig);
                     }
                     return ret;
                 }(o.at("signatures"))};
@@ -208,46 +248,54 @@ int main(int argc, char *argv[]) {
         state = boost::json::value_to<state_type<hash_type, signature_scheme_type>>(boost::json::parse(string, &mr));
     }
 
-    using TBlueprintField = typename system_curve_type::base_field_type;
-    constexpr std::size_t WiresAmount = 5;
-    constexpr typename system_curve_type::template g1_type<>::value_type B =
-        system_curve_type::template g1_type<>::value_type::one();
-    using ArithmetizationType = zk::snark::plonk_constraint_system<TBlueprintField>;
+    constexpr typename curve_type::template g1_type<>::value_type B = curve_type::template g1_type<>::value_type::one();
+    using ArithmetizationType = zk::snark::plonk_constraint_system<::field_type>;
 
     zk::blueprint<ArithmetizationType> bp;
-    zk::blueprint_private_assignment_table<ArithmetizationType, WitnessColumns> private_assignment;
-    zk::blueprint_public_assignment_table<ArithmetizationType, SelectorColumns,
-        PublicInputColumns, ConstantColumns> public_assignment;
+    zk::blueprint_private_assignment_table<ArithmetizationType, redshift_params::witness_columns> private_assignment;
+    zk::blueprint_public_assignment_table<ArithmetizationType,
+                                          redshift_params::public_input_columns,
+                                          redshift_params::constant_columns,
+                                          redshift_params::selector_columns>
+        public_assignment;
 
-    using scalar_mul_component_type = zk::components::element_g1_fixed_base_scalar_mul<
-        ArithmetizationType, system_curve_type,
-        0, 1, 2, 3, 4, 5, 6, 7, 8>;
+    zk::components::curve_element_variable_base_endo_scalar_mul<ArithmetizationType,
+                                                                curve_type,
+                                                                0,
+                                                                1,
+                                                                2,
+                                                                3,
+                                                                4,
+                                                                5,
+                                                                6,
+                                                                7,
+                                                                8,
+                                                                9,
+                                                                10,
+                                                                11,
+                                                                12,
+                                                                13,
+                                                                14>
+        scalar_mul_component(bp);
+    zk::components::poseidon_plonk<ArithmetizationType, curve_type> poseidon_component(bp);
 
-    using poseidon_component_type = zk::components::poseidon_plonk<
-        ArithmetizationType, system_curve_type,
-        0, 1, 2, 3, 4, 5, 6, 7, 8>;
+//    scalar_mul_component.generate_gates(public_assignment);
+//    poseidon_component.generate_gates();
 
-    scalar_mul_component_type scalar_mul_component(bp, {B});
-    poseidon_component_type poseidon_component(bp, {});
+    typename curve_type::scalar_field_type::value_type a = curve_type::scalar_field_type::value_type::one();
+    typename curve_type::template g1_type<>::value_type P = curve_type::template g1_type<>::value_type::one();
 
-    scalar_mul_component.generate_gates();
+    scalar_mul_component.generate_assignments(private_assignment, public_assignment, {P, a});
+    poseidon_component.generate_assignments();
 
-    typename system_curve_type::scalar_field_type::value_type a =
-        system_curve_type::scalar_field_type::value_type::one();
-    typename system_curve_type::template g1_type<>::value_type P =
-        system_curve_type::template g1_type<>::value_type::one();
+    //    auto cs = bp.get_constraint_system();
 
-    scalar_mul_component.generate_assignments(a, P);
+    //    auto assignments = bp.full_variable_assignment();
 
-    auto cs = bp.get_constraint_system();
+    //    typedef zk::snark::redshift_preprocessor<typename curve_type::base_field_type, 15, 1> preprocessor_type;
+    //    typedef zk::snark::redshift_prover<typename curve_type::base_field_type, 15, 5, 1, 5> prover_type;
 
-    auto assignments = bp.full_variable_assignment();
-
-    typedef zk::snark::redshift_preprocessor<typename system_curve_type::base_field_type, 5, 1> preprocess_type;
-
-    auto preprocessed_data = preprocess_type::process(cs, assignments);
-    typedef zk::snark::redshift_prover<typename system_curve_type::base_field_type, 5, 5, 1, 5> prove_type;
-    auto proof = prove_type::process(preprocessed_data, cs, assignments);
+    //    auto proof = prover_type::process(preprocessor_type::process(cs, assignments), cs, assignments);
 
 #ifndef __EMSCRIPTEN__
     if (vm.count("output")) {

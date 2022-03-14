@@ -56,7 +56,7 @@ contract TestLPCVerifier_d16 {
         evaluation_points[0] = 5;
         (lpc_verifier.proof_type memory proof, uint256 proof_size) = lpc_verifier.parse_proof_be(raw_proof, 0);
         Assert.equal(raw_proof.length, proof_size, "Proof length is not correct");
-        bool result = lpc_verifier.verifyProof(evaluation_points, proof, tr_state, lpc_params);
+        bool result = lpc_verifier.verify(evaluation_points, proof, tr_state, lpc_params);
         Assert.equal(true, result, "Proof is not correct");
     }
 

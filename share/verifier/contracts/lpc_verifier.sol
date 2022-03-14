@@ -58,7 +58,7 @@ library lpc_verifier {
         bytes memory bstr = new bytes(len);
         uint k = len;
         while (_i != 0) {
-            k = k-1;
+            k = k - 1;
             uint8 temp = (48 + uint8(_i - _i / 10 * 10));
             bytes1 b1 = bytes1(temp);
             bstr[k] = b1;
@@ -104,9 +104,9 @@ library lpc_verifier {
         proof.z = new uint256[](value_len);
         assembly {
             let z_ptr := add(mload(add(proof, 0x20)), 0x20)
-            for { let i := 0 }
+            for {let i := 0}
             lt(i, mul(0x20, value_len))
-            { i := add(i, 0x20) } {
+            {i := add(i, 0x20)} {
                 mstore(add(z_ptr, i), mload(add(blob, add(0x20, offset))))
                 offset := add(offset, 0x20)
             }
@@ -134,12 +134,12 @@ library lpc_verifier {
     }
 
     //
-    function verifyProof(
+    function verify(
         uint256[] memory evaluation_points,
         proof_type memory proof,
         transcript.transcript_data memory tr_state,
         params_type memory params
-    ) internal view returns(bool) {
+    ) internal view returns (bool) {
         require(evaluation_points.length == proof.z.length, "Number of evaluation points is not correct");
         params.fri_params.U = polynomial.interpolate(evaluation_points, proof.z, params.modulus);
         params.fri_params.V = new uint256[](1);
@@ -151,7 +151,7 @@ library lpc_verifier {
             params.fri_params.V = polynomial.mul_poly(params.fri_params.V, a_poly, params.modulus);
         }
         for (uint256 round_id = 0; round_id < params.lambda; round_id++) {
-            if (!fri_verifier.verifyProof(proof.fri_proof[round_id], tr_state, params.fri_params)) {
+            if (!fri_verifier.verify(proof.fri_proof[round_id], tr_state, params.fri_params)) {
                 return false;
             }
         }
@@ -164,7 +164,7 @@ library lpc_verifier {
         uint256[] memory evaluation_points,
         transcript.transcript_data memory tr_state,
         params_type memory params
-    ) internal view returns(bool result, uint256 proof_size) {
+    ) internal view returns (bool result, uint256 proof_size) {
         result = false;
         require(offset < blob.length);
         uint256 len = blob.length - offset;
@@ -173,15 +173,10 @@ library lpc_verifier {
         local_vars_type memory local_vars;
         assembly {
             let z_len := shr(0xc0, mload(add(add(blob, 0x20), add(offset, PROOF_Z_OFFSET))))
-            // number of z points should be equal to k
-            if eq(
-                eq(
-                    z_len,
-                    // k
-                    mload(add(params, 0x80))
-                ),
-                0
-            ) {
+        // number of z points should be equal to k
+            if eq(eq(z_len,
+            // k
+            mload(add(params, 0x80))), 0) {
                 revert(0, 0)
             }
             proof_size := add(proof_size, mul(0x20, z_len))
@@ -191,14 +186,14 @@ library lpc_verifier {
         require(proof_size + 8 <= len);
         assembly {
             let fri_proof_len := shr(0xc0, mload(add(add(blob, 0x20), add(offset, proof_size))))
-            // number of fri proofs should be equal to lambda
+        // number of fri proofs should be equal to lambda
             if eq(
-                eq(
-                    fri_proof_len,
-                    // lambda
-                    mload(add(params, 0x20))
-                ),
-                0
+            eq(
+            fri_proof_len,
+            // lambda
+            mload(add(params, 0x20))
+            ),
+            0
             ) {
                 revert(0, 0)
             }
@@ -209,9 +204,9 @@ library lpc_verifier {
         assembly {
             let z_ptr := add(mload(add(local_vars, 0x20)), 0x20)
             let local_off := add(add(offset, PROOF_Z_OFFSET), 8)
-            for { let i := 0 }
+            for {let i := 0}
             lt(i, mul(0x20, mload(local_vars)))
-            { i := add(i, 0x20) } {
+            {i := add(i, 0x20)} {
                 mstore(add(z_ptr, i), mload(add(add(blob, 0x20), local_off)))
                 local_off := add(local_off, 0x20)
             }
