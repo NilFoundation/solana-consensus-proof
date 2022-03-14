@@ -80,23 +80,96 @@ struct state_type {
     std::vector<signature_type> signatures;
 };
 
-template<std::size_t DigestBits>
-void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, static_digest<DigestBits> const &c) {
-    nil::crypto3::detail::to_ascii(c, jv.emplace_string().end());
-}
-
 template<typename Hash>
 void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, block_data<Hash> const &c) {
     jv = {{"block_number", c.block_number},
-          {"bank_hash", c.bank_hash},
-          {"merkle_hash", c.merkle_hash},
-          {"previous_bank_hash", c.previous_bank_hash},
+          {"bank_hash", std::to_string(c.bank_hash)},
+          {"merkle_hash", std::to_string(c.merkle_hash)},
+          {"previous_bank_hash", std::to_string(c.previous_bank_hash)},
           {"votes", c.votes}};
 }
 
 template<typename Hash>
 void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, vote_state<Hash> const &c) {
-    jv = {{"slots", c.slots}, {"hash", c.hash}, {"timestamp", c.timestamp}};
+    jv = {{"slots", c.slots}, {"hash", std::to_string(c.hash)}, {"timestamp", c.timestamp}};
+}
+
+void pretty_print(std::ostream &os, boost::json::value const &jv, std::string *indent = nullptr) {
+    std::string indent_;
+    if (!indent)
+        indent = &indent_;
+    switch (jv.kind()) {
+        case boost::json::kind::object: {
+            os << "{\n";
+            indent->append(4, ' ');
+            auto const &obj = jv.get_object();
+            if (!obj.empty()) {
+                auto it = obj.begin();
+                for (;;) {
+                    os << *indent << boost::json::serialize(it->key()) << " : ";
+                    pretty_print(os, it->value(), indent);
+                    if (++it == obj.end())
+                        break;
+                    os << ",\n";
+                }
+            }
+            os << "\n";
+            indent->resize(indent->size() - 4);
+            os << *indent << "}";
+            break;
+        }
+
+        case boost::json::kind::array: {
+            os << "[\n";
+            indent->append(4, ' ');
+            auto const &arr = jv.get_array();
+            if (!arr.empty()) {
+                auto it = arr.begin();
+                for (;;) {
+                    os << *indent;
+                    pretty_print(os, *it, indent);
+                    if (++it == arr.end())
+                        break;
+                    os << ",\n";
+                }
+            }
+            os << "\n";
+            indent->resize(indent->size() - 4);
+            os << *indent << "]";
+            break;
+        }
+
+        case boost::json::kind::string: {
+            os << boost::json::serialize(jv.get_string());
+            break;
+        }
+
+        case boost::json::kind::uint64:
+            os << jv.get_uint64();
+            break;
+
+        case boost::json::kind::int64:
+            os << jv.get_int64();
+            break;
+
+        case boost::json::kind::double_:
+            os << jv.get_double();
+            break;
+
+        case boost::json::kind::bool_:
+            if (jv.get_bool())
+                os << "true";
+            else
+                os << "false";
+            break;
+
+        case boost::json::kind::null:
+            os << "null";
+            break;
+    }
+
+    if (indent->empty())
+        os << "\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -142,12 +215,17 @@ int main(int argc, char *argv[]) {
     }
 
     if (s == status_type::success) {
-        boost::json::value jv = {{"confirmed", state.confirmed},
-                                 {"new_confirmed", state.new_confirmed},
-                                 {"repl_data", state.repl_data},
-                                 {"signatures", state.signatures}};
+        boost::json::value jv = {
+            {"confirmed", state.confirmed},
+            {"new_confirmed", state.new_confirmed},
+            {"repl_data", state.repl_data},
+            {"signatures", std::accumulate(state.signatures.begin(), state.signatures.end(), boost::json::array {},
+                                           [&](boost::json::array s, const signature_type &v) {
+                                               s.emplace_back(std::to_string(v));
+                                               return s;
+                                           })}};
 
-        std::cout << boost::json::serialize(jv) << std::endl;
+        pretty_print(std::cout, jv);
     }
 
     return 0;
