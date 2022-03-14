@@ -216,7 +216,8 @@ int main(int argc, char *argv[]) {
     // clang-format off
     options.add_options()("help,h", "Display help message")
     ("version,v", "Display version")
-    ("output,o", "Output file");
+    ("output,o", "Output file")
+    ("input,i", "Input file");
     // clang-format on
 
     boost::program_options::positional_options_description p;
