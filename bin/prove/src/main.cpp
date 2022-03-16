@@ -44,6 +44,8 @@
 
 #include <nil/crypto3/zk/algorithms/generate.hpp>
 
+#include <nil/crypto3/zk/commitments/type_traits.hpp>
+
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/preprocessor.hpp>
 
@@ -100,6 +102,8 @@ struct vote_state {
     digest_type hash;
     /// processing timestamp of last slot
     std::uint32_t timestamp;
+
+    std::size_t weight;
 };
 
 template<typename Hash>
@@ -109,7 +113,6 @@ struct block_data {
 
     std::size_t block_number;
     digest_type bank_hash;
-    digest_type merkle_hash;
     digest_type previous_bank_hash;
     std::vector<vote_state<Hash>> votes;
 };
@@ -138,7 +141,8 @@ block_data<Hash> tag_invoke(boost::json::value_to_tag<vote_state<Hash>>, const b
                     }
                     return ret;
                 }(o.at("hash").as_array()),
-            .timestamp = o.at("timestamp").as_uint64()};
+            .timestamp = o.at("timestamp").as_uint64(),
+            .weight = o.at("weight").as_uint64()};
 }
 
 template<typename Hash>
@@ -153,14 +157,6 @@ block_data<Hash> tag_invoke(boost::json::value_to_tag<block_data<Hash>>, const b
                     }
                     return ret;
                 }(o.at("bank_hash").as_array()),
-            .merkle_hash =
-                [&](const boost::json::array &v) {
-                    typename Hash::digest_type ret;
-                    for (int i = 0; i < v.size(); i++) {
-                        ret[i] = v[i].as_uint64();
-                    }
-                    return ret;
-                }(o.at("merkle_hash").as_array()),
             .previous_bank_hash =
                 [&](const boost::json::array &v) {
                     typename Hash::digest_type ret;
@@ -280,8 +276,8 @@ int main(int argc, char *argv[]) {
         scalar_mul_component(bp);
     zk::components::poseidon_plonk<ArithmetizationType, curve_type> poseidon_component(bp);
 
-//    scalar_mul_component.generate_gates(public_assignment);
-//    poseidon_component.generate_gates();
+    //    scalar_mul_component.generate_gates(public_assignment);
+    //    poseidon_component.generate_gates();
 
     typename curve_type::scalar_field_type::value_type a = curve_type::scalar_field_type::value_type::one();
     typename curve_type::template g1_type<>::value_type P = curve_type::template g1_type<>::value_type::one();
@@ -304,6 +300,66 @@ int main(int argc, char *argv[]) {
 #else
 
 #endif
+
+    typedef hashes::sha2<256> merkle_hash_type;
+    typedef hashes::sha2<256> transcript_hash_type;
+
+    typedef typename containers::merkle_tree<merkle_hash_type, 2> merkle_tree_type;
+
+    constexpr static const std::size_t lambda = 40;
+    constexpr static const std::size_t k = 1;
+
+    constexpr static const std::size_t d = 16;
+
+    constexpr static const std::size_t r = boost::static_log2<(d - k)>::value;
+    constexpr static const std::size_t m = 2;
+
+    typedef zk::commitments::fri<::field_type, merkle_hash_type, transcript_hash_type, m> fri_type;
+
+    typedef zk::commitments::list_polynomial_commitment_params<merkle_hash_type, transcript_hash_type, lambda, r, m>
+        lpc_params_type;
+    typedef zk::commitments::list_polynomial_commitment<::field_type, lpc_params_type, k> lpc_type;
+
+    static_assert(zk::is_commitment<fri_type>::value);
+    static_assert(zk::is_commitment<lpc_type>::value);
+    static_assert(!zk::is_commitment<merkle_hash_type>::value);
+    static_assert(!zk::is_commitment<merkle_tree_type>::value);
+    static_assert(!zk::is_commitment<std::size_t>::value);
+
+    typedef typename lpc_type::proof_type proof_type;
+
+    constexpr static const std::size_t d_extended = d;
+    std::size_t extended_log = boost::static_log2<d_extended>::value;
+    std::vector<std::shared_ptr<math::evaluation_domain<::field_type>>> D =
+        zk::commitments::detail::calculate_domain_set<::field_type>(extended_log, r);
+
+    typename fri_type::params_type fri_params;
+
+    math::polynomial<typename ::field_type::value_type> q = {0, 0, 1};
+    fri_params.r = r;
+    fri_params.D = D;
+    fri_params.q = q;
+    fri_params.max_degree = d - 1;
+
+    // commit
+
+    math::polynomial<typename ::field_type::value_type> f = {1, 3, 4, 1, 5, 6, 7, 2, 8, 7, 5, 6, 1, 2, 1, 1};
+
+    merkle_tree_type tree = lpc_type::precommit(f, D[0]);
+
+    // TODO: take a point outside of the basic domain
+    std::array<typename ::field_type::value_type, 1> evaluation_points = {
+        algebra::fields::arithmetic_params<::field_type>::multiplicative_generator};
+
+    std::array<std::uint8_t, 96> x_data {};
+    zk::transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript(x_data);
+
+    auto proof = lpc_type::proof_eval(evaluation_points, tree, f, fri_params, transcript);
+
+    // verify
+    zk::transcript::fiat_shamir_heuristic_sequential<transcript_hash_type> transcript_verifier(x_data);
+
+    lpc_type::verify_eval(evaluation_points, proof, fri_params, transcript_verifier);
 
     return 0;
 }

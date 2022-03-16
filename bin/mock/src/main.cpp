@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
 
     boost::random::random_device rd;     // Will be used to obtain a seed for the random number engine
     boost::random::mt19937 gen(rd());    // Standard mersenne_twister_engine seeded with rd()
-    boost::random::uniform_int_distribution<std::size_t> distrib(std::numeric_limits<std::size_t>::min() + 1, 32000UL);
+    boost::random::uniform_int_distribution<std::size_t> distrib(std::numeric_limits<std::size_t>::min() + 1, 1000UL);
 
     random_hash_generator_type hash_gen;
 
