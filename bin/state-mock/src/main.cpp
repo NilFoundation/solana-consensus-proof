@@ -54,6 +54,8 @@ struct vote_state {
     digest_type hash;
     /// processing timestamp of last slot
     std::uint32_t timestamp;
+    /// vote weight
+    std::size_t weight;
 };
 
 template<typename Hash>
