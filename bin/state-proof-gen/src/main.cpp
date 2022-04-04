@@ -52,6 +52,7 @@
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/verifier.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/params.hpp>
+#include <fstream>
 
 using namespace nil::crypto3;
 using namespace nil::marshalling;
@@ -78,6 +79,7 @@ struct block_data {
 
     std::size_t block_number;
     digest_type bank_hash;
+    digest_type merkle_hash;
     digest_type previous_bank_hash;
     std::vector<vote_state<Hash>> votes;
 };
@@ -95,49 +97,71 @@ struct state_type {
 };
 
 template<typename Hash>
-block_data<Hash> tag_invoke(boost::json::value_to_tag<vote_state<Hash>>, const boost::json::value &jv) {
+vote_state<Hash> tag_invoke(boost::json::value_to_tag<vote_state<Hash>>, const boost::json::value &jv) {
     auto &o = jv.as_object();
-    return {.slots = o.at("slots").as_array(),
+    return {.slots = [&](const boost::json::value &arr) {
+                std::vector<std::uint64_t> ret;
+                for (const boost::json::value &val : arr.as_array()) {
+                    ret.emplace_back(boost::json::value_to<std::uint64_t>(val));
+                }
+                return ret;
+            }(o.at("slots")),
             .hash =
-                [&](const boost::json::array &v) {
+                [&](const boost::json::value &v) {
                     typename Hash::digest_type ret;
-                    for (int i = 0; i < v.size(); i++) {
-                        ret[i] = v[i].as_uint64();
-                    }
+                    std::istringstream istr(boost::json::value_to<std::string>(v));
+                    istr >> ret;
                     return ret;
-                }(o.at("hash").as_array()),
-            .timestamp = o.at("timestamp").as_uint64(),
-            .weight = o.at("weight").as_uint64()};
+                }(o.at("hash")),
+            .timestamp = boost::json::value_to<std::uint32_t>(o.at("timestamp")),
+            .weight = boost::json::value_to<std::size_t>(o.at("weight"))};
 }
 
 template<typename Hash>
 block_data<Hash> tag_invoke(boost::json::value_to_tag<block_data<Hash>>, const boost::json::value &jv) {
     auto &o = jv.as_object();
-    return {.block_number = o.at("block_number").as_uint64(),
+
+
+    return {.block_number = boost::json::value_to<std::size_t>(o.at("block_number")),
             .bank_hash =
-                [&](const boost::json::array &v) {
+                [&](const boost::json::value &v) {
                     typename Hash::digest_type ret;
-                    for (int i = 0; i < v.size(); i++) {
-                        ret[i] = v[i].as_uint64();
-                    }
+                    std::istringstream istr(boost::json::value_to<std::string>(v));
+                    istr >> ret;
                     return ret;
-                }(o.at("bank_hash").as_array()),
+                }(o.at("bank_hash")),
+            .merkle_hash =
+                [&](const boost::json::value &v) {
+                    typename Hash::digest_type ret;
+                    std::istringstream istr(boost::json::value_to<std::string>(v));
+                    istr >> ret;
+                    return ret;
+                }(o.at("merkle_hash")),
             .previous_bank_hash =
-                [&](const boost::json::array &v) {
+                [&](const boost::json::value &v) {
                     typename Hash::digest_type ret;
-                    for (int i = 0; i < v.size(); i++) {
-                        ret[i] = v[i].as_uint64();
+                    std::istringstream istr(boost::json::value_to<std::string>(v));
+                    istr >> ret;
+                    return ret;
+                }(o.at("previous_bank_hash")),
+            .votes =
+                [&](const boost::json::value &arr) {
+                    std::vector<vote_state<Hash>> ret;
+                    for (const boost::json::value &val : arr.as_array()) {
+                        ret.emplace_back(boost::json::value_to<vote_state<Hash>>(val));
                     }
                     return ret;
-                }(o.at("previous_bank_hash").as_array())};
+                }(o.at("votes")),
+
+    };
 }
 
 template<typename Hash, typename SignatureSchemeType>
 state_type<Hash, SignatureSchemeType> tag_invoke(boost::json::value_to_tag<state_type<Hash, SignatureSchemeType>>,
                                                  const boost::json::value &jv) {
     auto &o = jv.as_object();
-    return {.confirmed = o.at("confirmed").as_uint64(),
-            .new_confirmed = o.at("new_confirmed").as_uint64(),
+    return {.confirmed = boost::json::value_to<std::size_t>(o.at("confirmed")),
+            .new_confirmed = boost::json::value_to<std::size_t>(o.at("new_confirmed")),
             .repl_data =
                 [&](const boost::json::value &arr) {
                     std::vector<block_data<Hash>> ret;
@@ -156,7 +180,8 @@ state_type<Hash, SignatureSchemeType> tag_invoke(boost::json::value_to_tag<state
                         ret.emplace_back(sig);
                     }
                     return ret;
-                }(o.at("signatures"))};
+                }(o.at("signatures"))
+    };
 }
 
 template<typename fri_type, typename FieldType>
@@ -196,8 +221,8 @@ int main(int argc, char *argv[]) {
     // clang-format off
     options.add_options()("help,h", "Display help message")
     ("version,v", "Display version")
-    ("output,o", "Output file")
-    ("input,i", "Input file");
+    ("output,o", boost::program_options::value< std::string >(),"Output file")
+    ("input,i", boost::program_options::value< std::string >(), "Input file");
     // clang-format on
 
     boost::program_options::positional_options_description p;
@@ -235,14 +260,13 @@ int main(int argc, char *argv[]) {
     constexpr std::size_t PublicInputColumns = 1;
     constexpr std::size_t ConstantColumns = 0;
     constexpr std::size_t SelectorColumns = 1;
-    using ArithmetizationParams = zk::snark::plonk_arithmetization_params<WitnessColumns,
-        PublicInputColumns, ConstantColumns, SelectorColumns>;
-    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType,
-                ArithmetizationParams>;
+    using ArithmetizationParams =
+        zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
+    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
 
-    using component_type = zk::components::curve_element_unified_addition<ArithmetizationType, curve_type,
-                                                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10>;
-    
+    using component_type = zk::components::curve_element_unified_addition<ArithmetizationType, curve_type, 0, 1, 2, 3,
+                                                                          4, 5, 6, 7, 8, 9, 10>;
+
 #ifndef __EMSCRIPTEN__
     if (vm.count("output")) {
     }
@@ -264,22 +288,20 @@ int main(int argc, char *argv[]) {
     std::size_t start_row = component_type::allocate_rows(bp);
     component_type::generate_gates(bp, public_assignment, public_params, start_row);
     component_type::generate_copy_constraints(bp, public_assignment, public_params, start_row);
-    component_type::generate_assignments(private_assignment, public_assignment,
-        public_params, private_params, start_row);
+    component_type::generate_assignments(private_assignment, public_assignment, public_params, private_params,
+                                         start_row);
 
     private_assignment.padding();
     public_assignment.padding();
-            
-    zk::snark::plonk_assignment_table<BlueprintFieldType, ArithmetizationParams> assignments(
-                private_assignment, public_assignment);
+
+    zk::snark::plonk_assignment_table<BlueprintFieldType, ArithmetizationParams> assignments(private_assignment,
+                                                                                             public_assignment);
 
     using params = zk::snark::redshift_params<BlueprintFieldType, ArithmetizationParams>;
     using types = zk::snark::detail::redshift_policy<BlueprintFieldType, params>;
 
-    using fri_type = typename zk::commitments::fri<BlueprintFieldType,
-        typename params::merkle_hash_type,
-        typename params::transcript_hash_type,
-        2>;
+    using fri_type = typename zk::commitments::fri<BlueprintFieldType, typename params::merkle_hash_type,
+                                                   typename params::transcript_hash_type, 2>;
 
     std::size_t table_rows_log = std::ceil(std::log2(desc.rows_amount));
 
@@ -288,20 +310,16 @@ int main(int argc, char *argv[]) {
     std::size_t permutation_size = desc.witness_columns + desc.public_input_columns + desc.constant_columns;
 
     typename types::preprocessed_public_data_type public_preprocessed_data =
-         zk::snark::redshift_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, 
-            desc, fri_params, permutation_size);
+        zk::snark::redshift_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
+                                                                                     fri_params, permutation_size);
     typename types::preprocessed_private_data_type private_preprocessed_data =
-         zk::snark::redshift_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment,
-            desc);
+        zk::snark::redshift_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment, desc);
 
-    auto proof = zk::snark::redshift_prover<BlueprintFieldType, params>::process(public_preprocessed_data,
-                                                                       private_preprocessed_data,
-                                                                       desc,
-                                                                       bp,
-                                                                       assignments, fri_params);
+    auto proof = zk::snark::redshift_prover<BlueprintFieldType, params>::process(
+        public_preprocessed_data, private_preprocessed_data, desc, bp, assignments, fri_params);
 
-    bool verifier_res = zk::snark::redshift_verifier<BlueprintFieldType, params>::process(public_preprocessed_data, proof, 
-                                                                                bp, fri_params);
+    bool verifier_res = zk::snark::redshift_verifier<BlueprintFieldType, params>::process(public_preprocessed_data,
+                                                                                          proof, bp, fri_params);
 
     return 0;
 }
