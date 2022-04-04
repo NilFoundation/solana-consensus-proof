@@ -18,12 +18,12 @@
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
-import {types} from "./types.sol";
+import {types} from "../types.sol";
 
 /**
- * @title Vesta elliptic curve crypto
+ * @title Pallas elliptic curve crypto
  */
-library vesta_crypto {
-    uint256 constant p_mod = 0x40000000000000000000000000000000224698fc0994a8dd8c46eb2100000001;
-    uint256 constant r_mod = 0x40000000000000000000000000000000224698fc094cf91b992d30ed00000001;
+library pallas_crypto {
+    uint256 constant p_mod = 0x40000000000000000000000000000000224698fc094cf91b992d30ed00000001;
+    uint256 constant r_mod = 0x40000000000000000000000000000000224698fc0994a8dd8c46eb2100000001;
 }

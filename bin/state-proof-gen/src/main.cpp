@@ -307,7 +307,10 @@ int main(int argc, char *argv[]) {
 
     typename fri_type::params_type fri_params = create_fri_params<fri_type, BlueprintFieldType>(table_rows_log);
 
-    std::size_t permutation_size = desc.witness_columns + desc.public_input_columns + desc.constant_columns;
+    std::size_t permutation_size =
+        zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::witness_columns +
+        zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::public_input_columns +
+        zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::constant_columns;
 
     typename types::preprocessed_public_data_type public_preprocessed_data =
         zk::snark::redshift_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
@@ -318,8 +321,6 @@ int main(int argc, char *argv[]) {
     auto proof = zk::snark::redshift_prover<BlueprintFieldType, params>::process(
         public_preprocessed_data, private_preprocessed_data, desc, bp, assignments, fri_params);
 
-    bool verifier_res = zk::snark::redshift_verifier<BlueprintFieldType, params>::process(public_preprocessed_data,
-                                                                                          proof, bp, fri_params);
-
-    return 0;
+    return zk::snark::redshift_verifier<BlueprintFieldType, params>::process(public_preprocessed_data, proof, bp,
+                                                                             fri_params);
 }

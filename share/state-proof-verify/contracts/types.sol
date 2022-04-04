@@ -16,7 +16,6 @@
 //---------------------------------------------------------------------------//
 
 pragma solidity >=0.8.4;
-pragma experimental ABIEncoderV2;
 
 /**
  * @title Bn254Crypto library used for the fr, g1 and g2 point types
@@ -202,7 +201,15 @@ library types {
         // 0x40
         uint256 theta;
         // 0x60
-        uint256 selector_evaluation;
+        uint256[] selector_evaluations_ptrs;
+        // 0x80
+        uint256 constraint_eval;
+        // 0xa0
+        uint256 gate_evaluation;
+        // 0xc0
+        bytes mds;
+        // 0xe0
+        bytes round_constants;
     }
     
     struct permutation_argument_eval_params {
@@ -250,15 +257,40 @@ library types {
 
     struct redshift_common_data {
         uint256 rows_amount;
+        // 0x20
         uint256 omega;
         int256[][] columns_rotations; 
     }
 
     struct redshift_local_variables {
         uint256 len;
+        // 0x20
         uint256 offset;
+        // 0x40
         uint256 zero_index;
-
+        // 0x60
+        uint256[] permutation_argument;
+        // 0x80
+        uint256 gate_argument;
+        // 0xa0
+        uint256[] alphas;
+        // 0xc0
+        uint256 challenge;
+        // 0xe0
+        uint256 e;
+        // 0x100
+        uint256[] evaluation_points_permutation;
+        // 0x120
+        uint256[] evaluation_points_quotient;
+        // 0x140
+        uint256[] F;
+        // 0x160
+        uint256 F_consolidated;
+        // 0x180
+        uint256 T_consolidated;
+        // 0x1a0
+        uint256 Z_at_challenge;
         uint256 tmp1;
+        bool status;
     }
 }
