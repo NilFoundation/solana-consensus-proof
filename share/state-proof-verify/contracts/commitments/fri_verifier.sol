@@ -17,11 +17,11 @@
 //---------------------------------------------------------------------------//
 pragma solidity >=0.8.4;
 
-import '../cryptography/types.sol';
+import '../types.sol';
 import '../containers/merkle_verifier.sol';
 import '../cryptography/transcript.sol';
-import '../cryptography/field.sol';
-import '../cryptography/polynomial.sol';
+import '../algebra/field.sol';
+import '../algebra/polynomial.sol';
 import '../basic_marshalling.sol';
 
 library fri_verifier {
@@ -230,10 +230,43 @@ library fri_verifier {
         }
     }
 
+
+
+    function skip_round_proof_be_check(bytes memory blob, uint256 offset)
+    internal pure returns (uint256 result_offset) {
+        // colinear_value
+        result_offset = basic_marshalling.skip_uint256_be_check(blob, offset);
+        // T_root
+        result_offset = basic_marshalling.skip_octet_vector_32_be_check(blob, result_offset);
+        // y
+        result_offset = basic_marshalling.skip_vector_of_uint256_be_check(blob, result_offset);
+        // colinear_path
+        result_offset = merkle_verifier.skip_merkle_proof_be_check(blob, result_offset);
+        // p
+        uint256 value_len;
+        (value_len, result_offset) = basic_marshalling.get_skip_length_check(blob, result_offset);
+        for (uint256 i = 0; i < value_len; i++) {
+            result_offset = merkle_verifier.skip_merkle_proof_be_check(blob, result_offset);
+        }
+    }
+
+    function skip_proof_be_check(bytes memory blob, uint256 offset)
+    internal pure returns (uint256 result_offset) {
+        // final_polynomial
+        result_offset = basic_marshalling.skip_vector_of_uint256_be_check(blob, offset);
+        // round_proofs
+        uint256 value_len;
+        (value_len, result_offset) = basic_marshalling.get_skip_length_check(blob, result_offset);
+        for (uint256 i = 0; i < value_len; i++) {
+            result_offset = skip_round_proof_be_check(blob, result_offset);
+        }
+    }
+
+
     function verify_round_proofs(
         types.fri_proof_type memory proof,
         uint256 i
-    ) internal view returns(bool) {
+    ) internal pure returns(bool) {
         for (uint256 j = 0; j < m; j++) {
             if (!merkle_verifier.verify_merkle_proof(
                     proof.round_proofs[i].p[j],
@@ -425,9 +458,8 @@ library fri_verifier {
 
     function parse_verify_round_proof_be(
         bytes memory blob,
-        uint256 offset,
-        types.fri_params_type memory fri_params
-    ) internal view returns (bool result, uint256 proof_size) {
+        uint256 offset
+    ) internal pure returns (bool result, uint256 proof_size) {
         require(offset < blob.length);
         round_proof_verification_local_vars memory vars;
         vars.len = blob.length - offset;
@@ -536,7 +568,7 @@ library fri_verifier {
             local_vars.alpha = transcript.get_field_challenge(tr_state, fri_params.modulus);
             local_vars.x_next = polynomial.evaluate(fri_params.q, local_vars.x, fri_params.modulus);
 
-            (bool result_i, uint256 read_round_proof_size) = parse_verify_round_proof_be(blob, offset + proof_size, fri_params);
+            (bool result_i, uint256 read_round_proof_size) = parse_verify_round_proof_be(blob, offset + proof_size);
             if (!result_i) {
                 return (false, 0);
             }
