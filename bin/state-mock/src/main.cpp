@@ -15,6 +15,7 @@
 //---------------------------------------------------------------------------//
 
 #include <iostream>
+#include <chrono>
 
 #include <boost/circular_buffer.hpp>
 #include <boost/optional.hpp>
@@ -93,7 +94,7 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, block_data<
 
 template<typename Hash>
 void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, vote_state<Hash> const &c) {
-    jv = {{"slots", c.slots}, {"hash", std::to_string(c.hash)}, {"timestamp", c.timestamp}};
+    jv = {{"slots", c.slots}, {"hash", std::to_string(c.hash)}, {"timestamp", c.timestamp}, {"weight", c.weight}};
 }
 
 void pretty_print(std::ostream &os, boost::json::value const &jv, std::string *indent = nullptr) {
@@ -194,6 +195,8 @@ int main(int argc, char *argv[]) {
     boost::random::random_device rd;     // Will be used to obtain a seed for the random number engine
     boost::random::mt19937 gen(rd());    // Standard mersenne_twister_engine seeded with rd()
     boost::random::uniform_int_distribution<std::size_t> distrib(std::numeric_limits<std::size_t>::min() + 1, 1000UL);
+    boost::random::uniform_int_distribution<std::size_t> small_distrib(std::numeric_limits<std::size_t>::min() + 1,
+                                                                       10UL);
 
     random_hash_generator_type hash_gen;
 
@@ -203,10 +206,27 @@ int main(int argc, char *argv[]) {
                                               .new_confirmed = distrib(gen) + state.confirmed};
 
     for (int i = 0; i < distrib(gen); i++) {
-        state.repl_data.push_back({.block_number = static_cast<size_t>(distrib(gen)),
-                                   .bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
-                                   .merkle_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
-                                   .previous_bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s)});
+        state.repl_data.push_back({
+            .block_number = static_cast<size_t>(distrib(gen)),
+            .bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
+            .merkle_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
+            .previous_bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
+
+        });
+
+        std::vector<uint64_t> slots;
+        std::generate_n(std::back_inserter(slots), small_distrib(gen), [] {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::system_clock::now().time_since_epoch())
+                .count();
+        });
+
+        for (int j = 0; j < slots.size(); j++) {
+            state.repl_data[i].votes.push_back({.slots = slots,
+                                                .hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
+                                                .timestamp = static_cast<uint32_t>(slots[j]),
+                                                .weight = static_cast<size_t>(distrib(gen))});
+        }
     }
 
     for (int i = 0; i < distrib(gen); i++) {
