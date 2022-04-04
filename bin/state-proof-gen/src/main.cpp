@@ -79,7 +79,6 @@ struct block_data {
 
     std::size_t block_number;
     digest_type bank_hash;
-    digest_type merkle_hash;
     digest_type previous_bank_hash;
     std::vector<vote_state<Hash>> votes;
 };
@@ -130,13 +129,6 @@ block_data<Hash> tag_invoke(boost::json::value_to_tag<block_data<Hash>>, const b
                     istr >> ret;
                     return ret;
                 }(o.at("bank_hash")),
-            .merkle_hash =
-                [&](const boost::json::value &v) {
-                    typename Hash::digest_type ret;
-                    std::istringstream istr(boost::json::value_to<std::string>(v));
-                    istr >> ret;
-                    return ret;
-                }(o.at("merkle_hash")),
             .previous_bank_hash =
                 [&](const boost::json::value &v) {
                     typename Hash::digest_type ret;

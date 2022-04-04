@@ -66,7 +66,6 @@ struct block_data {
 
     std::size_t block_number;
     digest_type bank_hash;
-    digest_type merkle_hash;
     digest_type previous_bank_hash;
     std::vector<vote_state<Hash>> votes;
 };
@@ -87,7 +86,6 @@ template<typename Hash>
 void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, block_data<Hash> const &c) {
     jv = {{"block_number", c.block_number},
           {"bank_hash", std::to_string(c.bank_hash)},
-          {"merkle_hash", std::to_string(c.merkle_hash)},
           {"previous_bank_hash", std::to_string(c.previous_bank_hash)},
           {"votes", c.votes}};
 }
@@ -209,7 +207,6 @@ int main(int argc, char *argv[]) {
         state.repl_data.push_back({
             .block_number = static_cast<size_t>(distrib(gen)),
             .bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
-            .merkle_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
             .previous_bank_hash = pack<nil::marshalling::option::little_endian>(hash_gen(), s),
 
         });
