@@ -9,17 +9,17 @@ cm_project(state-proof-mock WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM
 if(NOT Boost_FOUND AND NOT CMAKE_CROSSCOMPILING)
     cm_find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options thread system)
 elseif(CMAKE_CROSSCOMPILING)
-    if (NOT TARGET boost)
+    if(NOT TARGET boost)
         include(ExternalProject)
         set(Boost_LIBRARIES boost_random)
         externalproject_add(boost
-                PREFIX ${CMAKE_BINARY_DIR}/libs/boost
-                GIT_REPOSITORY git@github.com:boostorg/boost.git
-                GIT_TAG boost-1.77.0
-                BUILD_IN_SOURCE TRUE
-                CMAKE_ARGS -DCMAKE_CROSSCOMPILING_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-                BUILD_COMMAND cmake --build . --target ${Boost_LIBRARIES}
-                INSTALL_COMMAND "")
+                            PREFIX ${CMAKE_BINARY_DIR}/libs/boost
+                            GIT_REPOSITORY git@github.com:boostorg/boost.git
+                            GIT_TAG boost-1.77.0
+                            BUILD_IN_SOURCE TRUE
+                            CMAKE_ARGS -DCMAKE_CROSSCOMPILING_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+                            BUILD_COMMAND cmake --build . --target ${Boost_LIBRARIES}
+                            INSTALL_COMMAND "")
     else()
         set(Boost_LIBRARIES boost_random)
     endif()
@@ -68,13 +68,13 @@ if(APPLE OR NOT ${CMAKE_TARGET_ARCHITECTURE} STREQUAL ${CMAKE_HOST_SYSTEM_PROCES
     set_target_properties(${CURRENT_PROJECT_NAME} PROPERTIES
                           XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "${APPLE_CODE_SIGN_IDENTITY}"
                           XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM}")
-elseif(CMAKE_CROSSCOMPILING)
+elseif(CMAKE_CROSSCOMPILING AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
         set_target_properties(${CURRENT_PROJECT_NAME} PROPERTIES
-                              COMPILE_FLAGS "-s USE_BOOST_HEADERS=1"
-                              LINK_FLAGS "-s USE_BOOST_HEADERS=1")
+                              COMPILE_FLAGS "-s USE_BOOST_HEADERS=1 -s USE_PTHREADS -s PROXY_TO_PTHREAD"
+                              LINK_FLAGS "-s USE_BOOST_HEADERS=1 -s USE_PTHREADS -s PROXY_TO_PTHREAD"
+                              LINK_DIRECTORIES "${CMAKE_BINARY_DIR}/libs/boost/src/boost/stage/lib")
     endif()
 
     add_dependencies(${CURRENT_PROJECT_NAME} boost)
-    target_link_directories(${CURRENT_PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/libs/boost/src/boost/stage/lib)
 endif()
