@@ -16,6 +16,8 @@
 
 #include <iostream>
 
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
 #include <boost/json/src.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/optional.hpp>
@@ -238,7 +240,11 @@ int main(int argc, char *argv[]) {
         std::cin >> string;
     }
 #else
-    std::cin >> string;
+    std::string line;
+
+    while (std::getline(std::cin, line)) {
+        string += line + "\n";
+    }
 #endif
 
     {
@@ -270,7 +276,6 @@ int main(int argc, char *argv[]) {
     typename component_type::private_params_type private_params = {
         algebra::random_element<curve_type::template g1_type<>>(),
         algebra::random_element<curve_type::template g1_type<>>()};
-
     zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams> desc;
 
     zk::blueprint<ArithmetizationType> bp(desc);
