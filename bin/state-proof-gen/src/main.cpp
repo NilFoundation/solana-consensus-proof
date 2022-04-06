@@ -100,13 +100,14 @@ struct state_type {
 template<typename Hash>
 vote_state<Hash> tag_invoke(boost::json::value_to_tag<vote_state<Hash>>, const boost::json::value &jv) {
     auto &o = jv.as_object();
-    return {.slots = [&](const boost::json::value &arr) {
-                std::vector<std::uint64_t> ret;
-                for (const boost::json::value &val : arr.as_array()) {
-                    ret.emplace_back(boost::json::value_to<std::uint64_t>(val));
-                }
-                return ret;
-            }(o.at("slots")),
+    return {.slots =
+                [&](const boost::json::value &arr) {
+                    std::vector<std::uint64_t> ret;
+                    for (const boost::json::value &val : arr.as_array()) {
+                        ret.emplace_back(boost::json::value_to<std::uint64_t>(val));
+                    }
+                    return ret;
+                }(o.at("slots")),
             .hash =
                 [&](const boost::json::value &v) {
                     typename Hash::digest_type ret;
@@ -122,30 +123,30 @@ template<typename Hash>
 block_data<Hash> tag_invoke(boost::json::value_to_tag<block_data<Hash>>, const boost::json::value &jv) {
     auto &o = jv.as_object();
 
-
-    return {.block_number = boost::json::value_to<std::size_t>(o.at("block_number")),
-            .bank_hash =
-                [&](const boost::json::value &v) {
-                    typename Hash::digest_type ret;
-                    std::istringstream istr(boost::json::value_to<std::string>(v));
-                    istr >> ret;
-                    return ret;
-                }(o.at("bank_hash")),
-            .previous_bank_hash =
-                [&](const boost::json::value &v) {
-                    typename Hash::digest_type ret;
-                    std::istringstream istr(boost::json::value_to<std::string>(v));
-                    istr >> ret;
-                    return ret;
-                }(o.at("previous_bank_hash")),
-            .votes =
-                [&](const boost::json::value &arr) {
-                    std::vector<vote_state<Hash>> ret;
-                    for (const boost::json::value &val : arr.as_array()) {
-                        ret.emplace_back(boost::json::value_to<vote_state<Hash>>(val));
-                    }
-                    return ret;
-                }(o.at("votes")),
+    return {
+        .block_number = boost::json::value_to<std::size_t>(o.at("block_number")),
+        .bank_hash =
+            [&](const boost::json::value &v) {
+                typename Hash::digest_type ret;
+                std::istringstream istr(boost::json::value_to<std::string>(v));
+                istr >> ret;
+                return ret;
+            }(o.at("bank_hash")),
+        .previous_bank_hash =
+            [&](const boost::json::value &v) {
+                typename Hash::digest_type ret;
+                std::istringstream istr(boost::json::value_to<std::string>(v));
+                istr >> ret;
+                return ret;
+            }(o.at("previous_bank_hash")),
+        .votes =
+            [&](const boost::json::value &arr) {
+                std::vector<vote_state<Hash>> ret;
+                for (const boost::json::value &val : arr.as_array()) {
+                    ret.emplace_back(boost::json::value_to<vote_state<Hash>>(val));
+                }
+                return ret;
+            }(o.at("votes")),
 
     };
 }
@@ -174,8 +175,7 @@ state_type<Hash, SignatureSchemeType> tag_invoke(boost::json::value_to_tag<state
                         ret.emplace_back(sig);
                     }
                     return ret;
-                }(o.at("signatures"))
-    };
+                }(o.at("signatures"))};
 }
 
 template<typename fri_type, typename FieldType>
@@ -265,13 +265,6 @@ int main(int argc, char *argv[]) {
     using component_type = zk::components::curve_element_unified_addition<ArithmetizationType, curve_type, 0, 1, 2, 3,
                                                                           4, 5, 6, 7, 8, 9, 10>;
 
-#ifndef __EMSCRIPTEN__
-    if (vm.count("output")) {
-    }
-#else
-
-#endif
-
     typename component_type::public_params_type public_params = {};
     typename component_type::private_params_type private_params = {
         algebra::random_element<curve_type::template g1_type<>>(),
@@ -318,6 +311,15 @@ int main(int argc, char *argv[]) {
     auto proof = zk::snark::redshift_prover<BlueprintFieldType, params>::process(
         public_preprocessed_data, private_preprocessed_data, desc, bp, assignments, fri_params);
 
-    return zk::snark::redshift_verifier<BlueprintFieldType, params>::process(public_preprocessed_data, proof, bp,
-                                                                             fri_params);
+    if (!zk::snark::redshift_verifier<BlueprintFieldType, params>::process(public_preprocessed_data, proof, bp,
+                                                                           fri_params)) {
+        return -1;
+    }
+
+#ifndef __EMSCRIPTEN__
+    if (vm.count("output")) {
+    }
+#else
+
+#endif
 }
