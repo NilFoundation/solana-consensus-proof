@@ -271,11 +271,19 @@ int main(int argc, char *argv[]) {
     }
 
     if (vm.count("input")) {
-        if (boost::filesystem::exists(vm["input"].as<std::string>())) {
-            boost::filesystem::load_string_file(vm["input"].as<std::string>(), string);
+        if (vm["input"].as<std::string>().size() < PATH_MAX || vm["input"].as<std::string>().size() < FILENAME_MAX) {
+            if (boost::filesystem::exists(vm["input"].as<std::string>())) {
+                boost::filesystem::load_string_file(vm["input"].as<std::string>(), string);
+            }
+        } else {
+            string = vm["input"].as<std::string>();
         }
     } else {
-        std::cin >> string;
+        std::string line;
+
+        while (std::getline(std::cin, line)) {
+            string += line + "\n";
+        }
     }
 #else
     std::string line;
