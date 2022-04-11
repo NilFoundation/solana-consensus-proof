@@ -54,6 +54,10 @@
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/verifier.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/redshift/params.hpp>
+
+#include <nil/marshalling/endianness.hpp>
+#include <nil/crypto3/marshalling/zk/types/redshift/proof.hpp>
+
 #include <fstream>
 
 using namespace nil::crypto3;
@@ -197,6 +201,34 @@ typename fri_type::params_type create_fri_params(std::size_t degree_log) {
     return params;
 }
 
+template<typename TIter>
+void print_byteblob(std::ostream &os, TIter iter_begin, TIter iter_end) {
+    os << "0x";
+    os << std::hex;
+    for (TIter it = iter_begin; it != iter_end; it++) {
+        os << std::setfill('0') << std::setw(2) << std::right << int(*it);
+    }
+    os << std::endl << std::dec;
+}
+
+template<typename Endianness, typename RedshiftProof>
+void test_redshift_proof_marshalling(const RedshiftProof &proof) {
+    using namespace nil::crypto3::marshalling;
+
+    using proof_marshalling_type = nil::crypto3::marshalling::types::redshift_proof<nil::marshalling::field_type<Endianness>, RedshiftProof>;
+
+    auto filled_redshift_proof = nil::crypto3::marshalling::types::fill_redshift_proof<RedshiftProof, Endianness>(proof);
+    RedshiftProof _proof = nil::crypto3::marshalling::types::make_redshift_proof<RedshiftProof, Endianness>(filled_redshift_proof);
+
+    std::vector<std::uint8_t> cv;
+    cv.resize(filled_redshift_proof.length(), 0x00);
+    std::cout << filled_redshift_proof.length() << std::endl;
+    auto write_iter = cv.begin();
+    nil::marshalling::status_type status = filled_redshift_proof.write(write_iter, cv.size());
+
+    print_byteblob(std::cout, cv.cbegin(), cv.cend());
+}
+
 int main(int argc, char *argv[]) {
 
     typedef hashes::sha2<256> hash_type;
@@ -287,7 +319,7 @@ int main(int argc, char *argv[]) {
     zk::snark::plonk_assignment_table<BlueprintFieldType, ArithmetizationParams> assignments(private_assignment,
                                                                                              public_assignment);
 
-    using params = zk::snark::redshift_params<BlueprintFieldType, ArithmetizationParams>;
+    using params = zk::snark::redshift_params<BlueprintFieldType, ArithmetizationParams, hashes::keccak_1600<256>, hashes::keccak_1600<256>, 1>;
     using types = zk::snark::detail::redshift_policy<BlueprintFieldType, params>;
 
     using fri_type = typename zk::commitments::fri<BlueprintFieldType, typename params::merkle_hash_type,
@@ -316,10 +348,15 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    using Endianness = nil::marshalling::option::big_endian;
+    test_redshift_proof_marshalling<Endianness>(proof);
+
 #ifndef __EMSCRIPTEN__
     if (vm.count("output")) {
     }
 #else
 
 #endif
+
+//    std::cout << "Size of double: " << sizeof(std::size_t) << " bytes" << std::endl;
 }
