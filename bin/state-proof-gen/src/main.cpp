@@ -274,8 +274,6 @@ int main(int argc, char *argv[]) {
         while (std::getline(std::cin, line)) {
             string += line + "\n";
         }
-
-        std::cout << string << std::endl;
     }
 #else
     std::string line;
