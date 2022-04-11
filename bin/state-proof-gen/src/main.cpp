@@ -215,11 +215,8 @@ void print_byteblob(std::ostream &os, TIter iter_begin, TIter iter_end) {
 }
 
 template<typename Endianness, typename RedshiftProof>
-void test_redshift_proof_marshalling(const RedshiftProof &proof) {
+std::vector<std::uint8_t> serialize_proof(const RedshiftProof &proof) {
     using namespace nil::crypto3::marshalling;
-
-    using proof_marshalling_type =
-        nil::crypto3::marshalling::types::redshift_proof<nil::marshalling::field_type<Endianness>, RedshiftProof>;
 
     auto filled_redshift_proof =
         nil::crypto3::marshalling::types::fill_redshift_proof<RedshiftProof, Endianness>(proof);
@@ -228,11 +225,13 @@ void test_redshift_proof_marshalling(const RedshiftProof &proof) {
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_redshift_proof.length(), 0x00);
-    std::cout << filled_redshift_proof.length() << std::endl;
     auto write_iter = cv.begin();
-    nil::marshalling::status_type status = filled_redshift_proof.write(write_iter, cv.size());
 
-    print_byteblob(std::cout, cv.cbegin(), cv.cend());
+    if (filled_redshift_proof.write(write_iter, cv.size()) == status_type::success) {
+        return cv;
+    } else {
+        return {};
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -356,20 +355,34 @@ int main(int argc, char *argv[]) {
                                                                                fri_params)) {
             return -1;
         }
-    } else {
-        actor::app_template app;
-        app.run(argc, argv, [] {
-            std::cout << "Hello world\n";
-            return actor::make_ready_future<>();
-        });
-    }
+
+        auto cv = serialize_proof<option::big_endian>(proof);
 
 #ifndef __EMSCRIPTEN__
-    if (vm.count("output")) {
-//        using Endianness = nil::marshalling::option::big_endian;
-//        test_redshift_proof_marshalling<Endianness>(proof);
-    }
+
+        if (vm.count("output")) {
+            print_byteblob(std::cout, cv.cbegin(), cv.cend());
+        } else {
+            std::ofstream of(vm["output"].as<std::string>());
+            print_byteblob(of, cv.begin(), cv.end());
+        }
+#else
+        print_byteblob(std::cout, cv.cbegin(), cv.cend());
+#endif
+    } else {
+        actor::app_template app;
+        app.run(argc, argv, [&] {
+            std::cout << "Hello world\n";
+
+#ifndef __EMSCRIPTEN__
+            if (vm.count("output")) {
+                //        using Endianness = nil::marshalling::option::big_endian;
+                //        serialize_proof<Endianness>(proof);
+            }
 #else
 
 #endif
+            return actor::make_ready_future<>();
+        });
+    }
 }
