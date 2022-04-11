@@ -61,3 +61,18 @@
 [submodule "libs/container"]
 	path = libs/container
 	url = git@github.com:nilfoundation/crypto3-containers.git
+[submodule "libs/actor/core"]
+	path = libs/actor/core
+	url = git@github.com:nilfoundation/actor-core.git
+[submodule "libs/actor/network"]
+	path = libs/actor/network
+	url = git@github.com:nilfoundation/actor-network.git
+[submodule "libs/actor/cluster"]
+	path = libs/actor/cluster
+	url = git@github.com:nilfoundation/actor-cluster.git
+[submodule "libs/actor/shim/epoll"]
+	path = libs/actor/shim/epoll
+	url = git@github.com:nilfoundation/epoll-shim.git
+[submodule "libs/actor/dpdk"]
+	path = libs/actor/dpdk
+	url = git@github.com:nilfoundation/dpdk.git

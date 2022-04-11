@@ -41,6 +41,8 @@ option(BUILD_TESTS "Build unit tests" TRUE)
 
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs")
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs/marshalling")
+add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs/actor/shim")
+add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs/actor")
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/bin")
 
 add_custom_target(verifier
@@ -48,7 +50,7 @@ add_custom_target(verifier
                   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/share/state-proof-verify)
 
 if(BUILD_TESTS)
-    add_subdirectory(test)
+    add_subdirectory(bin/state-proof-gen/test/test)
 endif()
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/docs/doxygen/${CMAKE_WORKSPACE_NAME}.doxyfile.in
