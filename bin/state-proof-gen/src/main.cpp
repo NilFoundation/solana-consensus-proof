@@ -264,12 +264,18 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if (vm.count("input")) {
+    if (vm["input"].as<std::string>() != "stdin" && vm.count("input")) {
         if (boost::filesystem::exists(vm["input"].as<std::string>())) {
             boost::filesystem::load_string_file(vm["input"].as<std::string>(), string);
         }
     } else {
-        std::cin >> string;
+        std::string line;
+
+        while (std::getline(std::cin, line)) {
+            string += line + "\n";
+        }
+
+        std::cout << string << std::endl;
     }
 #else
     std::string line;
@@ -357,6 +363,4 @@ int main(int argc, char *argv[]) {
 #else
 
 #endif
-
-//    std::cout << "Size of double: " << sizeof(std::size_t) << " bytes" << std::endl;
 }
