@@ -49,9 +49,5 @@ add_custom_target(verifier
                   COMMAND truffle compile
                   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/share/state-proof-verify)
 
-if(BUILD_TESTS)
-    add_subdirectory(bin/state-proof-gen/test/test)
-endif()
-
 configure_file(${CMAKE_CURRENT_LIST_DIR}/docs/doxygen/${CMAKE_WORKSPACE_NAME}.doxyfile.in
                ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_WORKSPACE_NAME}.doxyfile @ONLY)
