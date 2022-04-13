@@ -49,4 +49,18 @@ function estimateGas(address, abi, proof) {
     });
 }
 
-module.exports = {generateAddressesFromSeed, sendProof, estimateGas};
+function signTransaction(encodedTransaction) {
+    var address = generateAddressesFromSeed(mnemonic, 1)[0];
+    var tx = {
+        to : address.address,
+        gasPrice: web3.utils.toHex(web3.utils.toWei('20', 'gwei')),
+        gasLimit: 100000,
+    }
+    console.log()
+
+    web3.eth.accounts.signTransaction(tx, address.privateKey).then(signed => {
+        web3.eth.sendSignedTransaction(signed.rawTransaction).on('receipt', console.log)
+    });
+}
+
+module.exports = {mnemonic, web3, signTransaction, generateAddressesFromSeed, sendProof, estimateGas};
