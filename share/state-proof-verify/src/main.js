@@ -4,7 +4,7 @@ const {hdkey} = require('ethereumjs-wallet');
 const fs = require('fs');
 
 const host = "https://ropsten.infura.io/v3/6f3d827e1a7241859cf304c63a4f3167"
-const mnemonic = fs.readFileSync(".secret").toString().trim();
+const mnemonic = fs.readFileSync(process.argv[2]).toString().trim();
 const count = 1;
 
 const web3 = new Web3(new Web3.providers.HttpProvider(
@@ -62,5 +62,6 @@ function signTransaction(encodedTransaction) {
         web3.eth.sendSignedTransaction(signed.rawTransaction).on('receipt', console.log)
     });
 }
+
 
 module.exports = {mnemonic, web3, signTransaction, generateAddressesFromSeed, sendProof, estimateGas};

@@ -23,7 +23,7 @@ Compiler/environment requirements are as follows:
 
 ### Building
 
-`mkdir build && cd build && cmake .. && make mock`
+`mkdir build && cd build && cmake .. && make state-proof-mock`
 
 ### Usage
 
@@ -48,7 +48,7 @@ Compiler/environment requirements are as follows:
 
 ### Building
 
-`mkdir build && cd build && cmake .. && make prove`
+`mkdir build && cd build && cmake .. && make state-proof-gen`
 
 ### Usage
 
@@ -59,6 +59,20 @@ Compiler/environment requirements are as follows:
 ### Benchmarks
 
 `make zk_lpc_performance_test`
+
+`cd share/state-proof-verify/src/ && ./run.sh {PATH_TO_SECRET}/.secret`
+
+### Docker
+
+#### Build
+`docker build -t state_proof_verify_img -f ./share/state-proof-verify/docker/Dockerfile .`
+
+#### Run
+`cat {PATH_TO_SECRET}/.secret | docker run -i state_proof_verify_img`
+
+#### Get output
+`docker logs state_proof_verify`
+
 
 ## Community
 

@@ -21,8 +21,14 @@ function verifyRedshiftUnifiedAddition(proof) {
     });
 }
 
-file = process.argv[2];
+const { performance } = require('perf_hooks');
 
-var text = fs.readFileSync(file).toString('utf-8');
-text = text.slice(0, -1);
-x = verifyRedshiftUnifiedAddition(text);
+var startTime = performance.now()
+
+var text = fs.readFileSync(0).toString('utf-8').trim();
+
+verifyRedshiftUnifiedAddition(text);
+
+var endTime = performance.now()
+
+fs.appendFileSync('time.log', 'redshift-unified-addition: ' + Math.trunc(endTime - startTime).toString() + 'ms\n');

@@ -1,4 +1,9 @@
-/Users/Zerg/Projects/evm-solana-verification/cmake-build-debug/bin/state-mock/state-proof-mock > example.txt
-cat example.txt | /Users/Zerg/Projects/evm-solana-verification/cmake-build-debug/bin/state-proof-gen/state-proof-gen stdin  > blob.txt
-node verifyRedshiftUnifiedAddition.js blob.txt
-
+#!/bin/sh
+if [ -f $1 ]; then
+  rm -f time.log
+  echo "Name Time_execution" > time.log
+  state-proof-mock | state-proof-gen | node verifyRedshiftUnifiedAddition.js $1
+  cat time.log | column -t
+else
+    echo "Secret on path $1 does not exist."
+fi

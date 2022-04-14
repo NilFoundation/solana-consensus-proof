@@ -1,5 +1,6 @@
 //---------------------------------------------------------------------------//
 // Copyright (c) 2018-2021 Mikhail Komarov <nemo@nil.foundation>
+// Copyright (c) 2022 Aleksei Moskvin <alalmoskvin@nil.foundation>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +16,7 @@
 //---------------------------------------------------------------------------//
 
 #include <iostream>
+#include <chrono>
 
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
@@ -105,20 +107,20 @@ template<typename Hash>
 vote_state<Hash> tag_invoke(boost::json::value_to_tag<vote_state<Hash>>, const boost::json::value &jv) {
     auto &o = jv.as_object();
     return {.slots =
-    [&](const boost::json::value &arr) {
-        std::vector<std::uint64_t> ret;
-        for (const boost::json::value &val : arr.as_array()) {
-            ret.emplace_back(boost::json::value_to<std::uint64_t>(val));
-        }
-        return ret;
-    }(o.at("slots")),
+                [&](const boost::json::value &arr) {
+                    std::vector<std::uint64_t> ret;
+                    for (const boost::json::value &val : arr.as_array()) {
+                        ret.emplace_back(boost::json::value_to<std::uint64_t>(val));
+                    }
+                    return ret;
+                }(o.at("slots")),
             .hash =
-            [&](const boost::json::value &v) {
-                typename Hash::digest_type ret;
-                std::istringstream istr(boost::json::value_to<std::string>(v));
-                istr >> ret;
-                return ret;
-            }(o.at("hash")),
+                [&](const boost::json::value &v) {
+                    typename Hash::digest_type ret;
+                    std::istringstream istr(boost::json::value_to<std::string>(v));
+                    istr >> ret;
+                    return ret;
+                }(o.at("hash")),
             .timestamp = boost::json::value_to<std::uint32_t>(o.at("timestamp")),
             .weight = boost::json::value_to<std::size_t>(o.at("weight"))};
 }
@@ -128,22 +130,22 @@ block_data<Hash> tag_invoke(boost::json::value_to_tag<block_data<Hash>>, const b
     auto &o = jv.as_object();
 
     return {
-            .block_number = boost::json::value_to<std::size_t>(o.at("block_number")),
-            .bank_hash =
+        .block_number = boost::json::value_to<std::size_t>(o.at("block_number")),
+        .bank_hash =
             [&](const boost::json::value &v) {
                 typename Hash::digest_type ret;
                 std::istringstream istr(boost::json::value_to<std::string>(v));
                 istr >> ret;
                 return ret;
             }(o.at("bank_hash")),
-            .previous_bank_hash =
+        .previous_bank_hash =
             [&](const boost::json::value &v) {
                 typename Hash::digest_type ret;
                 std::istringstream istr(boost::json::value_to<std::string>(v));
                 istr >> ret;
                 return ret;
             }(o.at("previous_bank_hash")),
-            .votes =
+        .votes =
             [&](const boost::json::value &arr) {
                 std::vector<vote_state<Hash>> ret;
                 for (const boost::json::value &val : arr.as_array()) {
@@ -162,24 +164,24 @@ state_type<Hash, SignatureSchemeType> tag_invoke(boost::json::value_to_tag<state
     return {.confirmed = boost::json::value_to<std::size_t>(o.at("confirmed")),
             .new_confirmed = boost::json::value_to<std::size_t>(o.at("new_confirmed")),
             .repl_data =
-            [&](const boost::json::value &arr) {
-                std::vector<block_data<Hash>> ret;
-                for (const boost::json::value &val : arr.as_array()) {
-                    ret.emplace_back(boost::json::value_to<block_data<Hash>>(val));
-                }
-                return ret;
-            }(o.at("repl_data")),
+                [&](const boost::json::value &arr) {
+                    std::vector<block_data<Hash>> ret;
+                    for (const boost::json::value &val : arr.as_array()) {
+                        ret.emplace_back(boost::json::value_to<block_data<Hash>>(val));
+                    }
+                    return ret;
+                }(o.at("repl_data")),
             .signatures =
-            [&](const boost::json::value &arr) {
-                std::vector<typename pubkey::public_key<SignatureSchemeType>::signature_type> ret;
-                for (const boost::json::value &val : arr.as_array()) {
-                    typename pubkey::public_key<SignatureSchemeType>::signature_type sig;
-                    std::istringstream istr(val.as_string().data());
-                    istr >> sig;
-                    ret.emplace_back(sig);
-                }
-                return ret;
-            }(o.at("signatures"))};
+                [&](const boost::json::value &arr) {
+                    std::vector<typename pubkey::public_key<SignatureSchemeType>::signature_type> ret;
+                    for (const boost::json::value &val : arr.as_array()) {
+                        typename pubkey::public_key<SignatureSchemeType>::signature_type sig;
+                        std::istringstream istr(val.as_string().data());
+                        istr >> sig;
+                        ret.emplace_back(sig);
+                    }
+                    return ret;
+                }(o.at("signatures"))};
 }
 
 template<typename fri_type, typename FieldType>
@@ -191,7 +193,7 @@ typename fri_type::params_type create_fri_params(std::size_t degree_log) {
     std::size_t r = degree_log - 1;
 
     std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> domain_set =
-            zk::commitments::detail::calculate_domain_set<FieldType>(degree_log + expand_factor, r);
+        zk::commitments::detail::calculate_domain_set<FieldType>(degree_log + expand_factor, r);
 
     params.r = r;
     params.D = domain_set;
@@ -216,10 +218,10 @@ std::string marshalling_to_blob(const RedshiftProof &proof) {
     using namespace nil::crypto3::marshalling;
 
     using proof_marshalling_type =
-    nil::crypto3::marshalling::types::redshift_proof<nil::marshalling::field_type<Endianness>, RedshiftProof>;
+        nil::crypto3::marshalling::types::redshift_proof<nil::marshalling::field_type<Endianness>, RedshiftProof>;
 
     auto filled_redshift_proof =
-            nil::crypto3::marshalling::types::fill_redshift_proof<RedshiftProof, Endianness>(proof);
+        nil::crypto3::marshalling::types::fill_redshift_proof<RedshiftProof, Endianness>(proof);
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_redshift_proof.length(), 0x00);
@@ -234,6 +236,9 @@ std::string marshalling_to_blob(const RedshiftProof &proof) {
 extern "C" {
 
 const char *proof_gen() {
+    auto start = std::chrono::high_resolution_clock::now();
+    std::ofstream out("time.log", std::ios::app);
+
     using curve_type = algebra::curves::pallas;
     using BlueprintFieldType = typename curve_type::base_field_type;
     constexpr std::size_t WitnessColumns = 11;
@@ -241,16 +246,16 @@ const char *proof_gen() {
     constexpr std::size_t ConstantColumns = 0;
     constexpr std::size_t SelectorColumns = 1;
     using ArithmetizationParams =
-    zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
+        zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
     using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
 
     using component_type = zk::components::curve_element_unified_addition<ArithmetizationType, curve_type, 0, 1, 2, 3,
-            4, 5, 6, 7, 8, 9, 10>;
+                                                                          4, 5, 6, 7, 8, 9, 10>;
 
     typename component_type::public_params_type public_params = {};
     typename component_type::private_params_type private_params = {
-            algebra::random_element<curve_type::template g1_type<>>(),
-            algebra::random_element<curve_type::template g1_type<>>()};
+        algebra::random_element<curve_type::template g1_type<>>(),
+        algebra::random_element<curve_type::template g1_type<>>()};
     zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams> desc;
 
     zk::blueprint<ArithmetizationType> bp(desc);
@@ -270,29 +275,34 @@ const char *proof_gen() {
                                                                                              public_assignment);
 
     using params = zk::snark::redshift_params<BlueprintFieldType, ArithmetizationParams, hashes::keccak_1600<256>,
-            hashes::keccak_1600<256>, 1>;
+                                              hashes::keccak_1600<256>, 1>;
     using types = zk::snark::detail::redshift_policy<BlueprintFieldType, params>;
 
     using fri_type = typename zk::commitments::fri<BlueprintFieldType, typename params::merkle_hash_type,
-            typename params::transcript_hash_type, 2>;
+                                                   typename params::transcript_hash_type, 2>;
 
     std::size_t table_rows_log = std::ceil(std::log2(desc.rows_amount));
 
     typename fri_type::params_type fri_params = create_fri_params<fri_type, BlueprintFieldType>(table_rows_log);
 
     std::size_t permutation_size =
-            zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::witness_columns +
-            zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::public_input_columns +
-            zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::constant_columns;
+        zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::witness_columns +
+        zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::public_input_columns +
+        zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::constant_columns;
 
     typename types::preprocessed_public_data_type public_preprocessed_data =
-            zk::snark::redshift_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
-                                                                                         fri_params, permutation_size);
+        zk::snark::redshift_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
+                                                                                     fri_params, permutation_size);
+
+    auto preprocessed_data_duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+    start = std::chrono::high_resolution_clock::now();
+
     typename types::preprocessed_private_data_type private_preprocessed_data =
-            zk::snark::redshift_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment, desc);
+        zk::snark::redshift_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment, desc);
 
     auto proof = zk::snark::redshift_prover<BlueprintFieldType, params>::process(
-            public_preprocessed_data, private_preprocessed_data, desc, bp, assignments, fri_params);
+        public_preprocessed_data, private_preprocessed_data, desc, bp, assignments, fri_params);
 
     //    if (!zk::snark::redshift_verifier<BlueprintFieldType, params>::process(public_preprocessed_data, proof, bp,
     //                                                                           fri_params)) {
@@ -307,6 +317,13 @@ const char *proof_gen() {
 
 #endif
     std::string st = marshalling_to_blob<Endianness>(proof);
+
+    auto prover_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+
+    out << "state-proof-gen-preprocessed-data: " << preprocessed_data_duration.count() << "ms" << std::endl;
+    out << "state-proof-gen-prover: " << prover_duration.count() << "ms" << std::endl;
+    out.close();
+
     return st.c_str();
 }
 }
@@ -336,15 +353,15 @@ int main(int argc, char *argv[]) {
 
     boost::program_options::variables_map vm;
     boost::program_options::store(
-            boost::program_options::command_line_parser(argc, argv).options(options).positional(p).run(), vm);
+        boost::program_options::command_line_parser(argc, argv).options(options).positional(p).run(), vm);
     boost::program_options::notify(vm);
 
-    if (vm.count("help") || argc < 2) {
+    if (vm.count("help")) {
         std::cout << options << std::endl;
         return 0;
     }
 
-    if (vm["input"].as<std::string>() != "stdin" && vm.count("input")) {
+    if (vm.count("input")) {
         if (boost::filesystem::exists(vm["input"].as<std::string>())) {
             boost::filesystem::load_string_file(vm["input"].as<std::string>(), string);
         }
