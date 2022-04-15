@@ -318,7 +318,8 @@ const char *proof_gen() {
 #endif
     std::string st = marshalling_to_blob<Endianness>(proof);
 
-    auto prover_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+    auto prover_duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
 
     out << "state-proof-gen-preprocessed-data: " << preprocessed_data_duration.count() << "ms" << std::endl;
     out << "state-proof-gen-prover: " << prover_duration.count() << "ms" << std::endl;
