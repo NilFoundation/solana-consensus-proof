@@ -272,8 +272,8 @@ const char *proof_gen() {
     std::size_t start_row = component_type::allocate_rows(bp);
     bp.allocate_rows(public_input.size());
 
-    for (std::size_t i = 0; i < public_input.size(); i++) {
-        auto allocated_pi = assignment_bp.allocate_public_input(public_input[i]);
+    for (auto & i : public_input) {
+        auto allocated_pi = assignment_bp.allocate_public_input(i);
     }
     
     typename component_type::allocated_data_type allocated_data;
