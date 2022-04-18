@@ -76,3 +76,6 @@
 [submodule "libs/actor/dpdk"]
 	path = libs/actor/dpdk
 	url = git@github.com:nilfoundation/dpdk.git
+[submodule "libs/application"]
+	path = libs/application
+	url = git@github.com:NilFoundation/application.git

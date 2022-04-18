@@ -33,7 +33,7 @@ set(${CURRENT_PROJECT_NAME}_HEADERS)
 
 # list cpp files excluding platform-dependent files
 list(APPEND ${CURRENT_PROJECT_NAME}_SOURCES
-     src/main.cpp)
+     src/main_new_new.cpp)
 
 add_executable(${CURRENT_PROJECT_NAME}
                ${${CURRENT_PROJECT_NAME}_HEADERS}
@@ -49,6 +49,7 @@ target_link_libraries(${CURRENT_PROJECT_NAME}
 
                       actor::core
                       actor::network
+                      epoll-shim
 
                       crypto3::algebra
                       crypto3::block
@@ -65,6 +66,8 @@ target_link_libraries(${CURRENT_PROJECT_NAME}
                       marshalling::crypto3_algebra
                       marshalling::crypto3_multiprecision
                       marshalling::crypto3_zk
+
+                      boost::application
 
                       ${Boost_LIBRARIES})
 

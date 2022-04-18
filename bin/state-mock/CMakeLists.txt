@@ -78,3 +78,6 @@ elseif(CMAKE_CROSSCOMPILING AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
 
     add_dependencies(${CURRENT_PROJECT_NAME} boost)
 endif()
+
+#install (TARGETS state-proof-mock RUNTIME DESTINATION /Users/zerg/Projects/)
+install(TARGETS ${CURRENT_PROJECT_NAME} RUNTIME DESTINATION bin)
