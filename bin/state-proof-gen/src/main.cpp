@@ -251,25 +251,36 @@ const char *proof_gen() {
 
     using component_type = zk::components::curve_element_unified_addition<ArithmetizationType, curve_type, 0, 1, 2, 3,
                                                                           4, 5, 6, 7, 8, 9, 10>;
+    using var = zk::snark::plonk_variable<BlueprintFieldType>;
 
-    typename component_type::public_params_type public_params = {};
-    typename component_type::private_params_type private_params = {
-        algebra::random_element<curve_type::template g1_type<>>(),
-        algebra::random_element<curve_type::template g1_type<>>()};
+    typename component_type::params_type component_params = {
+        {var(0, 1, false, var::column_type::public_input), var(0, 2, false, var::column_type::public_input)},
+        {var(0, 3, false, var::column_type::public_input), var(0, 4, false, var::column_type::public_input)}};
+    
+    auto P = algebra::random_element<curve_type::template g1_type<>>().to_affine();
+    auto Q = algebra::random_element<curve_type::template g1_type<>>().to_affine();
+
+    std::vector<typename BlueprintFieldType::value_type> public_input = {0, P.X, P.Y, Q.X, Q.Y};
+
     zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams> desc;
 
     zk::blueprint<ArithmetizationType> bp(desc);
     zk::blueprint_private_assignment_table<ArithmetizationType> private_assignment(desc);
     zk::blueprint_public_assignment_table<ArithmetizationType> public_assignment(desc);
+    zk::blueprint_assignment_table<ArithmetizationType> assignment_bp(private_assignment, public_assignment);
 
     std::size_t start_row = component_type::allocate_rows(bp);
-    component_type::generate_gates(bp, public_assignment, public_params, start_row);
-    component_type::generate_copy_constraints(bp, public_assignment, public_params, start_row);
-    component_type::generate_assignments(private_assignment, public_assignment, public_params, private_params,
-                                         start_row);
+    bp.allocate_rows(public_input.size());
 
-    private_assignment.padding();
-    public_assignment.padding();
+    for (std::size_t i = 0; i < public_input.size(); i++) {
+        auto allocated_pi = assignment_bp.allocate_public_input(public_input[i]);
+    }
+    
+    typename component_type::allocated_data_type allocated_data;
+    component_type::generate_circuit(bp, assignment_bp, component_params, allocated_data, start_row);
+    component_type::generate_assignments(assignment_bp, component_params, start_row);
+
+    assignment_bp.padding();
 
     zk::snark::plonk_assignment_table<BlueprintFieldType, ArithmetizationParams> assignments(private_assignment,
                                                                                              public_assignment);
@@ -285,10 +296,7 @@ const char *proof_gen() {
 
     typename fri_type::params_type fri_params = create_fri_params<fri_type, BlueprintFieldType>(table_rows_log);
 
-    std::size_t permutation_size =
-        zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::witness_columns +
-        zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::public_input_columns +
-        zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams>::constant_columns;
+    std::size_t permutation_size = desc.witness_columns + desc.public_input_columns + desc.constant_columns;
 
     typename types::preprocessed_public_data_type public_preprocessed_data =
         zk::snark::redshift_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
@@ -316,8 +324,8 @@ const char *proof_gen() {
 #else
 
 #endif
-    std::string st = marshalling_to_blob<Endianness>(proof);
-
+    //std::string st = marshalling_to_blob<Endianness>(proof);
+    std::string st = "";
     auto prover_duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
 
