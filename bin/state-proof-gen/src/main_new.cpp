@@ -16,9 +16,12 @@
 
 
 #include <iostream>
+#include <chrono>
 
 #define BOOST_APPLICATION_FEATURE_NS_SELECT_BOOST
+
 #include <boost/application.hpp>
+
 #undef B0
 
 #include <boost/random.hpp>
@@ -27,7 +30,6 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/optional.hpp>
 
-//#include <nil/crypto3/algebra/curves/pallas.hpp>
 //#include <nil/crypto3/algebra/fields/arithmetic_params/pallas.hpp>
 //#include <nil/crypto3/algebra/random_element.hpp>
 //#include <nil/crypto3/algebra/curves/alt_bn128.hpp>
@@ -66,6 +68,12 @@
 #include <nil/actor/detail/log.hh>
 #include <nil/actor/detail/log-cli.hh>
 
+#include <nil/actor/core/sleep.hh>
+#include <nil/actor/core/when_all.hh>
+#include <boost/range/irange.hpp>
+#include <nil/actor/core/thread.hh>
+#include <nil/actor/core/with_scheduling_group.hh>
+
 #include <fstream>
 
 //using namespace nil;
@@ -82,6 +90,7 @@ struct config {
     nil::actor::sstring description = "";
     std::chrono::duration<double> default_task_quota = std::chrono::microseconds(500);
     bool auto_handle_sigint_sigterm = true;
+
     config() {
     }
 };
@@ -92,6 +101,59 @@ static nil::actor::reactor_config reactor_config_from_app_config(config cfg) {
     ret.task_quota = cfg.default_task_quota;
     return ret;
 };
+
+nil::actor::future<> say_hello() {
+    nil::actor::print("Hello, World; from simple_actor located on core %u .\n", nil::actor::engine().cpu_id());
+    // Simulate long-running job
+    return nil::actor::sleep(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::milliseconds(500)));
+};
+
+//nil::actor::future<> say_hello()  {
+//    nil::actor::print("Hello, World; from simple_actor located on core %u .\n", nil::actor::engine().cpu_id());
+//    // Simulate long-running job
+//    return nil::actor::make_ready_future();
+//};
+
+template<typename Func, typename Duration>
+nil::actor::future<> compute_intensive_task(Duration duration, unsigned &counter, Func func) {
+    auto end = std::chrono::steady_clock::now() + duration;
+    while (std::chrono::steady_clock::now() < end) {
+        func();
+    }
+    ++counter;
+    return nil::actor::make_ready_future<>();
+}
+
+nil::actor::future<> heavy_task(unsigned &counter) {
+    return compute_intensive_task(std::chrono::milliseconds(100), counter, [] {
+        static thread_local double x = 1;
+        x = std::exp(x) / 3;
+    });
+}
+
+nil::actor::future<> light_task(unsigned &counter) {
+    return compute_intensive_task(std::chrono::milliseconds(10), counter, [] {
+        static thread_local double x = 0.1;
+        x = std::log(x + 1);
+    });
+}
+
+nil::actor::future<> medium_task(unsigned &counter) {
+    return compute_intensive_task(std::chrono::milliseconds(1), counter, [] {
+        static thread_local double x = 0.1;
+        x = std::cos(x);
+    });
+}
+
+nil::actor::future<> example() {
+    auto sg2 = nil::actor::create_scheduling_group("sg20", 20).get0();
+    return nil::actor::async([task = std::move(say_hello), sg2]() mutable {
+            nil::actor::parallel_for_each(boost::irange(0u, 3u), [task, sg2](unsigned i) mutable {
+                return nil::actor::with_scheduling_group(sg2, [task] { return say_hello(); });
+            }).get();
+            nil::actor::thread::maybe_yield();
+    });
+}
 
 class myapp {
 public:
@@ -111,7 +173,6 @@ public:
         auto av = myargs->argv();
 
         // in another file
-//        using configuration_reader = std::function<void(boost::program_options::variables_map &)>;
         config _cfg;
         boost::program_options::options_description _opts;
         boost::program_options::options_description _opts_conf_file;
@@ -122,7 +183,7 @@ public:
         _opts.add_options()("help,h", "show help message");
 
         nil::actor::smp::register_network_stacks();
-//        _opts_conf_file.add(nil::actor::reactor::get_options_description(reactor_config_from_app_config(_cfg)));
+        _opts_conf_file.add(nil::actor::reactor::get_options_description(reactor_config_from_app_config(_cfg)));
         _opts_conf_file.add(nil::actor::metrics::get_options_description());
         _opts_conf_file.add(nil::actor::smp::get_options_description());
         _opts_conf_file.add(nil::actor::scollectd::get_options_description());
@@ -177,6 +238,14 @@ public:
         }
         _configuration = {std::move(configuration)};
 
+//        (void)nil::actor::engine().when_started()
+//                .then([this] {
+//                    return nil::actor::metrics::configure(this->configuration()).then([this] {
+//                        // set scollectd use the metrics configuration, so the later
+//                        // need to be set first
+//                        nil::actor::scollectd::configure(this->configuration());
+//                    });
+//                });
 //        (void)nil::actor::engine()
 //                .when_started()
 //                .then([this] {
@@ -186,7 +255,7 @@ public:
 //                        nil::actor::scollectd::configure(this->configuration());
 //                    });
 //                })
-//                .then(std::move(func))
+//                .then(std::move(say_hello)).then(std::move(say_hello))
 //                .then_wrapped([](auto &&f) {
 //                    try {
 //                        f.get();
@@ -195,7 +264,21 @@ public:
 //                        nil::actor::engine().exit(1);
 //                    }
 //                });
-//        auto exit_code = nil::actor::engine().run();
+        (void) nil::actor::engine().when_started().then(std::move(say_hello)).then_wrapped(
+                [](auto &&f) {
+                    try {
+                        f.get();
+                    } catch (std::exception &ex) {
+                        std::cout << "program failed with uncaught exception: " << ex.what() << "\n";
+                        nil::actor::engine().exit(1);
+                    }
+                });
+
+        auto exit_code = nil::actor::engine().run();
+        std::cout << exit_code << std::endl;
+
+//        auto task = new nil::actor::detail::deregistration_task(std::move(say_hello));
+//        nil::actor::engine().add_task(say_hello());
         nil::actor::smp::cleanup();
         return 0;
     }
@@ -216,11 +299,7 @@ int main(int argc, char *argv[]) {
     boost::application::global_context_ptr ctx = boost::application::global_context::create(ec);
 
     boost::application::auto_handler<myapp> app(ctx);
-//
-//    /*<<Instantiate your application>>*/
-//    myapp app;
-//
-//    /*<<Add an aspect for future use. An 'aspect' can be customized, or new aspects can be created>>*/
+    /*<<Add an aspect for future use. An 'aspect' can be customized, or new aspects can be created>>*/
     this_application()->insert<boost::application::args>(boost::make_shared<boost::application::args>(argc, argv));
 
     int result = boost::application::launch<boost::application::common>(app, ctx, ec);
