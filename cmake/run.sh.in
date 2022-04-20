@@ -5,7 +5,7 @@ if [ -f $1 ]; then
 @CMAKE_INSTALL_PREFIX@/bin/state-mock/state-mock > tmp.txt
 @CMAKE_INSTALL_PREFIX@/bin/state-mock/state-mock > tmp.txt
 @CMAKE_INSTALL_PREFIX@/bin/state-mock/state-mock > tmp.txt
-#  state-mock | state-proof-gen ; cat blob.txt | node verifyRedshiftUnifiedAdditionGas.js $1
+#  state-mock | state-proof-gen ; cat blob.txt | node verifyPlaceholderUnifiedAdditionGas.js $1
   cat blob.txt | node verifyRedshiftUnifiedAdditionGas.js $1
   node printTable.js
 #  python3 create_pretty_table.py

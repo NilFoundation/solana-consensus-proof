@@ -52,13 +52,13 @@
 
 #include <nil/crypto3/zk/commitments/type_traits.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/redshift/preprocessor.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/redshift/verifier.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/redshift/params.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/verifier.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 
 #include <nil/marshalling/endianness.hpp>
-#include <nil/crypto3/marshalling/zk/types/redshift/proof.hpp>
+#include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
 
 #include <fstream>
 
@@ -213,24 +213,22 @@ void print_byteblob(std::ostream &os, TIter iter_begin, TIter iter_end) {
     os << std::endl << std::dec;
 }
 
-template<typename Endianness, typename RedshiftProof>
-std::string marshalling_to_blob(const RedshiftProof &proof) {
-    using namespace nil::crypto3::marshalling;
+template<typename Endianness, typename PlaceholderProof>
+std::string marshalling_to_blob(const PlaceholderProof &proof) {
 
-    using proof_marshalling_type =
-        nil::crypto3::marshalling::types::redshift_proof<nil::marshalling::field_type<Endianness>, RedshiftProof>;
-
-    auto filled_redshift_proof =
-        nil::crypto3::marshalling::types::fill_redshift_proof<RedshiftProof, Endianness>(proof);
+    auto filled_placeholder_proof =
+        nil::crypto3::marshalling::types::fill_placeholder_proof<PlaceholderProof, Endianness>(proof);
 
     std::vector<std::uint8_t> cv;
-    cv.resize(filled_redshift_proof.length(), 0x00);
+    cv.resize(filled_placeholder_proof.length(), 0x00);
     auto write_iter = cv.begin();
-    nil::marshalling::status_type status = filled_redshift_proof.write(write_iter, cv.size());
-
-    std::stringstream st;
-    print_byteblob(st, cv.cbegin(), cv.cend());
-    return st.str();
+    if (filled_placeholder_proof.write(write_iter, cv.size()) == nil::marshalling::status_type::success) {
+        std::stringstream st;
+        print_byteblob(st, cv.cbegin(), cv.cend());
+        return st.str();
+    } else {
+        return {};
+    }
 }
 
 extern "C" {
@@ -256,7 +254,7 @@ const char *proof_gen() {
     typename component_type::params_type component_params = {
         {var(0, 1, false, var::column_type::public_input), var(0, 2, false, var::column_type::public_input)},
         {var(0, 3, false, var::column_type::public_input), var(0, 4, false, var::column_type::public_input)}};
-    
+
     auto P = algebra::random_element<curve_type::template g1_type<>>().to_affine();
     auto Q = algebra::random_element<curve_type::template g1_type<>>().to_affine();
 
@@ -272,10 +270,10 @@ const char *proof_gen() {
     std::size_t start_row = component_type::allocate_rows(bp);
     bp.allocate_rows(public_input.size());
 
-    for (auto & i : public_input) {
+    for (auto &i : public_input) {
         auto allocated_pi = assignment_bp.allocate_public_input(i);
     }
-    
+
     typename component_type::allocated_data_type allocated_data;
     component_type::generate_circuit(bp, assignment_bp, component_params, allocated_data, start_row);
     component_type::generate_assignments(assignment_bp, component_params, start_row);
@@ -285,9 +283,9 @@ const char *proof_gen() {
     zk::snark::plonk_assignment_table<BlueprintFieldType, ArithmetizationParams> assignments(private_assignment,
                                                                                              public_assignment);
 
-    using params = zk::snark::redshift_params<BlueprintFieldType, ArithmetizationParams, hashes::keccak_1600<256>,
-                                              hashes::keccak_1600<256>, 1>;
-    using types = zk::snark::detail::redshift_policy<BlueprintFieldType, params>;
+    using params = zk::snark::placeholder_params<BlueprintFieldType, ArithmetizationParams, hashes::keccak_1600<256>,
+                                                 hashes::keccak_1600<256>, 1>;
+    using types = zk::snark::detail::placeholder_policy<BlueprintFieldType, params>;
 
     using fri_type = typename zk::commitments::fri<BlueprintFieldType, typename params::merkle_hash_type,
                                                    typename params::transcript_hash_type, 2>;
@@ -299,23 +297,23 @@ const char *proof_gen() {
     std::size_t permutation_size = desc.witness_columns + desc.public_input_columns + desc.constant_columns;
 
     typename types::preprocessed_public_data_type public_preprocessed_data =
-        zk::snark::redshift_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
-                                                                                     fri_params, permutation_size);
+        zk::snark::placeholder_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
+                                                                                        fri_params, permutation_size);
 
     auto preprocessed_data_duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
     start = std::chrono::high_resolution_clock::now();
 
     typename types::preprocessed_private_data_type private_preprocessed_data =
-        zk::snark::redshift_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment, desc);
+        zk::snark::placeholder_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment, desc);
 
-    auto proof = zk::snark::redshift_prover<BlueprintFieldType, params>::process(
+    auto proof = zk::snark::placeholder_prover<BlueprintFieldType, params>::process(
         public_preprocessed_data, private_preprocessed_data, desc, bp, assignments, fri_params);
 
-    //    if (!zk::snark::redshift_verifier<BlueprintFieldType, params>::process(public_preprocessed_data, proof, bp,
-    //                                                                           fri_params)) {
-    //        return -1;
-    //    }
+    if (!zk::snark::placeholder_verifier<BlueprintFieldType, params>::process(public_preprocessed_data, proof, bp,
+                                                                              fri_params)) {
+        return "";
+    }
     using Endianness = nil::marshalling::option::big_endian;
 
 #ifndef __EMSCRIPTEN__
@@ -324,8 +322,7 @@ const char *proof_gen() {
 #else
 
 #endif
-    //std::string st = marshalling_to_blob<Endianness>(proof);
-    std::string st = "";
+    std::string st = marshalling_to_blob<Endianness>(proof);
     auto prover_duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
 
@@ -353,8 +350,8 @@ int main(int argc, char *argv[]) {
     // clang-format off
     options.add_options()("help,h", "Display help message")
             ("version,v", "Display version")
-            ("output,o", boost::program_options::value< std::string >(),"Output file")
-            ("input,i", boost::program_options::value< std::string >(), "Input file");
+            ("output,o", boost::program_options::value<std::string>(),"Output file")
+            ("input,i", boost::program_options::value<std::string>(), "Input file");
     // clang-format on
 
     boost::program_options::positional_options_description p;
