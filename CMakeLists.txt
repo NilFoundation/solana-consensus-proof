@@ -1,6 +1,7 @@
 #---------------------------------------------------------------------------#
 # Copyright (c) 2018-2021 Mikhail Komarov <nemo@nil.foundation>
 # Copyright (c) 2020 Nikita Kaskov <nbering@nil.foundation>
+# Copyright (c) 2022 Aleksei Moskvin <alalmoskvin@nil.foundation>
 #
 # Distributed under the Boost Software License, Version 1.0
 # See accompanying file LICENSE_1_0.txt or copy at
@@ -53,3 +54,7 @@ endif()
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/docs/doxygen/${CMAKE_WORKSPACE_NAME}.doxyfile.in
                ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_WORKSPACE_NAME}.doxyfile @ONLY)
+
+configure_file(${CMAKE_SOURCE_DIR}/bin/run.sh.in ${CMAKE_BINARY_DIR}/benchmark/run.sh @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/share/state-proof-verify/package.json ${CMAKE_BINARY_DIR}/benchmark/package.json @ONLY)
+file(COPY ${CMAKE_SOURCE_DIR}/share/state-proof-verify/src/ DESTINATION ${CMAKE_BINARY_DIR}/benchmark)
