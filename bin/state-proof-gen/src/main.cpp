@@ -16,8 +16,15 @@
 
 #include <iostream>
 
+#define BOOST_APPLICATION_FEATURE_NS_SELECT_BOOST
+
+#include <boost/application.hpp>
+
+#undef B0
+
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
+#include <boost/range/irange.hpp>
 #include <boost/json/src.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/optional.hpp>
@@ -50,15 +57,26 @@
 
 #include <nil/crypto3/zk/commitments/type_traits.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/redshift/preprocessor.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/redshift/verifier.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/redshift/params.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/verifier.hpp>
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 
 #include <nil/marshalling/endianness.hpp>
-#include <nil/crypto3/marshalling/zk/types/redshift/proof.hpp>
+#include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
 
 #include <nil/actor/core/app_template.hh>
+#include <nil/actor/core/reactor.hh>
+#include <nil/actor/core/scollectd.hh>
+#include <nil/actor/core/metrics_api.hh>
+#include <nil/actor/core/print.hh>
+#include <nil/actor/detail/log.hh>
+#include <nil/actor/detail/log-cli.hh>
+
+#include <nil/actor/core/sleep.hh>
+#include <nil/actor/core/when_all.hh>
+#include <nil/actor/core/thread.hh>
+#include <nil/actor/core/with_scheduling_group.hh>
 
 #include <fstream>
 
@@ -219,9 +237,9 @@ std::vector<std::uint8_t> serialize_proof(const RedshiftProof &proof) {
     using namespace nil::crypto3::marshalling;
 
     auto filled_redshift_proof =
-        nil::crypto3::marshalling::types::fill_redshift_proof<RedshiftProof, Endianness>(proof);
+        nil::crypto3::marshalling::types::fill_placeholder_proof<RedshiftProof, Endianness>(proof);
     RedshiftProof _proof =
-        nil::crypto3::marshalling::types::make_redshift_proof<RedshiftProof, Endianness>(filled_redshift_proof);
+        nil::crypto3::marshalling::types::make_placeholder_proof<RedshiftProof, Endianness>(filled_redshift_proof);
 
     std::vector<std::uint8_t> cv;
     cv.resize(filled_redshift_proof.length(), 0x00);

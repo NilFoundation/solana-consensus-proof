@@ -52,13 +52,13 @@
 //
 //#include <nil/crypto3/zk/commitments/type_traits.hpp>
 //#include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
-//#include <nil/crypto3/zk/snark/systems/plonk/redshift/preprocessor.hpp>
-//#include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
-//#include <nil/crypto3/zk/snark/systems/plonk/redshift/verifier.hpp>
-//#include <nil/crypto3/zk/snark/systems/plonk/redshift/params.hpp>
+//#include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
+//#include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
+//#include <nil/crypto3/zk/snark/systems/plonk/placeholder/verifier.hpp>
+//#include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
 //
 //#include <nil/marshalling/endianness.hpp>
-//#include <nil/crypto3/marshalling/zk/types/redshift/proof.hpp>
+//#include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
 
 #include <nil/actor/core/app_template.hh>
 #include <nil/actor/core/reactor.hh>
