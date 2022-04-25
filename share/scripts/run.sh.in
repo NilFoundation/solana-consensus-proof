@@ -1,14 +1,19 @@
 #!/bin/sh
 
-if [[ (-f $1) && (-z $1) ]]; then
-  npm install  --silent
-  rm -f time.log
-  @CMAKE_BINARY_DIR@/bin/state-mock/state-mock | @CMAKE_BINARY_DIR@/bin/state-proof-gen/state-proof-gen | node @CMAKE_BINARY_DIR@/benchmark/verifyPlaceholderUnifiedAdditionSolana.js $1;
-  node @CMAKE_BINARY_DIR@/benchmark/printTable.js
-else
-    if [[ -z $1 ]]; then
+if [ -z $1 ]; then
         echo "Please enter path to secret."
-      else
-        echo "Secret on path $1 does not exist."
-    fi
+  else
+        if [ -f $1 ]; then
+            npm install  --silent
+            rm -f time.log
+            @CMAKE_BINARY_DIR@/bin/state-mock/state-mock | @CMAKE_BINARY_DIR@/bin/state-proof-gen/state-proof-gen | node @CMAKE_BINARY_DIR@/benchmark/verifyPlaceholderUnifiedAdditionSolana.js $1;
+            @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_variable_base_endo_scalar_mul_test | grep ms >> time.log
+            @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_variable_base_scalar_mul_test | grep ms >> time.log
+            @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_unified_addition_test | grep ms >> time.log
+
+            node @CMAKE_BINARY_DIR@/benchmark/printTable.js
+        else
+            echo "Secret on path $1 does not exist."
+        fi
 fi
+

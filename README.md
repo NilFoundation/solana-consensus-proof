@@ -58,9 +58,11 @@ Compiler/environment requirements are as follows:
 
 ### Benchmarks
 
+
 `make zk_lpc_performance_test`
 
-`cd share/state-proof-verify/src/ && ./run.sh {PATH_TO_SECRET}/.secret`
+`mkdir build && cd build && cmake .. && cmake --build . -t state-proof-gen state-mock blueprint_plonk_endo_scalar_test`
+`share/state-proof-verify/benchmark/run.sh {PATH_TO_SECRET}/.secret`
 
 ### Docker
 
@@ -69,10 +71,6 @@ Compiler/environment requirements are as follows:
 
 #### Run
 `cat {PATH_TO_SECRET}/.secret | docker run -i state_proof_verify_img`
-
-#### Get output
-`docker logs state_proof_verify`
-
 
 ## Community
 
