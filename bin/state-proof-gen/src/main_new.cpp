@@ -52,13 +52,13 @@
 //
 //#include <nil/crypto3/zk/commitments/type_traits.hpp>
 //#include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
-//#include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
-//#include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
-//#include <nil/crypto3/zk/snark/systems/plonk/placeholder/verifier.hpp>
-//#include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
+//#include <nil/crypto3/zk/snark/systems/plonk/redshift/preprocessor.hpp>
+//#include <nil/crypto3/zk/snark/systems/plonk/redshift/prover.hpp>
+//#include <nil/crypto3/zk/snark/systems/plonk/redshift/verifier.hpp>
+//#include <nil/crypto3/zk/snark/systems/plonk/redshift/params.hpp>
 //
 //#include <nil/marshalling/endianness.hpp>
-//#include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
+//#include <nil/crypto3/marshalling/zk/types/redshift/proof.hpp>
 
 #include <nil/actor/core/app_template.hh>
 #include <nil/actor/core/reactor.hh>
@@ -79,10 +79,7 @@
 //using namespace nil;
 //using namespace nil::crypto3;
 //using namespace nil::marshalling;
-
-inline boost::application::global_context_ptr this_application() {
-    return boost::application::global_context::get();
-}
+//
 
 // my functor application
 struct config {
@@ -102,17 +99,17 @@ static nil::actor::reactor_config reactor_config_from_app_config(config cfg) {
     return ret;
 };
 
-nil::actor::future<> say_hello() {
-    nil::actor::print("Hello, World; from simple_actor located on core %u .\n", nil::actor::engine().cpu_id());
-    // Simulate long-running job
-    return nil::actor::sleep(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::milliseconds(500)));
-};
-
-//nil::actor::future<> say_hello()  {
+//nil::actor::future<> say_hello() {
 //    nil::actor::print("Hello, World; from simple_actor located on core %u .\n", nil::actor::engine().cpu_id());
 //    // Simulate long-running job
-//    return nil::actor::make_ready_future();
+//    return nil::actor::sleep(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::milliseconds(500)));
 //};
+
+nil::actor::future<> say_hello()  {
+    nil::actor::print("Hello, World; from simple_actor located on core %u .\n", nil::actor::engine().cpu_id());
+    // Simulate long-running job
+    return nil::actor::make_ready_future();
+};
 
 template<typename Func, typename Duration>
 nil::actor::future<> compute_intensive_task(Duration duration, unsigned &counter, Func func) {
@@ -155,29 +152,46 @@ nil::actor::future<> example() {
     });
 }
 
-class myapp {
-public:
-    /*<<Define the application operator (singleton, no param)>>*/
-    void configure() {
+struct actor_aspect {
 
-    };
+    void initialize(boost::program_options::variables_map &configuration) {
+        if (configuration.count("help")) {
+            if (!_cfg.description.empty()) {
+                std::cout << _cfg.description << "\n";
+            }
+//            std::cout << _opts << "\n";
+//            return 1;
+            exit(1);
+        }
+        if (configuration["help-loggers"].as<bool>()) {
+            nil::actor::log_cli::print_available_loggers(std::cout);
+//            return 1;
+            exit(1);
+        }
 
-    boost::program_options::variables_map configuration() {
-        return *_configuration;
+        try {
+            boost::program_options::notify(configuration);
+        } catch (const boost::program_options::required_option &ex) {
+            std::cout << ex.what() << std::endl;
+            //            return 1;
+            exit(1);
+        }
+
+        // Needs to be before `smp::configure()`.
+        try {
+            apply_logging_settings(nil::actor::log_cli::extract_settings(configuration));
+        } catch (const std::runtime_error &exn) {
+            std::cout << "logging configuration error: " << exn.what() << '\n';
+            //            return 1;
+            exit(1);
+        }
+
+//        configuration.emplace("argv0", boost::program_options::variable_value(std::string(av[0]), false));
     }
 
-    int operator()() {
-        BOOST_APPLICATION_FEATURE_SELECT
-        boost::shared_ptr<boost::application::args> myargs = this_application()->find<boost::application::args>();
-        auto ac = myargs->argc();
-        auto av = myargs->argv();
-
-        // in another file
-        config _cfg;
+    void set_options(boost::program_options::options_description &cli) {
         boost::program_options::options_description _opts;
         boost::program_options::options_description _opts_conf_file;
-        boost::program_options::positional_options_description _pos_opts;
-        boost::program_options::variables_map _conf_reader;
 
         //configure
         _opts.add_options()("help,h", "show help message");
@@ -190,80 +204,49 @@ public:
         _opts_conf_file.add(nil::actor::log_cli::get_options_description());
 
         _opts.add(_opts_conf_file);
-        //
+
+        cli.add(_opts);
+    }
+
+    config _cfg;
+};
+
+class myapp {
+public:
+    myapp(boost::application::context &context) : context_(context) {
+    }
+
+    int operator()() {
+        BOOST_APPLICATION_FEATURE_SELECT
+        actor_aspect actor_conf;
+
+        boost::shared_ptr<boost::application::args> myargs = context_.find<boost::application::args>();
+        auto ac = myargs->argc();
+        auto av = myargs->argv();
 
         boost::program_options::variables_map configuration;
+        boost::program_options::options_description _opts;
+
+        actor_conf.set_options(_opts);
         try {
             boost::program_options::store(
-                    boost::program_options::command_line_parser(ac, av).options(_opts).positional(_pos_opts).run(),
-                    configuration);
-            _conf_reader = configuration;
+                boost::program_options::command_line_parser(ac, av).options(_opts).run(),
+                configuration);
         } catch (boost::program_options::error &e) {
             fmt::print("error: {}\n\nTry --help.\n", e.what());
             return 2;
         }
-        if (configuration.count("help")) {
-            if (!_cfg.description.empty()) {
-                std::cout << _cfg.description << "\n";
-            }
-            std::cout << _opts << "\n";
-            return 1;
-        }
-        if (configuration["help-loggers"].as<bool>()) {
-            nil::actor::log_cli::print_available_loggers(std::cout);
-            return 1;
-        }
+
+        std::cout << "Here" << std::endl;
+        actor_conf.initialize(configuration);
 
         try {
-            boost::program_options::notify(configuration);
-        } catch (const boost::program_options::required_option &ex) {
-            std::cout << ex.what() << std::endl;
-            return 1;
-        }
-
-        // Needs to be before `smp::configure()`.
-        try {
-            apply_logging_settings(nil::actor::log_cli::extract_settings(configuration));
-        } catch (const std::runtime_error &exn) {
-            std::cout << "logging configuration error: " << exn.what() << '\n';
-            return 1;
-        }
-
-        configuration.emplace("argv0", boost::program_options::variable_value(std::string(av[0]), false));
-        try {
-            nil::actor::smp::configure(configuration, reactor_config_from_app_config(_cfg));
+            nil::actor::smp::configure(configuration, reactor_config_from_app_config(actor_conf._cfg));
         } catch (...) {
             std::cerr << "Could not initialize actor: " << std::current_exception() << std::endl;
             return 1;
         }
-        _configuration = {std::move(configuration)};
 
-//        (void)nil::actor::engine().when_started()
-//                .then([this] {
-//                    return nil::actor::metrics::configure(this->configuration()).then([this] {
-//                        // set scollectd use the metrics configuration, so the later
-//                        // need to be set first
-//                        nil::actor::scollectd::configure(this->configuration());
-//                    });
-//                });
-//        (void)nil::actor::engine()
-//                .when_started()
-//                .then([this] {
-//                    return nil::actor::metrics::configure(this->configuration()).then([this] {
-//                        // set scollectd use the metrics configuration, so the later
-//                        // need to be set first
-//                        nil::actor::scollectd::configure(this->configuration());
-//                    });
-//                })
-//                .then(std::move(say_hello)).then(std::move(say_hello))
-//                .then_wrapped([](auto &&f) {
-//                    try {
-//                        f.get();
-//                    } catch (std::exception &ex) {
-//                        std::cout << "program failed with uncaught exception: " << ex.what() << "\n";
-//                        nil::actor::engine().exit(1);
-//                    }
-//                });
         (void) nil::actor::engine().when_started().then(std::move(say_hello)).then_wrapped(
                 [](auto &&f) {
                     try {
@@ -273,21 +256,18 @@ public:
                         nil::actor::engine().exit(1);
                     }
                 });
-
         auto exit_code = nil::actor::engine().run();
         std::cout << exit_code << std::endl;
 
-//        auto task = new nil::actor::detail::deregistration_task(std::move(say_hello));
-//        nil::actor::engine().add_task(say_hello());
         nil::actor::smp::cleanup();
         return 0;
     }
 
-    boost::optional<boost::program_options::variables_map> _configuration;
+    boost::application::context &context_;
 };
 
 bool setup(boost::application::context &context) {
-
+    return false;
 }
 
 // main
@@ -295,31 +275,26 @@ bool setup(boost::application::context &context) {
 int main(int argc, char *argv[]) {
 
     boost::system::error_code ec;
-//    /*<<Create a global context application aspect pool>>*/
-    boost::application::global_context_ptr ctx = boost::application::global_context::create(ec);
+    /*<<Create a global context application aspect pool>>*/
+    boost::application::context app_context;
 
-    boost::application::auto_handler<myapp> app(ctx);
-    /*<<Add an aspect for future use. An 'aspect' can be customized, or new aspects can be created>>*/
-    this_application()->insert<boost::application::args>(boost::make_shared<boost::application::args>(argc, argv));
+    boost::application::auto_handler<myapp> app(app_context);
 
-    int result = boost::application::launch<boost::application::common>(app, ctx, ec);
+    app_context.insert<boost::application::path>(boost::make_shared<boost::application::path>());
+
+    app_context.insert<boost::application::args>(boost::make_shared<boost::application::args>(argc, argv));
+
+    if (setup(app_context)) {
+        std::cout << "[I] Setup changed the current configuration." << std::endl;
+        return 0;
+    }
+
+    // my server instantiation
+    int result = boost::application::launch<boost::application::common>(app, app_context, ec);
 
     if (ec) {
         std::cout << "[E] " << ec.message() << " <" << ec.value() << "> " << std::endl;
     }
 
-    boost::application::global_context::destroy(ec);
-//    this_application()->insert<int>(boost::make_shared<int>(2));
-////    this_application()->insert<boost::application>(boost::make_shared<boost::application::args>(argc, argv));
-//
-//    /*<<Start the application on the desired mode (common, server)>>*/
-//    int ret = boost::application::launch<boost::application::common>(app, this_application());
-//
-//    /*<<Destroy the application global context>>*/
-//    boost::application::global_context::destroy();
-//    actor::app_template app;
-//    app.run(argc, argv, [&] {
-//        return actor::make_ready_future<>();
-//    });
     return 0;
 }
