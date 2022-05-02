@@ -233,9 +233,14 @@ std::string marshalling_to_blob(const PlaceholderProof &proof) {
     }
 }
 
+#ifndef __EMSCRIPTEN__
+std::string proof_gen() {
+#else
+
 extern "C" {
 
 const char *proof_gen() {
+#endif
     auto start = std::chrono::high_resolution_clock::now();
     std::ofstream out("time.log", std::ios::app);
 
@@ -318,12 +323,6 @@ const char *proof_gen() {
     }
     using Endianness = nil::marshalling::option::big_endian;
 
-#ifndef __EMSCRIPTEN__
-//    if (vm.count("output")) {
-//    }
-#else
-
-#endif
     std::string st = marshalling_to_blob<Endianness>(proof);
     auto prover_duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
@@ -331,9 +330,12 @@ const char *proof_gen() {
     out << "state-proof-gen-preprocessed-data: " << preprocessed_data_duration.count() << "ms" << std::endl;
     out << "state-proof-gen-prover: " << prover_duration.count() << "ms" << std::endl;
     out.close();
-
+#ifndef __EMSCRIPTEN__
+    return st;
+#else
     return st.c_str();
 }
+#endif
 }
 
 int main(int argc, char *argv[]) {
