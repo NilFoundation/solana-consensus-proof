@@ -29,6 +29,7 @@
 #include <boost/program_options.hpp>
 #endif
 
+#include <nil/crypto3/algebra/curves/ed25519.hpp>
 #include <nil/crypto3/algebra/curves/pallas.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/pallas.hpp>
 #include <nil/crypto3/algebra/random_element.hpp>
@@ -60,7 +61,7 @@
 #include <nil/crypto3/zk/algorithms/generate_circuit.hpp>
 
 #include <nil/marshalling/endianness.hpp>
-#include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
+// #include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
 
 #include <fstream>
 
@@ -215,23 +216,23 @@ void print_byteblob(std::ostream &os, TIter iter_begin, TIter iter_end) {
     os << std::endl << std::dec;
 }
 
-template<typename Endianness, typename PlaceholderProof>
-std::string marshalling_to_blob(const PlaceholderProof &proof) {
+// template<typename Endianness, typename PlaceholderProof>
+// std::string marshalling_to_blob(const PlaceholderProof &proof) {
 
-    auto filled_placeholder_proof =
-        nil::crypto3::marshalling::types::fill_placeholder_proof<PlaceholderProof, Endianness>(proof);
+//     auto filled_placeholder_proof =
+//         nil::crypto3::marshalling::types::fill_placeholder_proof<PlaceholderProof, Endianness>(proof);
 
-    std::vector<std::uint8_t> cv;
-    cv.resize(filled_placeholder_proof.length(), 0x00);
-    auto write_iter = cv.begin();
-    if (filled_placeholder_proof.write(write_iter, cv.size()) == nil::marshalling::status_type::success) {
-        std::stringstream st;
-        print_byteblob(st, cv.cbegin(), cv.cend());
-        return st.str();
-    } else {
-        return {};
-    }
-}
+//     std::vector<std::uint8_t> cv;
+//     cv.resize(filled_placeholder_proof.length(), 0x00);
+//     auto write_iter = cv.begin();
+//     if (filled_placeholder_proof.write(write_iter, cv.size()) == nil::marshalling::status_type::success) {
+//         std::stringstream st;
+//         print_byteblob(st, cv.cbegin(), cv.cend());
+//         return st.str();
+//     } else {
+//         return {};
+//     }
+// }
 
 extern "C" {
 
@@ -298,7 +299,7 @@ const char *proof_gen() {
 
     std::size_t permutation_size = desc.witness_columns + desc.public_input_columns + desc.constant_columns;
 
-    typename types::preprocessed_public_data_type public_preprocessed_data =
+    typename zk::snark::placeholder_public_preprocessor<BlueprintFieldType, params>::preprocessed_data_type public_preprocessed_data =
         zk::snark::placeholder_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
                                                                                         fri_params, permutation_size);
 
@@ -306,7 +307,7 @@ const char *proof_gen() {
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
     start = std::chrono::high_resolution_clock::now();
 
-    typename types::preprocessed_private_data_type private_preprocessed_data =
+    typename zk::snark::placeholder_private_preprocessor<BlueprintFieldType, params>::preprocessed_data_type private_preprocessed_data =
         zk::snark::placeholder_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment, desc);
 
     auto proof = zk::snark::placeholder_prover<BlueprintFieldType, params>::process(
@@ -324,7 +325,7 @@ const char *proof_gen() {
 #else
 
 #endif
-    std::string st = marshalling_to_blob<Endianness>(proof);
+    // std::string st = marshalling_to_blob<Endianness>(proof);
     auto prover_duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
 
@@ -332,14 +333,15 @@ const char *proof_gen() {
     out << "state-proof-gen-prover: " << prover_duration.count() << "ms" << std::endl;
     out.close();
 
-    return st.c_str();
+    // return st.c_str();
+    return "1";
 }
 }
 
 int main(int argc, char *argv[]) {
     typedef hashes::sha2<256> hash_type;
     typedef algebra::curves::alt_bn128<254> system_curve_type;
-    typedef algebra::curves::curve25519 signature_curve_type;
+    typedef algebra::curves::ed25519 signature_curve_type;
     typedef typename signature_curve_type::template g1_type<> group_type;
     typedef pubkey::eddsa<group_type, pubkey::eddsa_type::basic, void> signature_scheme_type;
     typedef typename pubkey::public_key<signature_scheme_type>::signature_type signature_type;
