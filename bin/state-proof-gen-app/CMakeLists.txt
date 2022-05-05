@@ -37,13 +37,15 @@ list(APPEND ${CURRENT_PROJECT_NAME}_SOURCES
     src/aspects/args.cpp
     src/aspects/configuration.cpp
     src/aspects/actor.cpp
-    src/aspects/path.cpp)
+    src/aspects/path.cpp
+    src/aspects/proof.cpp)
 
 set(${CURRENT_PROJECT_NAME}_HEADERS
     include/nil/proof/aspects/args.hpp
     include/nil/proof/aspects/configuration.hpp
     include/nil/proof/aspects/path.hpp
     include/nil/proof/aspects/actor.hpp
+    include/nil/proof/aspects/proof.hpp
 
     include/nil/proof/detail/configurable.hpp
 )
