@@ -76,9 +76,10 @@ namespace nil {
                 if (corrupted_files == confs.size()) {
                     write_default_config(default_config_path());
                 }
+                write_default_config(default_config_path());
             }
 
-//            boost::program_options::variables_map &configuration::vm() {
+            //            boost::program_options::variables_map &configuration::vm() {
             configuration::configuration_type &configuration::vm() {
                 return vmv;
             }
@@ -109,5 +110,5 @@ namespace nil {
                 return cfgv;
             }
         }    // namespace aspects
-    }        // namespace dbms
+    }        // namespace proof
 }    // namespace nil

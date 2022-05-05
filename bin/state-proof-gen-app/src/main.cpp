@@ -80,6 +80,7 @@
 #include <nil/proof/aspects/args.hpp>
 #include <nil/proof/aspects/path.hpp>
 #include <nil/proof/aspects/configuration.hpp>
+#include <nil/proof/aspects/proof.hpp>
 #include <nil/proof/detail/configurable.hpp>
 
 using namespace nil;
@@ -117,6 +118,7 @@ inline bool insert_aspects(boost::application::context &ctx, Application &app, A
     ctx.insert<proof::aspects::path>(path_aspect);
     ctx.insert<proof::aspects::configuration>(boost::make_shared<proof::aspects::configuration>(path_aspect));
     ctx.insert<proof::aspects::actor>(boost::make_shared<proof::aspects::actor>(path_aspect));
+    ctx.insert<proof::aspects::proof>(boost::make_shared<proof::aspects::proof>(path_aspect));
 
     return true;
 }
@@ -159,49 +161,21 @@ public:
     }
 
     int operator()() {
-        //        BOOST_APPLICATION_FEATURE_SELECT
-        //        actor_aspect actor_conf;
-        //
-        //        boost::shared_ptr<boost::application::args> myargs = context_.find<boost::application::args>();
-        //        auto ac = myargs->argc();
-        //        auto av = myargs->argv();
-        //
-        //        boost::program_options::variables_map configuration;
-        //        boost::program_options::options_description _opts;
-        //
-        //        actor_conf.set_options(_opts);
-        //        try {
-        //            boost::program_options::store(
-        //                boost::program_options::command_line_parser(ac, av).options(_opts).run(),
-        //                configuration);
-        //        } catch (boost::program_options::error &e) {
-        //            fmt::print("error: {}\n\nTry --help.\n", e.what());
-        //            return 2;
-        //        }
-        //
-        //        std::cout << "Here" << std::endl;
-        //        actor_conf.initialize(configuration);
-        //
-        //        try {
-        //            nil::actor::smp::configure(configuration, reactor_config_from_app_config(actor_conf._cfg));
-        //        } catch (...) {
-        //            std::cerr << "Could not initialize actor: " << std::current_exception() << std::endl;
-        //            return 1;
-        //        }
-        //
-        //        (void) nil::actor::engine().when_started().then(std::move(say_hello)).then_wrapped(
-        //            [](auto &&f) {
-        //                try {
-        //                    f.get();
-        //                } catch (std::exception &ex) {
-        //                    std::cout << "program failed with uncaught exception: " << ex.what() << "\n";
-        //                    nil::actor::engine().exit(1);
-        //                }
-        //            });
-        //        auto exit_code = nil::actor::engine().run();
-        //        std::cout << exit_code << std::endl;
-        //
-        //        nil::actor::smp::cleanup();
+        BOOST_APPLICATION_FEATURE_SELECT
+
+        (void) nil::actor::engine().when_started().then(std::move(say_hello)).then_wrapped(
+            [](auto &&f) {
+                try {
+                    f.get();
+                } catch (std::exception &ex) {
+                    std::cout << "program failed with uncaught exception: " << ex.what() << "\n";
+                    nil::actor::engine().exit(1);
+                }
+            });
+        auto exit_code = nil::actor::engine().run();
+        std::cout << exit_code << std::endl;
+
+        nil::actor::smp::cleanup();
         return 0;
     }
 
@@ -225,17 +199,15 @@ int main(int argc, char *argv[]) {
         std::cout << "[E] Application aspects configuration failed!" << std::endl;
         return 1;
     }
-    std::cout << "Here" << std::endl;
     if (configure_aspects(ctx, app)) {
         std::cout << "[I] Setup changed the current configuration." << std::endl;
     }
-        std::cout << "Here1" << std::endl;
     // my server instantiation
-//    int result = boost::application::launch<boost::application::common>(app, ctx, ec);
-//
-//    if (ec) {
-//        std::cout << "[E] " << ec.message() << " <" << ec.value() << "> " << std::endl;
-//    }
+    int result = boost::application::launch<boost::application::common>(app, ctx, ec);
+
+    if (ec) {
+        std::cout << "[E] " << ec.message() << " <" << ec.value() << "> " << std::endl;
+    }
 
     return 0;
 }

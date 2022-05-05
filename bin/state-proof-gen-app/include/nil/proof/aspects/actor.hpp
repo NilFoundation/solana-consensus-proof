@@ -43,8 +43,9 @@
 namespace nil {
     namespace proof {
         namespace aspects {
-            struct actor : public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
-                                                        dbms::plugin::cfg_options_description> {
+            struct actor
+                : public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
+                                              dbms::plugin::cfg_options_description> {
                 typedef detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
                                              dbms::plugin::cfg_options_description>
                     policy_type;
@@ -64,16 +65,16 @@ namespace nil {
             protected:
                 boost::shared_ptr<path> path_aspect;
             };
-//
-//            struct actor {
-//                void initialize(boost::program_options::variables_map &configuration);
-//
-//                void set_options(boost::program_options::options_description &cli);
-//
-//                config _cfg;
-//            };
+            //
+            //            struct actor {
+            //                void initialize(boost::program_options::variables_map &configuration);
+            //
+            //                void set_options(boost::program_options::options_description &cli);
+            //
+            //                config _cfg;
+            //            };
         }    // namespace aspects
-    }        // namespace dbms
+    }        // namespace proof
 }    // namespace nil
 
 #endif    // DBMS_ARGS_HPP

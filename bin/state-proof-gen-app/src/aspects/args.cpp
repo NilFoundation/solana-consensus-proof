@@ -32,5 +32,5 @@ namespace nil {
             void args::initialize(configuration_type &vm) {
             }
         }    // namespace aspects
-    }        // namespace dbms
+    }        // namespace proof
 }    // namespace nil

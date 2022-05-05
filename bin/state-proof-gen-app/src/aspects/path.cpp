@@ -36,5 +36,5 @@ namespace nil {
             void path::set_options(cfg_options_type &cfg) const {
             }
         }    // namespace aspects
-    }        // namespace dbms
+    }        // namespace proof
 }    // namespace nil

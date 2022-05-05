@@ -30,9 +30,10 @@
 namespace nil {
     namespace proof {
         namespace aspects {
-            struct args : public boost::application::args,
-                          public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
-                                                      dbms::plugin::cfg_options_description> {
+            struct args
+                : public boost::application::args,
+                  public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
+                                              dbms::plugin::cfg_options_description> {
                 typedef detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
                                              dbms::plugin::cfg_options_description>
                     policy_type;
@@ -51,7 +52,7 @@ namespace nil {
                 virtual void initialize(configuration_type &vm) override;
             };
         }    // namespace aspects
-    }        // namespace dbms
+    }        // namespace proof
 }    // namespace nil
 
 #endif    // DBMS_ARGS_HPP

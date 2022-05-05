@@ -47,45 +47,41 @@ namespace nil {
             }
 
             void actor::initialize(configuration_type &vm) {
-//                if (configuration.count("help")) {
-//                    if (!_cfg.description.empty()) {
-//                        std::cout << _cfg.description << "\n";
-//                    }
-//                    //            std::cout << _opts << "\n";
-//                    //            return 1;
-//                    exit(1);
-//                }
-//                if (configuration["help-loggers"].as<bool>()) {
-//                    nil::actor::log_cli::print_available_loggers(std::cout);
-//                    //            return 1;
-//                    exit(1);
-//                }
-//
-//                try {
-//                    boost::program_options::notify(configuration);
-//                } catch (const boost::program_options::required_option &ex) {
-//                    std::cout << ex.what() << std::endl;
-//                    //            return 1;
-//                    exit(1);
-//                }
-//
-//                // Needs to be before `smp::configure()`.
-//                try {
-//                    apply_logging_settings(nil::actor::log_cli::extract_settings(configuration));
-//                } catch (const std::runtime_error &exn) {
-//                    std::cout << "logging configuration error: " << exn.what() << '\n';
-//                    //            return 1;
-//                    exit(1);
-//                }
-//
-//                //        configuration.emplace("argv0", boost::program_options::variable_value(std::string(av[0]), false));
+                if (vm["help-loggers"].as<bool>()) {
+                    nil::actor::log_cli::print_available_loggers(std::cout);
+                    exit(1);
+                }
+
+                try {
+                    boost::program_options::notify(vm);
+                } catch (const boost::program_options::required_option &ex) {
+                    std::cerr << ex.what() << std::endl;
+                    exit(1);
+                }
+
+                // Needs to be before `smp::configure()`.
+                try {
+                    apply_logging_settings(nil::actor::log_cli::extract_settings(vm));
+                } catch (const std::runtime_error &exn) {
+                    std::cerr << "logging configuration error: " << exn.what() << '\n';
+                    exit(1);
+                }
+
+                try {
+                    nil::actor::smp::configure(vm, reactor_config_from_app_config(config()));
+                } catch (...) {
+                    std::cerr << "Could not initialize actor: " << std::current_exception() << std::endl;
+                    exit(1);
+                }
+                //                vm.emplace("argv0", boost::program_options::variable_value(std::string(av[0]),
+                //                false));
             }
 
             void actor::set_options(cli_options_type &cli) const {
                 boost::program_options::options_description _opts("Actor");
 
-                //configure
-//                _opts.add_options()("help,h", "show help message");
+                // configure
+                //                _opts.add_options()("help,h", "show help message");
 
                 nil::actor::smp::register_network_stacks();
                 _opts.add(nil::actor::reactor::get_options_description(reactor_config_from_app_config(config())));
@@ -98,7 +94,17 @@ namespace nil {
             }
 
             void actor::set_options(cfg_options_type &cfg) const {
+                boost::program_options::options_description _opts("Actor");
+
+                nil::actor::smp::register_network_stacks();
+                _opts.add(nil::actor::reactor::get_options_description(reactor_config_from_app_config(config())));
+                _opts.add(nil::actor::metrics::get_options_description());
+                _opts.add(nil::actor::smp::get_options_description());
+                _opts.add(nil::actor::scollectd::get_options_description());
+                _opts.add(nil::actor::log_cli::get_options_description());
+
+                cfg.add(_opts);
             }
         }    // namespace aspects
-    }        // namespace dbms
+    }        // namespace proof
 }    // namespace nil

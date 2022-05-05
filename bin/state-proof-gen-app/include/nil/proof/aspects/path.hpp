@@ -37,9 +37,10 @@ namespace std {
 namespace nil {
     namespace proof {
         namespace aspects {
-            struct path : public boost::application::path,
-                          public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
-                                                      dbms::plugin::cfg_options_description> {
+            struct path
+                : public boost::application::path,
+                  public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
+                                              dbms::plugin::cfg_options_description> {
                 typedef detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
                                              dbms::plugin::cfg_options_description>
                     policy_type;
@@ -59,7 +60,7 @@ namespace nil {
                 boost::filesystem::path libs_path(boost::system::error_code &ec);
             };
         }    // namespace aspects
-    }        // namespace dbms
+    }        // namespace proof
 }    // namespace nil
 
 #endif    // DBMS_ARGS_HPP
