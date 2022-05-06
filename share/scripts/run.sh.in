@@ -1,25 +1,18 @@
 #!/bin/sh
 
-if [ -z $1 ]; then
-        echo "Please enter path to secret."
-  else
-        if [ -f $1 ]; then
-            npm install  --silent
-            rm -f time.log
-            echo "Tests count: 0/6"
-            @CMAKE_BINARY_DIR@/bin/state-mock/state-mock | @CMAKE_BINARY_DIR@/bin/state-proof-gen/state-proof-gen | node @CMAKE_BINARY_DIR@/benchmark/verifyPlaceholderUnifiedAdditionSolana.js $1;
-            echo "Tests count: 1/6"
-            echo "Tests count: 2/6"
-            echo "Tests count: 3/6"
-            @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_variable_base_endo_scalar_mul_test 2>&1 | grep ms >> time.log
-            echo "Tests count: 4/6"
-            @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_variable_base_scalar_mul_test 2>&1 | grep ms >> time.log
-            echo "Tests count: 5/6"
-            @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_unified_addition_test 2>&1 | grep ms >> time.log
-            echo "Tests count: 6/6"
-            echo "Tests done"
-            node @CMAKE_BINARY_DIR@/benchmark/printTable.js
-        else
-            echo "Secret on path $1 does not exist."
-        fi
-fi
+npm install  --silent
+rm -f time.log
+echo "Tests count: 0/5"
+@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_endo_scalar_test  2>&1 | grep ms >> time.log
+ echo "Tests count: 1/5"
+@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_variable_base_scalar_mul_test  2>&1 | grep ms >> time.log
+ echo "Tests count: 2/5"
+@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_field_operations_test  2>&1 | grep ms >> time.log
+ echo "Tests count: 3/5"
+@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_multi_scalar_multiplication_test  2>&1 | grep ms >> time.log
+ echo "Tests count: 4/5"
+@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_unified_addition_test  2>&1 | grep ms >> time.log
+ echo "Tests count: 5/5"
+echo "Tests done"
+cat ./time.log
+node @CMAKE_BINARY_DIR@/benchmark/printTable.js
