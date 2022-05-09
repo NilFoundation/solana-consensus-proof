@@ -286,5 +286,44 @@ This can be implemented in the following algorithm:
 \item $c_0 - d_0 == d_1$. (7 rows)
 \end{enumerate}
 
+As another option, we add a protocol description with only non-native multiplications, additions, and subtractions without any special cases:
+\begin{enumerate}
+
+\item $s_0 = x_1^2$.
+\item $s_1 = y_1^2$
+\item $s_2 = x_1 \cdot y_1$
+\item $s_3 = b \cdot y_2$
+\item $s_4 = b \cdot x_2$
+
+\item $t_0 = s_0 + s_1$
+\item $t_1 = s_1 - s_0$
+\item $t_2 = s_0 - s_1$
+\item $t_3 = s_3 \cdot x_2$
+\item $t_4 = 2 \cdot s_2$
+\item $t_5 = d \cdot t_4$
+
+\item $l_0 = 2 + t_2$
+\item $l_1 = l_0 \cdot t_1$
+\item $l_2 = t_5 \cdot t_0$
+\item $l_3 = l_2 \cdot t_3$
+
+\item $r_0 = l_0 \cdot t_4$
+\item $r_1 = s_3 + (1 - b)$
+\item $r_2 = r_1 \cdot r_0$
+\item $r_3 = t_0 \cdot t_1$
+\item $r_4 = r_3 \cdot s_4$
+
+\item $p_0 = l_1 + l_3$
+\item $p_1 = l_1 - l_3$
+\item $p_2 = x_3 \cdot p_0$
+\item $p_3 = y_3 \cdot p_0$
+
+\item $z_0 = r_4 + r_2$
+\item $z_1 = r_0 \cdot s_4$
+\item $z_2 = r_3 \cdot r_1$
+\item $z_4 = z_1 + z_2$
+\end{enumerate}
+
+
 Thus, it costs $203$ rows per bit. 
 Totally, it is $50 953 + 4 $ rows.
