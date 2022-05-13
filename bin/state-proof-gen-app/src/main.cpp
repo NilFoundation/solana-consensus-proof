@@ -88,18 +88,6 @@ using namespace nil;
 // using namespace nil::marshalling;
 //
 
-// nil::actor::future<> say_hello() {
-//     nil::actor::print("Hello, World; from simple_actor located on core %u .\n", nil::actor::engine().cpu_id());
-//     // Simulate long-running job
-//     return nil::actor::sleep(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::milliseconds(500)));
-// };
-
-nil::actor::future<> say_hello() {
-    nil::actor::print("Hello, World; from simple_actor located on core %u .\n", nil::actor::engine().cpu_id());
-    // Simulate long-running job
-    return nil::actor::make_ready_future();
-};
-
 template<typename F, typename First, typename... Rest>
 inline void insert_aspect(F f, First first, Rest... rest) {
     f(first);
@@ -125,17 +113,14 @@ inline bool insert_aspects(boost::application::context &ctx, Application &app, A
 
 template<typename Application>
 inline bool configure_aspects(boost::application::context &ctx, Application &app) {
-//    typedef module::configurable<boost::program_options::variables_map, boost::program_options::options_description,
-//                                 boost::program_options::options_description>
-//        configurable_aspect_type;
     typedef nil::proof::detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
-                     dbms::plugin::cfg_options_description> configurable_aspect_type;
+                                             dbms::plugin::cfg_options_description>
+        configurable_aspect_type;
 
     boost::strict_lock<boost::application::aspect_map> guard(ctx);
     boost::shared_ptr<proof::aspects::args> args = ctx.find<proof::aspects::args>(guard);
     boost::shared_ptr<proof::aspects::configuration> cfg = ctx.find<proof::aspects::configuration>(guard);
 
-//    dbms::plugin::cfg_options_description x = cfg->cfg();
     for (boost::shared_ptr<void> itr : ctx) {
         boost::static_pointer_cast<configurable_aspect_type>(itr)->set_options(cfg->cli());
         boost::static_pointer_cast<configurable_aspect_type>(itr)->set_options(cfg->cfg());
@@ -162,16 +147,18 @@ public:
 
     int operator()() {
         BOOST_APPLICATION_FEATURE_SELECT
+        //        std::cout << context_.find<proof::aspects::proof>()->input_string() << std::endl;
 
-        (void) nil::actor::engine().when_started().then(std::move(say_hello)).then_wrapped(
-            [](auto &&f) {
-                try {
-                    f.get();
-                } catch (std::exception &ex) {
-                    std::cout << "program failed with uncaught exception: " << ex.what() << "\n";
-                    nil::actor::engine().exit(1);
-                }
-            });
+        //        (void) nil::actor::engine().when_started().then(std::move(say_hello)).then_wrapped(
+        //            [](auto &&f) {
+        //                try {
+        //                    f.get();
+        //                } catch (std::exception &ex) {
+        //                    std::cout << "program failed with uncaught exception: " << ex.what() << "\n";
+        //                    nil::actor::engine().exit(1);
+        //                }
+        //            });
+        //        (void) nil::actor::engine().when_started().then(std::move(example));
         auto exit_code = nil::actor::engine().run();
         std::cout << exit_code << std::endl;
 
@@ -186,9 +173,7 @@ bool setup(boost::application::context &context) {
     return false;
 }
 
-// main
 int main(int argc, char *argv[]) {
-
     boost::system::error_code ec;
     /*<<Create a global context application aspect pool>>*/
     boost::application::context ctx;

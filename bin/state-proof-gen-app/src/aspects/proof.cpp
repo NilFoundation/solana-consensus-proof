@@ -82,6 +82,14 @@ namespace nil {
                     }
                 }
             }
+
+            boost::filesystem::path proof::default_config_path() const {
+                return path_aspect->config_path() / "config.ini";
+            }
+
+            std::string proof::input_string() const {
+                return json_string;
+            }
         }    // namespace aspects
     }        // namespace proof
 }    // namespace nil

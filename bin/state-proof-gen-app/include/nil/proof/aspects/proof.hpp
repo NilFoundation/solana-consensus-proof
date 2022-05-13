@@ -51,6 +51,7 @@ namespace nil {
 
                 virtual void initialize(configuration_type &vm) override;
 
+                std::string input_string() const;
 
                 boost::filesystem::path default_config_path() const;
 

@@ -16,7 +16,6 @@
 // <https://github.com/NilFoundation/dbms/blob/master/LICENSE_1_0.txt>.
 //---------------------------------------------------------------------------//
 
-#include <nil/proof/aspects/args.hpp>
 #include <nil/proof/aspects/actor.hpp>
 #include <nil/actor/detail/log-cli.hh>
 #include <nil/actor/core/reactor.hh>
