@@ -12,6 +12,21 @@ Crucial components which define this part design are:
 
 \section{Verification Logic Architecture}
 
+The verificaton part contains several components:
+\begin{enumerate}
+    \item \textbf{Proof Deserialization:} Handles the input data processing (marshalling/demarshalling) mechanisms.
+
+    These mechanisms are defined within the \texttt{*_marshalling}-postfixed files.
+
+    \item \textbf{Proof Verification:} Includes a verification of the hash-based commitment scheme and the proof itself.
+
+    The verification itself is defined within the directory \texttt{components}, each of which defines a set of gates
+    relevant to particular component.
+
+    \item \item \item \textbf{Circuits Definition:} Full proof verification requires for the proof circuits to be defined within
+    with the EVM-interpretable bytecode.
+\end{enumerate}
+
 \subsection{State Proof Sequence Maintenance}
 \label{subsec:stateseq}
 
