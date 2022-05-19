@@ -175,6 +175,20 @@ The total amount of the limbs does not change, but the last limb has to be check
 This case is similar to the case from step 1.
 \end{enumerate}
 
+\paragraph{Complete addition circuit}:
+\begin{enumerate}
+\item $t_0 = x_1 \cdot y_2$ (7 rows)
+\item $t_1 =  x_2 \cdot y_1$ (7 rows)
+\item $t_2 =  x_1 \cdot x_2$ (7 rows)
+\item $t_3 =  y_2 \cdot y_1$ (7 rows)
+\item $z_0 = t_0 + t_1$ (4 rows)
+\item $z_1 = t_2 + t_3$ (4 rows)
+\item $z_2 = t_0 \cdot t_1$ ( 7 rows)
+\item $k_0 = d \cdot z_2$ (7 rows)
+\item $k_1 = x_2 +k_0$ (4 rows)
+\item $k_2 = k_0 - x_2$ (4 rows)
+\end{enumerate}
+
 \paragraph{Fixed-base scalar multiplication circuit}:
 We precompute all values $(u'_{s', i}, v'_{s', i}) = w(B,s',k) = k_i \cdot 8^{s'} B$, where $k_i \in \{ 0,..7 \}$, $s' \in \{0,.., 84\}$.
 The values $b_i$, $i = 0,.., 252$ are binary representation of the scalar $s$.\\
