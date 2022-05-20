@@ -185,8 +185,10 @@ This case is similar to the case from step 1.
 \item $z_1 = t_2 + t_3$ (4 rows)
 \item $z_2 = t_0 \cdot t_1$ ( 7 rows)
 \item $k_0 = d \cdot z_2$ (7 rows)
-\item $k_1 = x_3 + k_0$ (4 rows)
-\item $k_2 = y_3 - k_0$ (4 rows)
+\item $k_1 = x_3 \cdot k_0$ (7 rows)
+\item $k_2 = y_3 \cdot k_0$ (7 rows)
+\item $k_3 = x_3 + k_1$ (4 rows)
+\item $k_4 = y_3 - k_2$ (4 rows)
 \end{enumerate}
 
 \paragraph{Fixed-base scalar multiplication circuit}:
