@@ -192,44 +192,12 @@ This case is similar to the case from step 1.
 \end{enumerate}
 
 \paragraph{Fixed-base scalar multiplication circuit}:
-We precompute all values $(u'_{s', i}, v'_{s', i}) = w(B,s',k) = k_i \cdot 8^{s'} B$, where $k_i \in \{ 0,..7 \}$, $s' \in \{0,.., 84\}$.
-The values $b_i$, $i = 0,.., 252$ are binary representation of the scalar $s$.\\
-$(u, v) = (b_{i + 2} \cdot 2^2 + b_{i + 1}\cdot 2 + b_i) \cdot B$.\\
- $(x_{acc_{0}}, y_{acc_{0}}) = (u, v) $ \\
- $(x_{acc_{j + k}}, y_{acc_{j + k}}) = (u_{j + k}, v_{j + k}) + (x_{acc_{j + k - 1}}, y_{acc_{j + k - 1}}) $ \\:
-\begin{enumerate}
-    \item 
-        $b_i \cdot ((-u'_0 + u'_2 + u'_4 - u'_6 + u'_1 - u'_3 + u'_7 - u'_5) \cdot b_{i + 2} \cdot b_{i + 1} + (u'_0 - u'_1) \cdot b_{i + 2} + (u'_0 - u'_2 - u'_4 - u'_1 + u'_3 + u'_5) \cdot b_{i + 1} - u'_0 + u'_1 ) -
-        (u - (u'_0 + u'_2 + u'_4 -u'_6) \cdot b_{i + 1} \cdot b_{i + 2} + u'_0 \cdot b_{i + 2} + (u'_0 - u'_2 - u'_4) \cdot b_{i + 1}
-        - u'_0)$
-    \item 
-	$b_i \cdot ((-v'_0 + v'_2 + v'_4 - v'_6 + v'_1 - v'_3 + v'_7 - v'_5) \cdot b_{i + 2} \cdot b_{i + 1} + (v'_0 - v'_1) \cdot \cdot b_{i + 2} + (v'_0 - v'_2 - v'_4 - v'_1 + v'_3 + v'_5) \cdot \cdot b_{i + 1} - v'_0 + v'_1 ) -
-        (v - (v'_0 + v'_2 + v'_4 - v'_6) \cdot b_{i + 1} \cdot b_{i + 2} + v'_0 \cdot b_{i + 2} + (v'_0 - v'_2 - v'_4) \cdot b_{i + 1}
-        - v'_0)$
-    \item 
-        $x_2 \cdot (1 + d \cdot x_1 \cdot y_1 \cdot u \cdot v) - (u \cdot y_1 + v \cdot x_1)$
-    \item 
-        $y_2 \cdot (1 - d \cdot x_1 \cdot y_1 \cdot u \cdot v) - (u \cdot x_1 + v \cdot y_1)$
-\end{enumerate}
+We precompute all values $l \cdot (k \cdot B)$, where $k \in \{0, 2^{22}, 2^{44}, 2^{66}, 2^{88}, 2^{110},
+ 2^{132}, 2^{154}, 2^{176}, 2^{198}, 2^{220}, 2^{242}, 2^{253} \}$ and $0 \leq l < 2^22$.
+Since the size in bits of scalar is 253 we use $13$ lookups.
+The first $12$ lookups are used for $l \cdot (k \cdot B)$ and the last one for range constraining.
+Thuis, the $11$ complete addition's constraints are required for fixed-base multiplication. 
 
-Per $3$ bits $b_{i + 2}, b_{i + 1}, b_i$:
-\begin{enumerate}
-\item $b_i \cdot ((-u'_0 + u'_2 + u'_4 - u'_6 + u'_1 - u'_3 + u'_7 - u'_5) \cdot b_{i + 2} \cdot b_{i + 1} + (u'_0 - u'_1) \cdot b_{i + 2} + (u'_0 - u'_2 - u'_4 - u'_1 + u'_3 + u'_5) \cdot b_{i + 1} - u'_0 + u'_1 ) - (u - (u'_0 + u'_2 + u'_4 -u'_6) \cdot b_{i + 1} \cdot b_{i + 2} + u'_0 \cdot b_{i + 2} + (u'_0 - u'_2 - u'_4) \cdot b_{i + 1}- u'_0)$ (3 rows)
-\item $b_i \cdot ((-v'_0 + v'_2 + v'_4 - v'_6 + v'_1 - v'_3 + v'_7 - v'_5) \cdot b_{i + 2} \cdot b_{i + 1} + (v'_0 - v'_1) \cdot \cdot b_{i + 2} + (v'_0 - v'_2 - v'_4 - v'_1 + v'_3 + v'_5) \cdot \cdot b_{i + 1} - v'_0 + v'_1 ) - (v - (v'_0 + v'_2 + v'_4 - v'_6) \cdot b_{i + 1} \cdot b_{i + 2} + v'_0 \cdot b_{i + 2} + (v'_0 - v'_2 - v'_4) \cdot b_{i + 1} - v'_0)$ (3 rows)
-\item $t_0 = u \cdot v$ (11 rows)
-\item $t_1 =  x_1 \cdot y_1$ (11 rows)
-\item $t_2 = t_0 \cdot t_1$ (11 rows)
-\item $t_3 = d \cdot t_2$ (9 rows)
-\item $t_4 = x_2 \cdot (1 + t_3)$ (11 rows)
-\item $z_0 = u \cdot y_1$ (11 rows)
-\item $z_1 = v \cdot x_1$ (11 rows)
-\item $t_4 - z_1 == z_0$ (7 rows)
-\item $c_0 = y_2 \cdot (1 - t_3)$ (11 rows)
-\item $d_0 = u \cdot x_1$ (11 rows)
-\item $d_1 = v \cdot y_1$ (11 rows)
-\item $c_0 - d_1 == d_0$ (7 rows)
-\end{enumerate}
-Totally, it costs $10 880$ rows.
 
 \paragraph{Decomposition circuit}
 The decomposition circuit is a specific function for SHA-512, which prepares output to the non-native variable base scalar multiplication.
