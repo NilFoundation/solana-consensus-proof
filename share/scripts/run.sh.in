@@ -2,19 +2,21 @@
 
 npm install  --silent
 rm -f time.log
-echo "Tests count: 0/6"
+echo "Tests count: 0/7"
 @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_field_add_test  2>&1 | grep ms >> time.log
-echo "Tests count: 1/6"
+echo "Tests count: 1/7"
 @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_field_mul_test  2>&1 | grep ms >> time.log
-echo "Tests count: 2/6"
+echo "Tests count: 2/7"
 @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_field_sub_test  2>&1 | grep ms >> time.log
-echo "Tests count: 3/6"
+echo "Tests count: 3/7"
 @CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_non_native_range_test  2>&1 | grep ms >> time.log
-echo "Tests count: 4/6"
-@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_unified_addition_test  2>&1 | grep ms >> time.log
-echo "Tests count: 5/6"
-@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_variable_base_scalar_mul_test  2>&1 | grep ms >> time.log
-echo "Tests count: 6/6"
+echo "Tests count: 4/7"
+@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_complete_addition_test  2>&1 | grep ms >> time.log
+echo "Tests count: 5/7"
+@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_var_base_mul_per_bit_test  2>&1 | grep ms >> time.log
+echo "Tests count: 6/7"
+@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_fixed_base_mul_test  2>&1 | grep ms >> time.log
+echo "Tests count: 7/7"
 echo "Tests done"
 #cat time.log
 node @CMAKE_BINARY_DIR@/benchmark/printTable.js
