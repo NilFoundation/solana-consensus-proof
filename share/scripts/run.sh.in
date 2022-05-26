@@ -1,22 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 
 npm install  --silent
 rm -f time.log
-echo "Tests count: 0/7"
-@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_field_add_test  2>&1 | grep ms >> time.log
-echo "Tests count: 1/7"
-@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_field_mul_test  2>&1 | grep ms >> time.log
-echo "Tests count: 2/7"
-@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_field_sub_test  2>&1 | grep ms >> time.log
-echo "Tests count: 3/7"
-@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_non_native_range_test  2>&1 | grep ms >> time.log
-echo "Tests count: 4/7"
-@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_complete_addition_test  2>&1 | grep ms >> time.log
-echo "Tests count: 5/7"
-@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_var_base_mul_per_bit_test  2>&1 | grep ms >> time.log
-echo "Tests count: 6/7"
-@CMAKE_BINARY_DIR@/libs/blueprint/test/blueprint_plonk_fixed_base_mul_test  2>&1 | grep ms >> time.log
-echo "Tests count: 7/7"
+
+TEST_NAMES=('blueprint_hashes_plonk_decomposition_test' 'blueprint_non_native_plonk_non_native_range_test' 'blueprint_non_native_plonk_var_base_mul_per_bit_test'
+'blueprint_non_native_plonk_field_mul_test' 'blueprint_non_native_plonk_complete_addition_test' 'blueprint_non_native_plonk_field_sub_test')
+TESTS_COUNT=${#TEST_NAMES[@]}
+i=0
+for test in "${TEST_NAMES[@]}"
+do
+  echo Tests count: ${i}/${TESTS_COUNT}
+  @CMAKE_BINARY_DIR@/libs/blueprint/test/${test}  2>&1 | grep ms >> time.log
+  let "i=i+1"
+done
 echo "Tests done"
-#cat time.log
 node @CMAKE_BINARY_DIR@/benchmark/printTable.js
