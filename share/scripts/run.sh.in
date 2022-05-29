@@ -4,7 +4,7 @@ npm install  --silent
 rm -f time.log
 
 TEST_NAMES=('blueprint_hashes_plonk_decomposition_test' 'blueprint_non_native_plonk_non_native_range_test' 'blueprint_non_native_plonk_var_base_mul_per_bit_test'
-'blueprint_non_native_plonk_field_mul_test' 'blueprint_non_native_plonk_complete_addition_test' 'blueprint_non_native_plonk_field_sub_test')
+'blueprint_non_native_plonk_field_mul_test' 'blueprint_non_native_plonk_complete_addition_test' 'blueprint_non_native_plonk_field_sub_test', 'blueprint_non_native_plonk_field_add_test')
 TESTS_COUNT=${#TEST_NAMES[@]}
 i=0
 for test in "${TEST_NAMES[@]}"
