@@ -1,16 +1,20 @@
 #!/bin/bash
 
-npm install  --silent
+npm install --silent
 rm -f time.log
 
 TEST_NAMES=('blueprint_hashes_plonk_decomposition_test' 'blueprint_non_native_plonk_non_native_range_test' 'blueprint_non_native_plonk_var_base_mul_per_bit_test'
-'blueprint_non_native_plonk_field_mul_test' 'blueprint_non_native_plonk_complete_addition_test' 'blueprint_non_native_plonk_field_sub_test', 'blueprint_non_native_plonk_field_add_test')
+  'blueprint_non_native_plonk_field_mul_test' 'blueprint_non_native_plonk_complete_addition_test' 'blueprint_non_native_plonk_field_sub_test' 'blueprint_non_native_plonk_field_add_test')
+
+if [[ -z "$1" ]]; then
+  TEST_NAMES+=("blueprint_non_native_plonk_fixed_base_mul_test")
+fi
+
 TESTS_COUNT=${#TEST_NAMES[@]}
 i=0
-for test in "${TEST_NAMES[@]}"
-do
+for test in "${TEST_NAMES[@]}"; do
   echo Tests count: ${i}/${TESTS_COUNT}
-  @CMAKE_BINARY_DIR@/libs/blueprint/test/${test}  2>&1 | grep ms >> time.log
+  @CMAKE_BINARY_DIR@/libs/blueprint/test/${test} 2>&1 | grep ms >>time.log
   let "i=i+1"
 done
 echo "Tests done"
