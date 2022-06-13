@@ -54,7 +54,7 @@ TEST_NAMES=('blueprint_hashes_plonk_decomposition_test' 'blueprint_non_native_pl
   'blueprint_non_native_plonk_field_mul_test' 'blueprint_non_native_plonk_complete_addition_test' 'blueprint_non_native_plonk_field_sub_test' 'blueprint_non_native_plonk_field_add_test')
 
 if [[ -z "$1" ]]; then
-  TEST_NAMES+=("blueprint_non_native_plonk_non_native_demo_test" "blueprint_non_native_plonk_fixed_base_mul_test", "blueprint_hashes_plonk_sha256_test")
+  TEST_NAMES+=("blueprint_non_native_plonk_non_native_demo_test" "blueprint_non_native_plonk_fixed_base_mul_test" "blueprint_hashes_plonk_sha256_test")
 fi
 
 TESTS_COUNT=${#TEST_NAMES[@]}
