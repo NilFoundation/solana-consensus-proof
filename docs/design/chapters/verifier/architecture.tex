@@ -1,0 +1,50 @@
+\section{Verification Logic Architecture}
+
+The verificaton part contains several components:
+\begin{enumerate}
+    \item \textbf{Proof Deserialization:} Handles the input data processing (marshalling/demarshalling) mechanisms.
+
+    These mechanisms are defined within the \texttt{*\_marshalling}-postfixed files.
+
+    \item \textbf{Proof Verification:} Includes a verification of the hash-based commitment scheme and the proof itself.
+
+    The verification itself is defined within the directory \texttt{components}, each of which defines a set of gates
+    relevant to particular component.
+
+    \item \item \item \textbf{Circuits Definition:} Full proof verification requires for the proof circuits to be defined within
+    with the EVM-interpretable bytecode.
+\end{enumerate}
+
+\subsection{State Proof Sequence Maintenance}
+\label{subsec:stateseq}
+
+To verify the validator set within the state proof submitted is derived from 
+original Solana's genesis data, it is supposed to maintain validator's set state
+proofs sequence on in-EVM side in a data structure as follows.
+
+Let $B_{n_1}$ be the last state confirmed on Ethereum. Let us say some prover 
+wants to confirm a new $B_{n_2}$ state. Denote by $H_{B}$ the hash of a state $B$.
+So a Merkle Tree $T_{n_1, n_2}$ from the set $\{H_{B_{n_1}}, ..., H_{B_{n_2}}\}$
+
+
+The state proof sequence correctness statement contains (but not bounded by) the following points:
+\begin{algorithm}
+    \caption{Proving Statement}
+    \label{circuit}
+    \begin{enumerate}
+        \item Show that the validator set is correct.
+        \item Show that the $B_{n_1}$ corresponds to the last confirmed state on Ethereum.
+        \item for $i$ from the interval $[n_1 + 1, n_2 - 1]$:
+        \begin{enumerate}
+            \item Show that $B_{i}$ contains $H_{B_{i - 1}}$ as a hash of the previous state.
+        \end{enumerate}
+        \item for $i$ from the interval $[n_2, n_2 + 32]$:
+        \begin{enumerate}
+            \item Show that $B_{i}$ contains $H_{B_{i - 1}}$ as a hash of the previous state.
+            \item Show that there are enough valid signatures from the current validator set for $B_{i}$.
+        \end{enumerate}
+        \item Build a Merkle Tree $T_{n_1, n_2}$ from the set $\{H_{B_{n_1}}, ..., H_{B_{n_2}}\}$.
+    \end{enumerate}
+\end{algorithm}
+
+$T_{n_1, n_2}$ allows to provide a successful transaction from $\{B_{n_1}, ..., B_{n_2}\}$ to the Ethereum-based proof verificator later.
