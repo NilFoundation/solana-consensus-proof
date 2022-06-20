@@ -1,1 +1,24 @@
 \section{Verification Logic API Reference}
+
+Every call to Placeholder public API verification function eventually leads to a call of verification function for chosen circuit (for example, https://github.com/NilFoundation/evm-placeholder-verification/blob/ba2b726556a0c95dba00539b83ce3326bef73a8a/contracts/placeholder/verifier_non_native_field_add_component.sol#L46, https://github.com/NilFoundation/evm-placeholder-verification/blob/ba2b726556a0c95dba00539b83ce3326bef73a8a/contracts/placeholder/verifier_variable_base_scalar_mul_component.sol#L46). 
+These verification functions should be supplied with proof byteblob and initialized verification parameters.
+
+For now there is test public API which execute basic logic consisting of:
+1. parsing proof byteblob
+2. verification parameters initialization
+3. circuit specific verification function calling
+4. verification result returning
+
+Example of test public API function declaration intended for verification of unified addition circuit (see https://github.com/NilFoundation/evm-placeholder-verification/blob/ba2b726556a0c95dba00539b83ce3326bef73a8a/contracts/placeholder/test/public_api_placeholder_unified_addition_component.sol#L34):
+
+function verify(
+    bytes calldata blob,
+    uint256[] calldata init_params,
+    int256[][] calldata columns_rotations
+) public {...}
+
+More details regarding public API input data structure see in the next section.
+
+Other existing test public API functions could be found here:
+- https://github.com/NilFoundation/evm-placeholder-verification/blob/ba2b726556a0c95dba00539b83ce3326bef73a8a/contracts/placeholder/test/public_api_placeholder_non_native_field_add_component.sol#L34
+- https://github.com/NilFoundation/evm-placeholder-verification/blob/ba2b726556a0c95dba00539b83ce3326bef73a8a/contracts/placeholder/test/public_api_placeholder_variable_base_scalar_mul_component.sol#L34
