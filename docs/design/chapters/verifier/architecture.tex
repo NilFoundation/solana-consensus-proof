@@ -19,6 +19,8 @@ Verification contains the following steps:
         \item \url{https://github.com/NilFoundation/evm-placeholder-verification/blob/master/contracts/basic_marshalling_calldata.sol}
     \end{itemize}
 
+    \item \textbf{Parameters Initialization} Processes commitment scheme (FRI) parameters from the input data \\
+            \url{https://github.com/NilFoundation/evm-placeholder-verification/blob/master/contracts/types.sol}
     \item \textbf{Proof Verification:} Includes a verification of the hash-based commitment scheme and the proof itself.
 
     The verification itself is defined within the directory \texttt{components}, each of which\footnote{
@@ -32,13 +34,7 @@ Verification contains the following steps:
         \item Permutation argument: \\
             \url{https://github.com/NilFoundation/evm-placeholder-verification/blob/master/contracts/placeholder/permutation_argument.sol}
         \item Gate Argument depends on the circuit definition and is unique for each circuit.
-                Example:
-            \begin{itemize}
-                \item Circuit description: \\
-                    \url{https://github.com/NilFoundation/evm-placeholder-verification/blob/master/contracts/components/poseidon_split_gen.sol.txt}
-                \item Generated gate argument: \\
                     \url{https://github.com/NilFoundation/evm-placeholder-verification/blob/master/contracts/components/non_native_field_add_gen.sol} 
-            \end{itemize}
         \item Commitment Scheme verification \\
             \url{https://github.com/NilFoundation/evm-placeholder-verification/tree/master/contracts/commitments}
     \end{itemize}
