@@ -101,15 +101,16 @@ Verification parameters are used to parametrize Placeholder algorithm depending 
 
 Following parameters are required to complete Placeholder verification procedure in-EVM:
 
-\begin{verbatim}
-    uint256 modulus - modulus of chosen prime field
-    uint256 r - parameter of FRI algorithm
-    uint256 max_degree - parameter of FRI algorithm
-    uint256 lambda - parameter of LPC algorithm
-    uint256 rows_amount - parameter defined by chosen circuit
-    uint256 omega - parameter defined by chosen circuit
-    uint256 max_leaf_size - parameter dependent on specific instance of Placeholder algorithm, equal to max leaf size among all of the instances of batched LPC algorithm used within Placeholder algorithm
-    vector<uint256> Domains generators - parameter defined by chosen circuit 
-    vector<uint256> q_polynomial - parameter of Placeholder algorithm
-    vector<vector<int256>> columns_rotations - parameter defined by chosen circuit
-\end{verbatim}
+\begin{itemize}
+    \item \texttt{uint256 modulus} - modulus of chosen prime field
+    \item \texttt{uint256 r} - FRI algorithm rounds
+    \item \texttt{uint256 max\_degree} - maximal degree of polynomials for commitment scheme
+    \item \texttt{uint256 lambda} - parameter of LPC algorithm
+    \item \texttt{uint256 rows\_amount} - parameter defined by chosen circuit
+    \item \texttt{uint256 omega} - parameter defined by chosen circuit
+    \item \texttt{uint256 max\_leaf\_size} - parameter dependent on specific instance of Placeholder algorithm,
+        equal to max leaf size among all of the instances of batched LPC algorithm used within Placeholder algorithm
+    \item \texttt{vector<uint256> Domains generators} - parameter defined by chosen circuit 
+    \item \texttt{vector<uint256> q\_polynomial} - FRI folding-related parameter
+    \item \texttt{vector<vector<int256>> columns\_rotations} - parameter defined by chosen circuit
+\end{itemize}
