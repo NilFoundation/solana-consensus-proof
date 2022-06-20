@@ -83,13 +83,13 @@ Verification parameters are used to parametrize Placeholder algorithm depending 
 
 Following parameters are required to complete Placeholder verification procedure in-EVM:
 
-1. modulus: uint256
-2. r: uint256
-3. max_degree: uint256
-4. lambda: uint256
-5. rows_amount: uint256
-6. omega: uint256
-7. max_leaf_size: uint256
-8. Domains generators: vector<uint256>
-9. q polynomial: vector<uint256>
-10. Columns rotations: vector<vector<int256>>
+1. modulus: uint256 - modulus of chosen prime field
+2. r: uint256 - parameter of FRI algorithm
+3. max_degree: uint256 - parameter of FRI algorithm
+4. lambda: uint256 - parameter of LPC algorithm
+5. rows_amount: uint256 - parameter defined by chosen circuit
+6. omega: uint256 - parameter defined by chosen circuit
+7. max_leaf_size: uint256 - parameter dependent on specific instance of Placeholder algorithm, equal to max leaf size among all of the instances of batched LPC algorithm used within Placeholder algorithm
+8. Domains generators: vector<uint256> - parameter defined by chosen circuit 
+9. q polynomial: vector<uint256> - parameter of Placeholder algorithm
+10. Columns rotations: vector<vector<int256>> - parameter defined by chosen circuit
