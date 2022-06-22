@@ -64,3 +64,6 @@
 [submodule "share/state-proof-verify"]
 	path = share/state-proof-verify
 	url = git@github.com:nilfoundation/evm-placeholder-verification.git
+[submodule "share/starknet-proof-verify"]
+	path = share/starknet-proof-verify
+	url = git@github.com:nilfoundation/cairo-placeholder-verification.git
