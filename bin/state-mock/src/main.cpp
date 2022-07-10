@@ -1,5 +1,6 @@
 //---------------------------------------------------------------------------//
 // Copyright (c) 2018-2021 Mikhail Komarov <nemo@nil.foundation>
+// Copyright (c) 2022 Aleksei Moskvin <alalmoskvin@nil.foundation>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -174,7 +175,7 @@ void pretty_print(std::ostream &os, boost::json::value const &jv, std::string *i
 }
 
 int main(int argc, char *argv[]) {
-
+    auto start = std::chrono::high_resolution_clock::now();
     typedef hashes::sha2<256> hash_type;
     typedef algebra::curves::curve25519 curve_type;
     typedef typename curve_type::template g1_type<> group_type;
@@ -247,5 +248,11 @@ int main(int argc, char *argv[]) {
         pretty_print(std::cout, jv);
     }
 
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+
+    std::ofstream out("time.log", std::ios::app);
+    out << "state-proof-mock: " << duration.count() << "ms" << std::endl;
+    out.close();
     return 0;
 }

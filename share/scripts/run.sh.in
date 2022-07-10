@@ -1,0 +1,81 @@
+#!/bin/bash
+
+npm install --silent
+rm -f time_execution.log
+rm -f preprocessor.log
+rm -f private.log
+rm -f permutation.log
+rm -f gate.log
+rm -f quotient.log
+rm -f polynomial.log
+
+time_execution () {
+   cat tmp.log | grep Time_execution | cut -d " " -f 2 >> time_execution.log
+}
+
+preprocessor () {
+   cat tmp.log | grep Placeholder_public_preprocessor_total_time | cut -d " " -f 2 >> preprocessor.log
+}
+
+private () {
+   t1=$(cat tmp.log | grep polynomial_table_generated_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+   t2=$(cat tmp.log | grep witness_precommit_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+   sum=`echo $t1 + $t2 | bc | sed 's/^\./0./'`
+   echo ${sum}'ms' >> private.log
+}
+
+permutation() {
+  cat tmp.log | grep permutation_argument_prove_eval_time | cut -d " " -f 2 >> permutation.log
+}
+
+gate() {
+  cat tmp.log | grep gate_argument_time | cut -d " " -f 2 >> gate.log
+}
+
+quotient() {
+  t1=$(cat tmp.log | grep quotient_polynomial_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+  t2=$(cat tmp.log | grep split_polynomial_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+  t3=$(cat tmp.log | grep T_splitted_precommit_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+  sum=`echo $t1 + $t2 + $t3 | bc | sed 's/^\./0./'`
+  echo ${sum}'ms' >> quotient.log
+}
+
+polynomial() {
+  t1=$(cat tmp.log | grep witness_evaluation_points_generated_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+  t2=$(cat tmp.log | grep permutation_proof_eval_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+  t3=$(cat tmp.log | grep quotient_proof_eval_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+  t4=$(cat tmp.log | grep public_input_proof_eval_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+  t5=$(cat tmp.log | grep special_selectors_proof_eval_time | cut -d " " -f 2 | awk '{ print substr( $0, 1, length($0)-2 ) }')
+  sum=`echo $t1 + $t2 + $t3 + $t4 + $t5 | bc | sed 's/^\./0./'`
+  echo ${sum}'ms' >> polynomial.log
+}
+
+#TEST_NAMES=('blueprint_hashes_plonk_decomposition_test' 'blueprint_non_native_plonk_non_native_range_test' 'blueprint_non_native_plonk_var_base_mul_per_bit_test'
+#  'blueprint_non_native_plonk_field_mul_test' 'blueprint_non_native_plonk_complete_addition_test' 'blueprint_non_native_plonk_field_sub_test' 'blueprint_non_native_plonk_field_add_test')
+#
+
+TEST_NAMES=('blueprint_hashes_plonk_decomposition_test' 'blueprint_non_native_plonk_non_native_range_test' 'blueprint_non_native_plonk_var_base_mul_per_bit_test'
+  'blueprint_hashes_plonk_decomposition_test' 'blueprint_non_native_plonk_complete_addition_test' 'blueprint_hashes_plonk_decomposition_test' 'blueprint_hashes_plonk_decomposition_test')
+
+if [[ -z "$1" ]]; then
+  TEST_NAMES+=("blueprint_non_native_plonk_non_native_demo_test" "blueprint_non_native_plonk_fixed_base_mul_test" "blueprint_hashes_plonk_sha256_test")
+fi
+
+TESTS_COUNT=${#TEST_NAMES[@]}
+i=0
+for test in "${TEST_NAMES[@]}"; do
+  rm -f tmp.log
+  echo Tests count: ${i}/${TESTS_COUNT}
+  @CMAKE_BINARY_DIR@/libs/blueprint/test/${test} >> tmp.log 2>&1
+  time_execution
+  preprocessor
+  private
+  permutation
+  gate
+  quotient
+  polynomial
+
+  let "i=i+1"
+done
+echo "Tests done"
+node @CMAKE_BINARY_DIR@/benchmark/printTable.js

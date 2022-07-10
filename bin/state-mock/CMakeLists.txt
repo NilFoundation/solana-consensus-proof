@@ -4,7 +4,7 @@ cm_find_package(CM)
 include(CMDeploy)
 include(CMSetupVersion)
 
-cm_project(state-proof-mock WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM C CXX)
+cm_project(state-mock WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM C CXX)
 
 if(NOT Boost_FOUND AND NOT CMAKE_CROSSCOMPILING)
     cm_find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options thread system)
@@ -79,5 +79,8 @@ elseif(CMAKE_CROSSCOMPILING AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     add_dependencies(${CURRENT_PROJECT_NAME} boost)
 endif()
 
-#install (TARGETS state-proof-mock RUNTIME DESTINATION /Users/zerg/Projects/)
+IF(UNIX)
+    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:\$ORIGIN/../bin:\$ORIGIN")
+ENDIF()
+
 install(TARGETS ${CURRENT_PROJECT_NAME} RUNTIME DESTINATION bin)
