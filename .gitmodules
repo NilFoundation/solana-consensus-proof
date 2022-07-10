@@ -88,3 +88,15 @@
 [submodule "libs/plugin"]
 	path = libs/plugin
 	url = git@github.com:NilFoundation/plugin.git
+[submodule "libs/actor/blueprint"]
+    path = libs/actor/blueprint
+    url = git@github.com:NilFoundation/actor-blueprint.git
+[submodule "libs/actor/math"]
+    path = libs/actor/math
+    url = git@github.com:NilFoundation/actor-math.git
+[submodule "libs/actor/container"]
+    path = libs/actor/container
+    url = git@github.com:NilFoundation/actor-containers.git
+[submodule "libs/actor/zk"]
+    path = libs/actor/zk
+    url = git@github.com:NilFoundation/actor-zk.git
