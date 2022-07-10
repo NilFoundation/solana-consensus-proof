@@ -14,80 +14,80 @@ Placeholder proof consists of different fields and some of them are of complex s
 So, the first one Placeholder proof has the following structure, which is described in pseudocode:
 
 \begin{verbatim}
-    struct PlaceholderProof {
-        vector<uint8> witness_commitment
-        vector<uint8> v_perm_commitment
-        vector<uint8> input_perm_commitment
-        vector<uint8> value_perm_commitment
-        vector<uint8> v_l_perm_commitment
-        vector<uint8> T_commitment
-        uint256 challenge
-        uint256 lagrange_0
-        LPCProof witness
-        LPCProof permutation
-        LPCProofquotient
-        vector<LPCProof> lookups
-        LPCProof id_permutation
-        LPCProof sigma_permutation
-        LPCProof public_input
-        LPCProof constant
-        LPCProof selector
-        LPCProof special_selectors
+    struct placeholder_proof {
+        std::vector<uint8_t> witness_commitment;
+        std::vector<uint8_t> v_perm_commitment;
+        std::vector<uint8_t> input_perm_commitment;
+        std::vector<uint8_t> value_perm_commitment;
+        std::vector<uint8_t> v_l_perm_commitment;
+        std::vector<uint8_t> T_commitment;
+        uint256_t challenge;
+        uint256_t lagrange_0;
+        lpc_proof witness;
+        lpc_proof permutation;
+        lpc_proof quotient;
+        std::vector<lpc_proof> lookups;
+        lpc_proof id_permutation;
+        lpc_proof sigma_permutation;
+        lpc_proof public_input;
+        lpc_proof constant;
+        lpc_proof selector;
+        lpc_proof special_selectors;
     }
 \end{verbatim}
 
 In turn proof of LPC algorithm has the following structure:
 
 \begin{verbatim}
-    struct LPCProof {
-        vector<uint8> T_root
-        vector<vector<uint256>> z
-        vector<FRIProof> fri_proofs
+    struct lpc_proof {
+        std::vector<uint8_t> T_root;
+        std::vector<std::vector<uint256_t>> z;
+        std::vector<fri_proof> fri_proofs;
     }
 \end{verbatim}
 
 The next one description is for structure of FRI algorithm proof:
 
 \begin{verbatim}
-    struct FRIProof {
-        vector<vector<uint256>> final_polynomials
-        vector<FRIRoundProof> round_proofs
+    struct fri_proof {
+        std::vector<std::vector<uint256_t>> final_polynomials;
+        std::vector<fri_round_proof> round_proofs;
     }
 \end{verbatim}
 
 One of the components of the FRI algorithm proof is so called round FRI proof, which has the following structure:
 
 \begin{verbatim}
-    struct FRIRoundProof {
-        vector<uint256> colinear_value
-        vector<uint256> T_root
-        MerkleProof colinear_path
-        vector<MerkleProof> p
+    struct fri_round_proof {
+        std::vector<uint256_t> colinear_value;
+        std::vector<uint256_t> T_root;
+        merkle_proof colinear_path;
+        std::vector<merkle_proof> p;
     }
 \end{verbatim}
 
 The next important component is the merkle tree proof of the following structure:
 
 \begin{verbatim}
-    struct MerkleProof {
-        uint64 leaf_index
-        vector<uint8> root
-        vector<MerkleProofLayer> path
+    struct merkle_proof {
+        uint64_t leaf_index;
+        std::vector<uint8_t> root;
+        std::vector<merkle_proof_layer> path;
     }
 \end{verbatim}
 
 \begin{verbatim}
-    struct MerkleProofLayer {
-        vector<MerkleProofLayerElement> layer
+    struct merkle_proof_layer {
+        std::vector<merkle_proof_layer_element> layer;
     }       
 \end{verbatim}
 
 In the simplest and used case of the merkle tree with arity 2 layer consists of only one element:
 
 \begin{verbatim}
-    struct MerkleProofLayerElement {
-        uint64 position
-        vector<uint8> hash
+    struct merkle_proof_layer_element {
+        uint64_t position;
+        std::vector<uint8_t> hash;
     }
 \end{verbatim}
 
@@ -102,15 +102,15 @@ Verification parameters are used to parametrize Placeholder algorithm depending 
 Following parameters are required to complete Placeholder verification procedure in-EVM:
 
 \begin{itemize}
-    \item \texttt{uint256 modulus} - modulus of chosen prime field
-    \item \texttt{uint256 r} - FRI algorithm rounds
-    \item \texttt{uint256 max\_degree} - maximal degree of polynomials for commitment scheme
-    \item \texttt{uint256 lambda} - parameter of LPC algorithm
-    \item \texttt{uint256 rows\_amount} - parameter defined by chosen circuit
-    \item \texttt{uint256 omega} - parameter defined by chosen circuit
-    \item \texttt{uint256 max\_leaf\_size} - parameter dependent on specific instance of Placeholder algorithm,
+    \item \texttt{uint256_t modulus} - modulus of chosen prime field
+    \item \texttt{uint256_t r} - FRI algorithm rounds
+    \item \texttt{uint256_t max\_degree} - maximal degree of polynomials for commitment scheme
+    \item \texttt{uint256_t lambda} - parameter of LPC algorithm
+    \item \texttt{uint256_t rows\_amount} - parameter defined by chosen circuit
+    \item \texttt{uint256_t omega} - parameter defined by chosen circuit
+    \item \texttt{uint256_t max\_leaf\_size} - parameter dependent on specific instance of Placeholder algorithm,
         equal to max leaf size among all of the instances of batched LPC algorithm used within Placeholder algorithm
-    \item \texttt{vector<uint256> Domains generators} - parameter defined by chosen circuit 
-    \item \texttt{vector<uint256> q\_polynomial} - FRI folding-related parameter
-    \item \texttt{vector<vector<int256>> columns\_rotations} - parameter defined by chosen circuit
+    \item \texttt{std::vector<uint256_t> Domains generators} - parameter defined by chosen circuit 
+    \item \texttt{std::vector<uint256_t> q\_polynomial} - FRI folding-related parameter
+    \item \texttt{std::vector<std::vector<int256_t>> columns\_rotations} - parameter defined by chosen circuit
 \end{itemize}
