@@ -47,6 +47,10 @@ set_target_properties(${CURRENT_PROJECT_NAME} PROPERTIES
 
 target_link_libraries(${CURRENT_PROJECT_NAME}
 
+                      actor::core
+                      actor::network
+                      epoll-shim
+
                       crypto3::algebra
                       crypto3::block
                       crypto3::blueprint
@@ -62,6 +66,8 @@ target_link_libraries(${CURRENT_PROJECT_NAME}
                       marshalling::crypto3_algebra
                       marshalling::crypto3_multiprecision
                       marshalling::crypto3_zk
+
+                      boost::application
 
                       ${Boost_LIBRARIES})
 
