@@ -32,8 +32,9 @@
 namespace nil {
     namespace proof {
         namespace aspects {
-            struct proof : public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
-                                                               dbms::plugin::cfg_options_description> {
+            struct proof
+                : public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
+                                              dbms::plugin::cfg_options_description> {
                 typedef detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
                                              dbms::plugin::cfg_options_description>
                     policy_type;
@@ -61,7 +62,7 @@ namespace nil {
                 std::string json_string;
             };
         }    // namespace aspects
-    }        // namespace dbms
+    }        // namespace proof
 }    // namespace nil
 
 #endif    // PROOF_PROOF_ASPECT_HPP
