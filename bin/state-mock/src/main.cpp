@@ -29,7 +29,7 @@
 #include <boost/program_options.hpp>
 #endif
 
-#include <nil/crypto3/algebra/curves/curve25519.hpp>
+#include <nil/crypto3/algebra/curves/ed25519.hpp>
 
 #include <nil/crypto3/hash/algorithm/hash.hpp>
 #include <nil/crypto3/hash/sha2.hpp>
@@ -177,7 +177,7 @@ void pretty_print(std::ostream &os, boost::json::value const &jv, std::string *i
 int main(int argc, char *argv[]) {
     auto start = std::chrono::high_resolution_clock::now();
     typedef hashes::sha2<256> hash_type;
-    typedef algebra::curves::curve25519 curve_type;
+    typedef algebra::curves::ed25519 curve_type;
     typedef typename curve_type::template g1_type<> group_type;
     typedef pubkey::eddsa<group_type, pubkey::eddsa_type::basic, void> scheme_type;
     typedef pubkey::public_key<scheme_type> public_key_type;
