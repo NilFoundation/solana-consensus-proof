@@ -192,7 +192,6 @@ state_type<Hash, SignatureSchemeType> tag_invoke(boost::json::value_to_tag<state
 template<typename fri_type, typename FieldType>
 typename fri_type::params_type create_fri_params(std::size_t degree_log) {
     typename fri_type::params_type params;
-    math::polynomial<typename FieldType::value_type> q = {0, 0, 1};
 
     constexpr std::size_t expand_factor = 0;
     std::size_t r = degree_log - 1;
@@ -202,7 +201,6 @@ typename fri_type::params_type create_fri_params(std::size_t degree_log) {
 
     params.r = r;
     params.D = domain_set;
-    params.q = q;
     params.max_degree = (1 << degree_log) - 1;
 
     return params;
