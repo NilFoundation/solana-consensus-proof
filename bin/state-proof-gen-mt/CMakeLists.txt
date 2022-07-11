@@ -4,7 +4,7 @@ cm_find_package(CM)
 include(CMDeploy)
 include(CMSetupVersion)
 
-cm_project(state-proof-gen-app WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM C CXX)
+cm_project(state-proof-gen-mt WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM C CXX)
 
 if (NOT Boost_FOUND AND NOT CMAKE_CROSSCOMPILING)
     cm_find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options thread system)
@@ -67,14 +67,14 @@ target_link_libraries(${CURRENT_PROJECT_NAME}
 
         crypto3::algebra
         crypto3::block
-        crypto3::blueprint
+        actor::blueprint
         crypto3::codec
-        crypto3::math
+        actor::math
         crypto3::multiprecision
         crypto3::pkpad
         crypto3::pubkey
         crypto3::random
-        crypto3::zk
+        actor::zk
 
         marshalling::core
         marshalling::crypto3_algebra
