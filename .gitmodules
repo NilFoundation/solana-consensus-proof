@@ -67,3 +67,15 @@
 [submodule "share/starknet-proof-verify"]
 	path = share/starknet-proof-verify
 	url = git@github.com:nilfoundation/cairo-placeholder-verification.git
+[submodule "libs/actor/blueprint"]
+	path = libs/actor/blueprint
+	url = git@github.com:nilfoundation/actor-blueprint.git
+[submodule "libs/application"]
+	path = libs/application
+	url = git@github.com:NilFoundation/application.git
+[submodule "libs/module"]
+	path = libs/module
+	url = git@github.com:nilfoundation/module.git
+[submodule "libs/plugin"]
+	path = libs/plugin
+	url = git@github.com:NilFoundation/plugin.git
