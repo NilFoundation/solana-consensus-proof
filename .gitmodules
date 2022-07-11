@@ -79,3 +79,27 @@
 [submodule "libs/plugin"]
 	path = libs/plugin
 	url = git@github.com:NilFoundation/plugin.git
+[submodule "libs/actor/cluster"]
+	path = libs/actor/cluster
+	url = git@github.com:NilFoundation/actor-cluster.git
+[submodule "libs/actor/container"]
+	path = libs/actor/container
+	url = git@github.com:NilFoundation/actor-containers.git
+[submodule "libs/actor/core"]
+	path = libs/actor/core
+	url = git@github.com:nilfoundation/actor-core.git
+[submodule "libs/actor/dpdk"]
+	path = libs/actor/dpdk
+	url = git@github.com:NilFoundation/dpdk.git
+[submodule "libs/actor/math"]
+	path = libs/actor/math
+	url = git@github.com:NilFoundation/actor-math.git
+[submodule "libs/actor/network"]
+	path = libs/actor/network
+	url = git@github.com:NilFoundation/actor-network.git
+[submodule "libs/actor/zk"]
+	path = libs/actor/zk
+	url = git@github.com:nilfoundation/actor-zk.git
+[submodule "libs/actor/shim/epoll"]
+	path = libs/actor/shim/epoll
+	url = https://github.com/NilFoundation/epoll-shim.git
