@@ -50,6 +50,8 @@
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
+#include <nil/crypto3/math/algorithms/calculate_domain_set.hpp>
+
 #include <nil/crypto3/zk/commitments/type_traits.hpp>
 #include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
 #include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
@@ -59,8 +61,8 @@
 #include <nil/crypto3/zk/algorithms/allocate.hpp>
 #include <nil/crypto3/zk/algorithms/generate_circuit.hpp>
 
-#include <nil/marshalling/endianness.hpp>
-#include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
+// #include <nil/marshalling/endianness.hpp>
+// #include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
 
 #include <fstream>
 
@@ -195,7 +197,7 @@ typename fri_type::params_type create_fri_params(std::size_t degree_log) {
     std::size_t r = degree_log - 1;
 
     std::vector<std::shared_ptr<math::evaluation_domain<FieldType>>> domain_set =
-        zk::commitments::detail::calculate_domain_set<FieldType>(degree_log + expand_factor, r);
+        math::calculate_domain_set<FieldType>(degree_log + expand_factor, r);
 
     params.r = r;
     params.D = domain_set;
@@ -215,23 +217,23 @@ void print_byteblob(std::ostream &os, TIter iter_begin, TIter iter_end) {
     os << std::endl << std::dec;
 }
 
-template<typename Endianness, typename PlaceholderProof>
-std::string marshalling_to_blob(const PlaceholderProof &proof) {
+// template<typename Endianness, typename PlaceholderProof>
+// std::string marshalling_to_blob(const PlaceholderProof &proof) {
 
-    auto filled_placeholder_proof =
-        nil::crypto3::marshalling::types::fill_placeholder_proof<PlaceholderProof, Endianness>(proof);
+//     auto filled_placeholder_proof =
+//         nil::crypto3::marshalling::types::fill_placeholder_proof<PlaceholderProof, Endianness>(proof);
 
-    std::vector<std::uint8_t> cv;
-    cv.resize(filled_placeholder_proof.length(), 0x00);
-    auto write_iter = cv.begin();
-    if (filled_placeholder_proof.write(write_iter, cv.size()) == nil::marshalling::status_type::success) {
-        std::stringstream st;
-        print_byteblob(st, cv.cbegin(), cv.cend());
-        return st.str();
-    } else {
-        return {};
-    }
-}
+//     std::vector<std::uint8_t> cv;
+//     cv.resize(filled_placeholder_proof.length(), 0x00);
+//     auto write_iter = cv.begin();
+//     if (filled_placeholder_proof.write(write_iter, cv.size()) == nil::marshalling::status_type::success) {
+//         std::stringstream st;
+//         print_byteblob(st, cv.cbegin(), cv.cend());
+//         return st.str();
+//     } else {
+//         return {};
+//     }
+// }
 
 #ifndef __EMSCRIPTEN__
 std::string proof_gen() {
@@ -321,9 +323,10 @@ const char *proof_gen() {
                                                                               fri_params)) {
         return "";
     }
-    using Endianness = nil::marshalling::option::big_endian;
+    // using Endianness = nil::marshalling::option::big_endian;
 
-    std::string st = marshalling_to_blob<Endianness>(proof);
+    // std::string st = marshalling_to_blob<Endianness>(proof);
+    std::string st = "";
     auto prover_duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
 
