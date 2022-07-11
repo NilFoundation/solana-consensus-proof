@@ -33,6 +33,7 @@
 #include <nil/crypto3/algebra/fields/arithmetic_params/pallas.hpp>
 #include <nil/crypto3/algebra/random_element.hpp>
 #include <nil/crypto3/algebra/curves/alt_bn128.hpp>
+#include <nil/crypto3/algebra/curves/ed25519.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/alt_bn128.hpp>
 #include <nil/crypto3/algebra/curves/params/multiexp/alt_bn128.hpp>
 #include <nil/crypto3/algebra/curves/params/wnaf/alt_bn128.hpp>
@@ -297,7 +298,7 @@ const char *proof_gen() {
     using types = zk::snark::detail::placeholder_policy<BlueprintFieldType, params>;
 
     using fri_type = typename zk::commitments::fri<BlueprintFieldType, typename params::merkle_hash_type,
-                                                   typename params::transcript_hash_type, 2>;
+                                                   typename params::transcript_hash_type, 2, 1>;
 
     std::size_t table_rows_log = std::ceil(std::log2(desc.rows_amount));
 
@@ -305,7 +306,8 @@ const char *proof_gen() {
 
     std::size_t permutation_size = desc.witness_columns + desc.public_input_columns + desc.constant_columns;
 
-    typename types::preprocessed_public_data_type public_preprocessed_data =
+    typename zk::snark::placeholder_public_preprocessor<BlueprintFieldType, params>::preprocessed_data_type
+        public_preprocessed_data =
         zk::snark::placeholder_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
                                                                                         fri_params, permutation_size);
 
@@ -313,8 +315,9 @@ const char *proof_gen() {
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
     start = std::chrono::high_resolution_clock::now();
 
-    typename types::preprocessed_private_data_type private_preprocessed_data =
-        zk::snark::placeholder_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment, desc);
+    typename zk::snark::placeholder_private_preprocessor<BlueprintFieldType, params>::preprocessed_data_type
+        private_preprocessed_data =
+        zk::snark::placeholder_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment, desc, fri_params);
 
     auto proof = zk::snark::placeholder_prover<BlueprintFieldType, params>::process(
         public_preprocessed_data, private_preprocessed_data, desc, bp, assignments, fri_params);
@@ -344,7 +347,7 @@ const char *proof_gen() {
 int main(int argc, char *argv[]) {
     typedef hashes::sha2<256> hash_type;
     typedef algebra::curves::alt_bn128<254> system_curve_type;
-    typedef algebra::curves::curve25519 signature_curve_type;
+    typedef algebra::curves::ed25519 signature_curve_type;
     typedef typename signature_curve_type::template g1_type<> group_type;
     typedef pubkey::eddsa<group_type, pubkey::eddsa_type::basic, void> signature_scheme_type;
     typedef typename pubkey::public_key<signature_scheme_type>::signature_type signature_type;
