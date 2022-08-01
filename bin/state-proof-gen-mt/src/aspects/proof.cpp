@@ -15,7 +15,7 @@
 // <https://github.com/NilFoundation/dbms/blob/master/LICENSE_1_0.txt>.
 //---------------------------------------------------------------------------//
 
-#include <nil/proof/aspects/proof.hpp>
+#include <nil/state-proof-gen-mt/aspects/proof.hpp>
 
 #include <boost/exception/get_error_info.hpp>
 

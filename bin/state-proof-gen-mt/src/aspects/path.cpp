@@ -15,7 +15,7 @@
 // <https://github.com/NilFoundation/dbms/blob/master/LICENSE_1_0.txt>.
 //---------------------------------------------------------------------------//
 
-#include <nil/proof/aspects/path.hpp>
+#include <nil/state-proof-gen-mt/aspects/path.hpp>
 
 #include <iostream>
 namespace nil {
