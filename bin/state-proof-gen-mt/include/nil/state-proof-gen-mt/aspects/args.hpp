@@ -15,15 +15,14 @@
 // <https://github.com/NilFoundation/dbms/blob/master/LICENSE_1_0.txt>.
 //---------------------------------------------------------------------------//
 
-#ifndef PROOF_CONFIGURATION_ASPECT_HPP
-#define PROOF_CONFIGURATION_ASPECT_HPP
+#ifndef PROOF_ARGS_ASPECT_HPP
+#define PROOF_ARGS_ASPECT_HPP
 
-#include <iostream>
-#include <numeric>
+#include <tuple>
 
-#include <nil/proof/detail/configurable.hpp>
+#include <boost/application/aspects/args.hpp>
 
-#include <nil/proof/aspects/path.hpp>
+#include <nil/state-proof-gen-mt/detail/configurable.hpp>
 
 #include <nil/dbms/plugin/options_description.hpp>
 #include <nil/dbms/plugin/variables_map.hpp>
@@ -31,8 +30,9 @@
 namespace nil {
     namespace proof {
         namespace aspects {
-            struct configuration
-                : public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
+            struct args
+                : public boost::application::args,
+                  public detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
                                               dbms::plugin::cfg_options_description> {
                 typedef detail::configurable<dbms::plugin::variables_map, dbms::plugin::cli_options_description,
                                              dbms::plugin::cfg_options_description>
@@ -44,31 +44,15 @@ namespace nil {
                 typedef typename std::tuple_element<0, options_type>::type cli_options_type;
                 typedef typename std::tuple_element<1, options_type>::type cfg_options_type;
 
-                configuration(boost::shared_ptr<path> aspct);
+                args(int argc, char *argv[]);
 
                 virtual void set_options(cli_options_type &cli) const override;
                 virtual void set_options(cfg_options_type &cfg) const override;
 
                 virtual void initialize(configuration_type &vm) override;
-
-                configuration_type &vm();
-
-                cli_options_type &cli();
-                cfg_options_type &cfg();
-
-                boost::filesystem::path default_config_path() const;
-
-            protected:
-                void write_default_config(const boost::filesystem::path &path);
-
-                configuration_type vmv;
-                cli_options_type cliv;
-                cfg_options_type cfgv;
-
-                boost::shared_ptr<path> path_aspect;
             };
         }    // namespace aspects
     }        // namespace proof
 }    // namespace nil
 
-#endif    // PROOF_CONFIGURATION_ASPECT_HPP
+#endif    // DBMS_ARGS_HPP
