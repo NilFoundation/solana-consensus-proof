@@ -6,8 +6,8 @@ include(CMSetupVersion)
 
 cm_project(state-proof-gen WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM C CXX)
 
-if(NOT CMAKE_CROSSCOMPILING)
-    cm_find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options thread system)
+if(NOT Boost_FOUND AND NOT CMAKE_CROSSCOMPILING)
+    find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options thread system)
 elseif(CMAKE_CROSSCOMPILING)
     if(NOT TARGET boost)
         include(ExternalProject)
