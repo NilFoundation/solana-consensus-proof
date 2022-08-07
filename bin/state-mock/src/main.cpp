@@ -98,8 +98,9 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, vote_state<
 
 void pretty_print(std::ostream &os, boost::json::value const &jv, std::string *indent = nullptr) {
     std::string indent_;
-    if (!indent)
+    if (!indent) {
         indent = &indent_;
+    }
     switch (jv.kind()) {
         case boost::json::kind::object: {
             os << "{\n";
@@ -197,6 +198,29 @@ int main(int argc, char *argv[]) {
     boost::random::uniform_int_distribution<std::size_t> small_distrib(std::numeric_limits<std::size_t>::min() + 1,
                                                                        10UL);
 
+#ifndef __EMSCRIPTEN__
+    boost::program_options::options_description options("Solana 'Light-Client' State Mock Data Generator");
+    // clang-format off
+    options.add_options()("help,h", "Display help message")
+            ("packets,p", boost::program_options::value<std::size_t>()->default_value(0), "Amount of packets to mock")
+            ("validators,v", boost::program_options::value<std::size_t>()->default_value(distrib(gen)), "Amount of validators to emulate");
+    // clang-format on
+
+    boost::program_options::positional_options_description p;
+    p.add("input", 1);
+
+    boost::program_options::variables_map vm;
+    boost::program_options::store(
+        boost::program_options::command_line_parser(argc, argv).options(options).positional(p).run(), vm);
+    boost::program_options::notify(vm);
+
+    if (vm.count("help")) {
+        std::cout << options << std::endl;
+        return 0;
+    }
+
+#endif
+
     random_hash_generator_type hash_gen;
 
     status_type s;
@@ -248,8 +272,8 @@ int main(int argc, char *argv[]) {
         pretty_print(std::cout, jv);
     }
 
-
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
 
     std::ofstream out("time.log", std::ios::app);
     out << "state-proof-mock: " << duration.count() << "ms" << std::endl;
