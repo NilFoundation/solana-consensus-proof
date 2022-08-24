@@ -25,6 +25,17 @@ endif()
 
 cm_setup_version(VERSION 0.1.0)
 
+option(ZK_PLACEHOLDER_PROFILING_ENABLED "Build with placeholder profiling" FALSE)
+option(ZK_PLACEHOLDER_DEBUG_ENABLED "Build with placeholder testing inside" FALSE)
+
+if(ZK_PLACEHOLDER_PROFILING)
+    add_definitions(-DZK_PLACEHOLDER_PROFILING_ENABLED)
+endif()
+
+if(ZK_PLACEHOLDER_DEBUG)
+    add_definitions(-DZK_PLACEHOLDER_DEBUG_ENABLED)
+endif()
+
 # get header files; only needed by CMake generators,
 # e.g., for creating proper Xcode projects
 set(${CURRENT_PROJECT_NAME}_HEADERS)

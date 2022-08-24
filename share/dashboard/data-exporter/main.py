@@ -17,14 +17,22 @@ def state_proof_gen_mt_process(prefix_path):
     log = open('log.txt', 'a')
     return subprocess.Popen([
         prefix_path + '/bin/state-proof-gen-mt/state-proof-gen-mt', '-i',
-        prefix_path + '/bin/state-proof-gen-mt/mock.txt'],
+        prefix_path + '/bin/state-proof-gen-mt/mock.txt', "--shard0-mem-scale", "20"],
         stdout=log, stderr=log)
 
 
+def get_data(prefix_path):
+    log = open('get_blocks.txt', 'a')
+    return subprocess.Popen(
+        ["python3", prefix_path + '/../share/dashboard/data-exporter/block_data.py'], stdout=log, stderr=log)
+
+
 def state_mock_process(prefix_path):
+    get_data(prefix_path).wait()
     mock = open(prefix_path + '/bin/state-proof-gen-mt/mock.txt', 'w')
     return subprocess.Popen(
-        [prefix_path + '/bin/state-mock/state-mock'],
+        [prefix_path + '/bin/state-mock/state-mock', '--input',
+         prefix_path + '/../share/dashboard/data-exporter/data.json'],
         stdout=mock)
 
 
@@ -44,7 +52,7 @@ def check_htop(pid, right_name):
 
 
 if __name__ == '__main__':
-    start_http_server(port=3005)
+    start_http_server(port=4005)
     BINARY_PREFIX_PATH = sys.argv[1]
     block_id = 22
     start_time = datetime.timestamp(datetime.now())
@@ -59,7 +67,8 @@ if __name__ == '__main__':
     thread_mem_proof.start()
     while True:
         if proof_gen.poll() is not None:
-            proof_time_metrics.info({"value": str(datetime.timestamp(datetime.now()) - start_time), "blocks": str(block_id)})
+            proof_time_metrics.info(
+                {"value": str(datetime.timestamp(datetime.now()) - start_time), "blocks": str(block_id)})
             time.sleep(15)
             proof_time_metrics.info({"value": str(0), "blocks": str(block_id)})
             thread_mem_proof.join()

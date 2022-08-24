@@ -15,10 +15,10 @@ scrape_configs:
   - job_name: 'prometheus'
 
     static_configs:
-    - targets: ['167.235.233.17:3001',
-                '167.235.233.17:3005',
+    - targets: ['167.235.235.247:4001',
+                '167.235.233.17:4005',
 #                'data_exporter:3005',
-                '167.235.233.17:3002']
+                '167.235.235.247:4002']
     # 167.235.233.17:3001 - prometheus db
     # x.x.x.x:3002 - node exporter
     # 167.235.233.17:3005 - my exporter

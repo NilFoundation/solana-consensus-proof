@@ -33,7 +33,6 @@
 
 #include <nil/crypto3/algebra/curves/pallas.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/pallas.hpp>
-#include <nil/crypto3/algebra/random_element.hpp>
 
 #include <nil/crypto3/zk/blueprint/plonk.hpp>
 #include <nil/crypto3/zk/assignment/plonk.hpp>
@@ -44,41 +43,45 @@
 #include <nil/crypto3/pubkey/algorithm/sign.hpp>
 #include <nil/crypto3/pubkey/eddsa.hpp>
 
+#include <nil/marshalling/algorithms/pack.hpp>
+#include <nil/marshalling/status_type.hpp>
+
+#include <nil/crypto3/marshalling/multiprecision/types/integral.hpp>
+
 #include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/placeholder/verifier.hpp>
-#include <nil/crypto3/zk/snark/systems/plonk/placeholder/params.hpp>
-#include <nil/crypto3/zk/algorithms/allocate.hpp>
 
 #include "test_plonk_component.hpp"
-#include <nil/crypto3/zk/components/hashes/sha256/plonk/sha256_process.hpp>
 #include <nil/crypto3/algebra/curves/ed25519.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/ed25519.hpp>
-#include <nil/crypto3/zk/components/non_native/algebra/fields/plonk/variable_base_multiplication_edwards25519.hpp>
-#include <nil/crypto3/zk/components/hashes/sha256/plonk/sha512_process.hpp>
-#include <nil/crypto3/zk/components/non_native/algebra/fields/plonk/non_native_range.hpp>
-#include <nil/crypto3/zk/components/non_native/algebra/fields/plonk/fixed_base_multiplication_edwards25519.hpp>
+
+#include <nil/crypto3/codec/algorithm/decode.hpp>
+#include <nil/crypto3/codec/base.hpp>
+#include <nil/crypto3/zk/components/non_native/algebra/fields/plonk/signatures_verification.hpp>
+#include <nil/crypto3/zk/components/non_native/algebra/fields/plonk/ed25519.hpp>
 
 using namespace nil::crypto3;
 using namespace nil::marshalling;
 
-template<typename Hash>
+template<typename Hash, typename CurveType>
+struct signature_t {
+    typedef typename CurveType::base_field_type::integral_type integral_type;
+    typedef typename CurveType::scalar_field_type::value_type value_type;
+    std::array<integral_type, 2> points;
+    value_type scalar;
+};
+
+template<typename Hash, typename CurveType>
 struct vote_state {
     typedef Hash hash_type;
     typedef typename Hash::digest_type digest_type;
-
-    /// A stack of votes starting with the oldest vote
-    std::vector<std::uint64_t> slots;
-    /// signature of the bank's state at the last slot
-    digest_type hash;
-    /// processing timestamp of last slot
-    std::uint32_t timestamp;
+    typedef typename CurveType::base_field_type::integral_type integral_type;
+    signature_t<Hash, CurveType> signature;
+    std::array<integral_type, 2> pubkey;
 
     std::size_t weight;
 };
 
-template<typename Hash>
+template<typename Hash, typename CurveType>
 struct block_data {
     typedef Hash hash_type;
     typedef typename Hash::digest_type digest_type;
@@ -86,45 +89,65 @@ struct block_data {
     std::size_t block_number;
     digest_type bank_hash;
     digest_type previous_bank_hash;
-    std::vector<vote_state<Hash>> votes;
+    std::uint32_t timestamp;
 };
 
-template<typename Hash, typename SignatureSchemeType>
+template<typename Hash, typename CurveType>
 struct state_type {
     typedef Hash hash_type;
-    typedef SignatureSchemeType signature_scheme_type;
-    typedef typename pubkey::public_key<signature_scheme_type>::signature_type signature_type;
+    typedef typename Hash::digest_type digest_type;
+    typedef CurveType signature_scheme_type;
 
     std::size_t confirmed;
     std::size_t new_confirmed;
-    std::vector<block_data<hash_type>> repl_data;
-    std::vector<signature_type> signatures;
+    digest_type bank_hash;
+    std::vector<block_data<hash_type, signature_scheme_type>> repl_data;
+    std::vector<vote_state<Hash, signature_scheme_type>> votes;
 };
 
-template<typename Hash>
-vote_state<Hash> tag_invoke(boost::json::value_to_tag<vote_state<Hash>>, const boost::json::value &jv) {
+template<typename Hash, typename CurveType>
+vote_state<Hash, CurveType>
+tag_invoke(boost::json::value_to_tag<vote_state<Hash, CurveType>>, const boost::json::value &jv) {
     auto &o = jv.as_object();
-    return {.slots =
-    [&](const boost::json::value &arr) {
-        std::vector<std::uint64_t> ret;
-        for (const boost::json::value &val: arr.as_array()) {
-            ret.emplace_back(boost::json::value_to<std::uint64_t>(val));
-        }
-        return ret;
-    }(o.at("slots")),
-            .hash =
+    return {
+            .signature =
             [&](const boost::json::value &v) {
-                typename Hash::digest_type ret;
-                std::istringstream istr(boost::json::value_to<std::string>(v));
-                istr >> ret;
-                return ret;
-            }(o.at("hash")),
-            .timestamp = boost::json::value_to<std::uint32_t>(o.at("timestamp")),
+                nil::marshalling::status_type status;
+                typedef typename CurveType::base_field_type::integral_type integral_type;
+                typedef typename CurveType::scalar_field_type::value_type value_type;
+                std::vector<uint8_t> st_decode = nil::crypto3::decode<nil::crypto3::codec::base<58>>(boost::json::value_to<std::string>(v));
+                integral_type x = nil::marshalling::pack<nil::marshalling::option::big_endian>(st_decode.begin(),
+                                                                                               st_decode.begin() +
+                                                                                               st_decode.size() / 3,
+                                                                                               status);
+                std::vector<uint8_t> st_decode2(st_decode.begin() + st_decode.size() / 3,
+                                                st_decode.begin() + st_decode.size() / 3 * 2);
+                integral_type y = nil::marshalling::pack<nil::marshalling::option::big_endian>(st_decode2, status);
+
+                std::vector<uint8_t> st_decode3(st_decode.begin() + st_decode.size() / 3 * 2, st_decode.end());
+                value_type s = nil::marshalling::pack<nil::marshalling::option::big_endian>(st_decode3, status);
+                return signature_t<Hash, CurveType>{.points = {x, y}, .scalar = s};
+            }(o.at("signature")),
+            .pubkey =
+            [&](const boost::json::value &v) {
+                nil::marshalling::status_type status;
+                typedef typename CurveType::base_field_type::integral_type integral_type;
+                std::vector<uint8_t> st_decode = nil::crypto3::decode<nil::crypto3::codec::base<58>>(boost::json::value_to<std::string>(v));
+                integral_type x = nil::marshalling::pack<nil::marshalling::option::big_endian>(st_decode.begin(),
+                                                                                               st_decode.begin() +
+                                                                                               st_decode.size() / 2,
+                                                                                               status);
+                std::vector<uint8_t> st_decode2(st_decode.begin() + st_decode.size() / 2, st_decode.end());
+                integral_type y = nil::marshalling::pack<nil::marshalling::option::big_endian>(st_decode2, status);
+
+                return std::array<typename CurveType::base_field_type::integral_type, 2>{x, y};
+            }(o.at("pubkey")),
             .weight = boost::json::value_to<std::size_t>(o.at("weight"))};
 }
 
-template<typename Hash>
-block_data<Hash> tag_invoke(boost::json::value_to_tag<block_data<Hash>>, const boost::json::value &jv) {
+template<typename Hash, typename CurveType>
+block_data<Hash, CurveType>
+tag_invoke(boost::json::value_to_tag<block_data<Hash, CurveType>>, const boost::json::value &jv) {
     auto &o = jv.as_object();
 
     return {
@@ -132,893 +155,155 @@ block_data<Hash> tag_invoke(boost::json::value_to_tag<block_data<Hash>>, const b
             .bank_hash =
             [&](const boost::json::value &v) {
                 typename Hash::digest_type ret;
-                std::istringstream istr(boost::json::value_to<std::string>(v));
-                istr >> ret;
+                nil::crypto3::decode<nil::crypto3::codec::base<58>>(
+                        boost::json::value_to<std::string>(v), ret.begin());
+
                 return ret;
             }(o.at("bank_hash")),
             .previous_bank_hash =
             [&](const boost::json::value &v) {
                 typename Hash::digest_type ret;
-                std::istringstream istr(boost::json::value_to<std::string>(v));
-                istr >> ret;
+                nil::crypto3::decode<nil::crypto3::codec::base<58>>(
+                        boost::json::value_to<std::string>(v), ret.begin());
                 return ret;
             }(o.at("previous_bank_hash")),
-            .votes =
-            [&](const boost::json::value &arr) {
-                std::vector<vote_state<Hash>> ret;
-                for (const boost::json::value &val: arr.as_array()) {
-                    ret.emplace_back(boost::json::value_to<vote_state<Hash>>(val));
-                }
-                return ret;
-            }(o.at("votes")),
-
+            .timestamp = boost::json::value_to<std::uint32_t>(o.at("timestamp")),
     };
 }
 
-template<typename Hash, typename SignatureSchemeType>
-state_type<Hash, SignatureSchemeType> tag_invoke(boost::json::value_to_tag<state_type<Hash, SignatureSchemeType>>,
-                                                 const boost::json::value &jv) {
+template<typename Hash, typename CurveType>
+state_type<Hash, CurveType> tag_invoke(boost::json::value_to_tag<state_type<Hash, CurveType>>,
+                                       const boost::json::value &jv) {
     auto &o = jv.as_object();
     return {.confirmed = boost::json::value_to<std::size_t>(o.at("confirmed")),
             .new_confirmed = boost::json::value_to<std::size_t>(o.at("new_confirmed")),
+            .bank_hash =
+            [&](const boost::json::value &v) {
+                typename Hash::digest_type ret;
+                nil::crypto3::decode<nil::crypto3::codec::base<58>>(
+                        boost::json::value_to<std::string>(v), ret.begin());
+                return ret;
+            }(o.at("bank_hash")),
             .repl_data =
             [&](const boost::json::value &arr) {
-                std::vector<block_data<Hash>> ret;
+                std::vector<block_data<Hash, CurveType>> ret;
                 for (const boost::json::value &val: arr.as_array()) {
-                    ret.emplace_back(boost::json::value_to<block_data<Hash>>(val));
+                    ret.emplace_back(boost::json::value_to<block_data<Hash, CurveType>>(val));
                 }
                 return ret;
             }(o.at("repl_data")),
-            .signatures =
+            .votes =
             [&](const boost::json::value &arr) {
-                std::vector<typename pubkey::public_key<SignatureSchemeType>::signature_type> ret;
+                std::vector<vote_state<Hash, CurveType>> ret;
                 for (const boost::json::value &val: arr.as_array()) {
-                    typename pubkey::public_key<SignatureSchemeType>::signature_type sig;
-                    std::istringstream istr(val.as_string().data());
-                    istr >> sig;
-                    ret.emplace_back(sig);
+                    ret.emplace_back(boost::json::value_to<vote_state<Hash, CurveType>>(val));
                 }
                 return ret;
-            }(o.at("signatures"))};
-}
-
-void sha256_process() {
-    using curve_type = algebra::curves::pallas;
-    using BlueprintFieldType = typename curve_type::base_field_type;
-    constexpr std::size_t WitnessColumns = 9;
-    constexpr std::size_t PublicInputColumns = 1;
-    constexpr std::size_t ConstantColumns = 1;
-    constexpr std::size_t SelectorColumns = 10;
-    using hash_type = nil::crypto3::hashes::keccak_1600<256>;
-    constexpr std::size_t Lambda = 1;
-
-    using ArithmetizationParams = zk::snark::plonk_arithmetization_params<WitnessColumns,
-            PublicInputColumns, ConstantColumns, SelectorColumns>;
-    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType,
-            ArithmetizationParams>;
-    using var = zk::snark::plonk_variable<BlueprintFieldType>;
-    using AssignmentType = zk::blueprint_assignment_table<ArithmetizationType>;
-
-    using component_type = zk::components::sha256_process<ArithmetizationType, curve_type,
-            0, 1, 2, 3, 4, 5, 6, 7, 8>;
-    typename BlueprintFieldType::value_type s = typename BlueprintFieldType::value_type(2).pow(29);
-    std::array<typename ArithmetizationType::field_type::value_type, 24> public_input = {0x6a09e667, 0xbb67ae85,
-                                                                                         0x3c6ef372, 0xa54ff53a,
-                                                                                         0x510e527f, 0x9b05688c,
-                                                                                         0x1f83d9ab, 0x5be0cd19, s - 5,
-                                                                                         s + 5, s - 6, s + 6, s - 7,
-                                                                                         s + 7, s - 8, s + 8, s - 9,
-                                                                                         s + 9, s + 10, s - 10, s + 11,
-                                                                                         s - 11, s + 12, s - 12};
-    std::array<var, 8> input_state_var = {var(0, 0, false, var::column_type::public_input),
-                                          var(0, 1, false, var::column_type::public_input),
-                                          var(0, 2, false, var::column_type::public_input),
-                                          var(0, 3, false, var::column_type::public_input),
-                                          var(0, 4, false, var::column_type::public_input),
-                                          var(0, 5, false, var::column_type::public_input),
-                                          var(0, 6, false, var::column_type::public_input),
-                                          var(0, 7, false, var::column_type::public_input)};
-
-    std::array<typename BlueprintFieldType::integral_type, 64>
-            round_constant = {0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
-                              0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
-                              0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786,
-                              0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-                              0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,
-                              0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
-                              0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
-                              0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-                              0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a,
-                              0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-                              0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2};
-
-    std::array<var, 16> input_words_var;
-    for (int i = 0; i < 16; i++) {
-        input_words_var[i] = var(0, 8 + i, false, var::column_type::public_input);
-    }
-    std::array<typename BlueprintFieldType::integral_type, 64> message_schedule_array;
-    for (std::size_t i = 0; i < 16; i++) {
-        message_schedule_array[i] = typename BlueprintFieldType::integral_type(public_input[8 + i].data);
-    }
-    for (std::size_t i = 16; i < 64; i++) {
-        typename BlueprintFieldType::integral_type s0 =
-                ((message_schedule_array[i - 15] >> 7) | ((message_schedule_array[i - 15] << (32 - 7))
-                                                          & typename BlueprintFieldType::integral_type(
-                        (typename BlueprintFieldType::value_type(2).pow(32) - 1).data))) ^
-                ((message_schedule_array[i - 15] >> 18) | ((message_schedule_array[i - 15] << (32 - 18))
-                                                           & typename BlueprintFieldType::integral_type(
-                        (typename BlueprintFieldType::value_type(2).pow(32) - 1).data)))
-                ^ (message_schedule_array[i - 15] >> 3);
-        typename BlueprintFieldType::integral_type s1 =
-                ((message_schedule_array[i - 2] >> 17) | ((message_schedule_array[i - 2] << (32 - 17))
-                                                          & typename BlueprintFieldType::integral_type(
-                        (typename BlueprintFieldType::value_type(2).pow(32) - 1).data))) ^
-                ((message_schedule_array[i - 2] >> 19) | ((message_schedule_array[i - 2] << (32 - 19))
-                                                          & typename BlueprintFieldType::integral_type(
-                        (typename BlueprintFieldType::value_type(2).pow(32) - 1).data)))
-                ^ (message_schedule_array[i - 2] >> 10);
-        message_schedule_array[i] = (message_schedule_array[i - 16] + s0 + s1 + message_schedule_array[i - 7]) %
-                                    typename curve_type::base_field_type::integral_type(
-                                            typename curve_type::base_field_type::value_type(2).pow(32).data);
-    }
-    typename ArithmetizationType::field_type::integral_type a = typename ArithmetizationType::field_type::integral_type(
-            public_input[0].data);
-    typename ArithmetizationType::field_type::integral_type b = typename ArithmetizationType::field_type::integral_type(
-            public_input[1].data);
-    typename ArithmetizationType::field_type::integral_type c = typename ArithmetizationType::field_type::integral_type(
-            public_input[2].data);
-    typename ArithmetizationType::field_type::integral_type d = typename ArithmetizationType::field_type::integral_type(
-            public_input[3].data);
-    typename ArithmetizationType::field_type::integral_type e = typename ArithmetizationType::field_type::integral_type(
-            public_input[4].data);
-    typename ArithmetizationType::field_type::integral_type f = typename ArithmetizationType::field_type::integral_type(
-            public_input[5].data);
-    typename ArithmetizationType::field_type::integral_type g = typename ArithmetizationType::field_type::integral_type(
-            public_input[6].data);
-    typename ArithmetizationType::field_type::integral_type h = typename ArithmetizationType::field_type::integral_type(
-            public_input[7].data);
-    for (std::size_t i = 0; i < 64; i++) {
-        typename BlueprintFieldType::integral_type S0 = ((a >> 2) | ((a << (32 - 2))
-                                                                     & typename BlueprintFieldType::integral_type(
-                (typename BlueprintFieldType::value_type(2).pow(32) - 1).data))) ^
-                                                        ((a >> 13) | ((a << (32 - 13))
-                                                                      & typename BlueprintFieldType::integral_type(
-                                                                (typename BlueprintFieldType::value_type(2).pow(32) -
-                                                                 1).data)))
-                                                        ^ ((a >> 22) | ((a << (32 - 22))
-                                                                        & typename BlueprintFieldType::integral_type(
-                (typename BlueprintFieldType::value_type(2).pow(32) - 1).data)));
-        typename BlueprintFieldType::integral_type S1 = ((e >> 6) | ((e << (32 - 6))
-                                                                     & typename BlueprintFieldType::integral_type(
-                (typename BlueprintFieldType::value_type(2).pow(32) - 1).data))) ^
-                                                        ((e >> 11) | ((e << (32 - 11))
-                                                                      & typename BlueprintFieldType::integral_type(
-                                                                (typename BlueprintFieldType::value_type(2).pow(32) -
-                                                                 1).data)))
-                                                        ^ ((e >> 25) | ((e << (32 - 25))
-                                                                        & typename BlueprintFieldType::integral_type(
-                (typename BlueprintFieldType::value_type(2).pow(32) - 1).data)));
-        typename BlueprintFieldType::integral_type maj = (a & b) ^ (a & c) ^ (b & c);
-        typename BlueprintFieldType::integral_type ch = (e & f) ^ ((~e) & g);
-        typename BlueprintFieldType::integral_type tmp1 = h + S1 + ch + round_constant[i] + message_schedule_array[i];
-        typename BlueprintFieldType::integral_type tmp2 = S0 + maj;
-        h = g;
-        g = f;
-        f = e;
-        e = (d + tmp1) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data);
-        d = c;
-        c = b;
-        b = a;
-        a = (tmp1 + tmp2) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data);
-    }
-    std::array<typename BlueprintFieldType::integral_type, 8> result_state = {
-            (a + typename ArithmetizationType::field_type::integral_type(public_input[0].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data),
-            (b + typename ArithmetizationType::field_type::integral_type(public_input[1].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data),
-            (c + typename ArithmetizationType::field_type::integral_type(public_input[2].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data),
-            (d + typename ArithmetizationType::field_type::integral_type(public_input[3].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data),
-            (e + typename ArithmetizationType::field_type::integral_type(public_input[4].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data),
-            (f + typename ArithmetizationType::field_type::integral_type(public_input[5].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data),
-            (g + typename ArithmetizationType::field_type::integral_type(public_input[6].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data),
-            (h + typename ArithmetizationType::field_type::integral_type(public_input[7].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(32).data)};
-    auto result_check = [result_state](AssignmentType &assignment,
-                                       component_type::result_type &real_res) {
-        for (std::size_t i = 0; i < 8; i++) {
-            assert(result_state[i] == typename ArithmetizationType::field_type::integral_type(
-                    assignment.var_value(real_res.output_state[i]).data));
-        }
+            }(o.at("votes"))
     };
-    typename component_type::params_type params = {input_state_var, input_words_var};
-    test_component<component_type, BlueprintFieldType, ArithmetizationParams, hash_type, Lambda>(params, public_input,
-                                                                                                 result_check);
-}
-
-void non_native_demo() {
-    constexpr std::size_t complexity = 1;
-
-    using curve_type = algebra::curves::pallas;
-    using ed25519_type = algebra::curves::ed25519;
-    using BlueprintFieldType = typename curve_type::base_field_type;
-    constexpr std::size_t WitnessColumns = 9;
-    constexpr std::size_t PublicInputColumns = 1;
-    constexpr std::size_t ConstantColumns = 1;
-    constexpr std::size_t SelectorColumns = 17;
-    using ArithmetizationParams =
-            zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
-    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
-    using AssignmentType = zk::blueprint_assignment_table<ArithmetizationType>;
-    using hash_type = nil::crypto3::hashes::keccak_1600<256>;
-    constexpr std::size_t Lambda = 1;
-
-    using var = zk::snark::plonk_variable<BlueprintFieldType>;
-
-    using mul_component_type = zk::components::variable_base_multiplication<ArithmetizationType, curve_type, ed25519_type, 0, 1, 2, 3,
-            4, 5, 6, 7, 8>;
-    using sha256_component_type = zk::components::sha256_process<ArithmetizationType, curve_type, 0, 1, 2, 3, 4, 5, 6, 7, 8>;
-    typename BlueprintFieldType::value_type s = typename BlueprintFieldType::value_type(2).pow(29);
-
-    std::array<var, 8> input_state_var = {var(0, 0, false, var::column_type::public_input),
-                                          var(0, 1, false, var::column_type::public_input),
-                                          var(0, 2, false, var::column_type::public_input),
-                                          var(0, 3, false, var::column_type::public_input),
-                                          var(0, 4, false, var::column_type::public_input),
-                                          var(0, 5, false, var::column_type::public_input),
-                                          var(0, 6, false, var::column_type::public_input),
-                                          var(0, 7, false, var::column_type::public_input)};
-    std::array<var, 16> input_words_var;
-    for (int i = 0; i < 16; i++) {
-        input_words_var[i] = var(0, 8 + i, false, var::column_type::public_input);
-    }
-    typename sha256_component_type::params_type sha_params = {input_state_var, input_words_var};
-
-    std::array<var, 4> input_var_Xa = {var(0, 24, false, var::column_type::public_input),
-                                       var(0, 25, false, var::column_type::public_input),
-                                       var(0, 26, false, var::column_type::public_input),
-                                       var(0, 27, false, var::column_type::public_input)};
-    std::array<var, 4> input_var_Xb = {var(0, 28, false, var::column_type::public_input),
-                                       var(0, 29, false, var::column_type::public_input),
-                                       var(0, 30, false, var::column_type::public_input),
-                                       var(0, 31, false, var::column_type::public_input)};
-
-    var b_var = var(0, 32, false, var::column_type::public_input);
-
-    typename mul_component_type::params_type mul_params = {{input_var_Xa, input_var_Xb}, b_var};
-
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type T = algebra::random_element<ed25519_type::template g1_type<algebra::curves::coordinates::affine>>();
-    ed25519_type::scalar_field_type::value_type b = algebra::random_element<ed25519_type::scalar_field_type>();
-    ed25519_type::base_field_type::integral_type integral_b = ed25519_type::base_field_type::integral_type(b.data);
-    ed25519_type::base_field_type::integral_type Tx = ed25519_type::base_field_type::integral_type(T.X.data);
-    ed25519_type::base_field_type::integral_type Ty = ed25519_type::base_field_type::integral_type(T.Y.data);
-    typename ed25519_type::base_field_type::integral_type base = 1;
-    typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
-
-    std::array<typename ArithmetizationType::field_type::value_type, 33> public_input = {0x6a09e667, 0xbb67ae85,
-                                                                                         0x3c6ef372, 0xa54ff53a,
-                                                                                         0x510e527f, 0x9b05688c,
-                                                                                         0x1f83d9ab, 0x5be0cd19, s - 5,
-                                                                                         s + 5, s - 6, s + 6, s - 7,
-                                                                                         s + 7, s - 8, s + 8, s - 9,
-                                                                                         s + 9, s + 10, s - 10, s + 11,
-                                                                                         s - 11, s + 12, s - 12,
-                                                                                         Tx & mask, (Tx >> 66) & mask,
-                                                                                         (Tx >> 132) & mask,
-                                                                                         (Tx >> 198) & mask,
-                                                                                         Ty & mask, (Ty >> 66) & mask,
-                                                                                         (Ty >> 132) & mask,
-                                                                                         (Ty >> 198) & mask,
-                                                                                         integral_b};
-
-    zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams> desc;
-
-    zk::blueprint<ArithmetizationType> bp(desc);
-    zk::blueprint_private_assignment_table<ArithmetizationType> private_assignment(desc);
-    zk::blueprint_public_assignment_table<ArithmetizationType> public_assignment(desc);
-    zk::blueprint_assignment_table<ArithmetizationType> assignment_bp(private_assignment, public_assignment);
-
-    std::size_t start_row = 0;
-    zk::components::allocate<sha256_component_type>(bp, 1);
-    zk::components::allocate<mul_component_type>(bp, complexity);
-
-    bp.allocate_rows(public_input.size());
-
-    sha256_component_type::generate_circuit(bp, public_assignment, sha_params, start_row);
-    sha256_component_type::generate_assignments(assignment_bp, sha_params, start_row);
-    start_row += sha256_component_type::rows_amount;
-
-    for (std::size_t i = 0; i < complexity; i++) {
-
-        std::size_t row = start_row + i * mul_component_type::rows_amount;
-
-        mul_component_type::generate_circuit(bp, public_assignment, mul_params, row);
-
-        mul_component_type::generate_assignments(assignment_bp, mul_params, row);
-    }
-
-    assignment_bp.padding();
-    zk::snark::plonk_assignment_table<BlueprintFieldType, ArithmetizationParams> assignments(private_assignment,
-                                                                                             public_assignment);
-
-    //profiling(assignments);
-    using params = zk::snark::placeholder_params<BlueprintFieldType, ArithmetizationParams, hash_type, hash_type, Lambda>;
-
-    using fri_type = typename zk::commitments::fri<BlueprintFieldType, typename params::merkle_hash_type,
-            typename params::transcript_hash_type, 2, 1>;
-
-    std::size_t table_rows_log = std::ceil(std::log2(desc.rows_amount));
-
-    typename fri_type::params_type fri_params = create_fri_params<fri_type, BlueprintFieldType>(table_rows_log);
-
-    std::size_t permutation_size = desc.witness_columns + desc.public_input_columns + desc.constant_columns;
-
-    typename zk::snark::placeholder_public_preprocessor<BlueprintFieldType, params>::preprocessed_data_type public_preprocessed_data =
-            zk::snark::placeholder_public_preprocessor<BlueprintFieldType, params>::process(bp, public_assignment, desc,
-                                                                                            fri_params,
-                                                                                            permutation_size);
-    typename zk::snark::placeholder_private_preprocessor<BlueprintFieldType, params>::preprocessed_data_type private_preprocessed_data =
-            zk::snark::placeholder_private_preprocessor<BlueprintFieldType, params>::process(bp, private_assignment,
-                                                                                             desc, fri_params);
-
-    auto placeholder_proof = zk::snark::placeholder_prover<BlueprintFieldType, params>::process(
-            public_preprocessed_data, private_preprocessed_data, desc, bp, assignments, fri_params);
-
-    bool verifier_res = zk::snark::placeholder_verifier<BlueprintFieldType, params>::process(
-            public_preprocessed_data, placeholder_proof, bp, fri_params);
-    std::cout << "Proof check: " << verifier_res << std::endl;
-}
-
-void sha512_process() {
-    using curve_type = algebra::curves::pallas;
-    using BlueprintFieldType = typename curve_type::base_field_type;
-    constexpr std::size_t WitnessColumns = 9;
-    constexpr std::size_t PublicInputColumns = 1;
-    constexpr std::size_t ConstantColumns = 1;
-    constexpr std::size_t SelectorColumns = 10;
-    using hash_type = nil::crypto3::hashes::keccak_1600<256>;
-    constexpr std::size_t Lambda = 1;
-
-    using ArithmetizationParams = zk::snark::plonk_arithmetization_params<WitnessColumns,
-            PublicInputColumns, ConstantColumns, SelectorColumns>;
-    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType,
-            ArithmetizationParams>;
-    using var = zk::snark::plonk_variable<BlueprintFieldType>;
-    using AssignmentType = zk::blueprint_assignment_table<ArithmetizationType>;
-
-    using component_type = zk::components::sha512_process<ArithmetizationType, curve_type,
-            0, 1, 2, 3, 4, 5, 6, 7, 8>;
-    typename BlueprintFieldType::value_type s = typename BlueprintFieldType::value_type(2).pow(59);
-    std::array<typename ArithmetizationType::field_type::value_type, 24> public_input = {0x6a09e667f3bcc908_cppui64,
-                                                                                         0xbb67ae8584caa73b_cppui64,
-                                                                                         0x3c6ef372fe94f82b_cppui64,
-                                                                                         0xa54ff53a5f1d36f1_cppui64,
-                                                                                         0x510e527fade682d1_cppui64,
-                                                                                         0x9b05688c2b3e6c1f_cppui64,
-                                                                                         0x1f83d9abfb41bd6b_cppui64,
-                                                                                         0x5be0cd19137e2179_cppui64,
-                                                                                         s - 5, s + 5, s - 6, s + 6,
-                                                                                         s - 7, s + 7, s - 8, s + 8,
-                                                                                         s - 9, s + 9, s + 10, s - 10,
-                                                                                         s + 11, s - 11, s + 12,
-                                                                                         s - 12};
-    std::array<var, 8> input_state_var = {var(0, 0, false, var::column_type::public_input),
-                                          var(0, 1, false, var::column_type::public_input),
-                                          var(0, 2, false, var::column_type::public_input),
-                                          var(0, 3, false, var::column_type::public_input),
-                                          var(0, 4, false, var::column_type::public_input),
-                                          var(0, 5, false, var::column_type::public_input),
-                                          var(0, 6, false, var::column_type::public_input),
-                                          var(0, 7, false, var::column_type::public_input)};
-
-    std::array<typename BlueprintFieldType::integral_type, 80>
-            round_constant = {
-            0x428a2f98d728ae22_cppui64, 0x7137449123ef65cd_cppui64, 0xb5c0fbcfec4d3b2f_cppui64,
-            0xe9b5dba58189dbbc_cppui64,
-            0x3956c25bf348b538_cppui64, 0x59f111f1b605d019_cppui64, 0x923f82a4af194f9b_cppui64,
-            0xab1c5ed5da6d8118_cppui64,
-            0xd807aa98a3030242_cppui64, 0x12835b0145706fbe_cppui64, 0x243185be4ee4b28c_cppui64,
-            0x550c7dc3d5ffb4e2_cppui64,
-            0x72be5d74f27b896f_cppui64, 0x80deb1fe3b1696b1_cppui64, 0x9bdc06a725c71235_cppui64,
-            0xc19bf174cf692694_cppui64,
-            0xe49b69c19ef14ad2_cppui64, 0xefbe4786384f25e3_cppui64, 0x0fc19dc68b8cd5b5_cppui64,
-            0x240ca1cc77ac9c65_cppui64,
-            0x2de92c6f592b0275_cppui64, 0x4a7484aa6ea6e483_cppui64, 0x5cb0a9dcbd41fbd4_cppui64,
-            0x76f988da831153b5_cppui64,
-            0x983e5152ee66dfab_cppui64, 0xa831c66d2db43210_cppui64, 0xb00327c898fb213f_cppui64,
-            0xbf597fc7beef0ee4_cppui64,
-            0xc6e00bf33da88fc2_cppui64, 0xd5a79147930aa725_cppui64, 0x06ca6351e003826f_cppui64,
-            0x142929670a0e6e70_cppui64,
-            0x27b70a8546d22ffc_cppui64, 0x2e1b21385c26c926_cppui64, 0x4d2c6dfc5ac42aed_cppui64,
-            0x53380d139d95b3df_cppui64,
-            0x650a73548baf63de_cppui64, 0x766a0abb3c77b2a8_cppui64, 0x81c2c92e47edaee6_cppui64,
-            0x92722c851482353b_cppui64,
-            0xa2bfe8a14cf10364_cppui64, 0xa81a664bbc423001_cppui64, 0xc24b8b70d0f89791_cppui64,
-            0xc76c51a30654be30_cppui64,
-            0xd192e819d6ef5218_cppui64, 0xd69906245565a910_cppui64, 0xf40e35855771202a_cppui64,
-            0x106aa07032bbd1b8_cppui64,
-            0x19a4c116b8d2d0c8_cppui64, 0x1e376c085141ab53_cppui64, 0x2748774cdf8eeb99_cppui64,
-            0x34b0bcb5e19b48a8_cppui64,
-            0x391c0cb3c5c95a63_cppui64, 0x4ed8aa4ae3418acb_cppui64, 0x5b9cca4f7763e373_cppui64,
-            0x682e6ff3d6b2b8a3_cppui64,
-            0x748f82ee5defb2fc_cppui64, 0x78a5636f43172f60_cppui64, 0x84c87814a1f0ab72_cppui64,
-            0x8cc702081a6439ec_cppui64,
-            0x90befffa23631e28_cppui64, 0xa4506cebde82bde9_cppui64, 0xbef9a3f7b2c67915_cppui64,
-            0xc67178f2e372532b_cppui64,
-            0xca273eceea26619c_cppui64, 0xd186b8c721c0c207_cppui64, 0xeada7dd6cde0eb1e_cppui64,
-            0xf57d4f7fee6ed178_cppui64,
-            0x06f067aa72176fba_cppui64, 0x0a637dc5a2c898a6_cppui64, 0x113f9804bef90dae_cppui64,
-            0x1b710b35131c471b_cppui64,
-            0x28db77f523047d84_cppui64, 0x32caab7b40c72493_cppui64, 0x3c9ebe0a15c9bebc_cppui64,
-            0x431d67c49c100d4c_cppui64,
-            0x4cc5d4becb3e42b6_cppui64, 0x597f299cfc657e2a_cppui64, 0x5fcb6fab3ad6faec_cppui64,
-            0x6c44198c4a475817_cppui64};
-
-    std::array<var, 16> input_words_var;
-    for (int i = 0; i < 16; i++) {
-        input_words_var[i] = var(0, 8 + i, false, var::column_type::public_input);
-    }
-    std::array<typename BlueprintFieldType::integral_type, 80> message_schedule_array;
-    for (std::size_t i = 0; i < 16; i++) {
-        message_schedule_array[i] = typename BlueprintFieldType::integral_type(public_input[8 + i].data);
-    }
-    for (std::size_t i = 16; i < 80; i++) {
-        typename BlueprintFieldType::integral_type s0 =
-                ((message_schedule_array[i - 15] >> 7) | ((message_schedule_array[i - 15] << (64 - 7))
-                                                          & typename BlueprintFieldType::integral_type(
-                        (typename BlueprintFieldType::value_type(2).pow(64) - 1).data))) ^
-                ((message_schedule_array[i - 15] >> 18) | ((message_schedule_array[i - 15] << (64 - 18))
-                                                           & typename BlueprintFieldType::integral_type(
-                        (typename BlueprintFieldType::value_type(2).pow(64) - 1).data)))
-                ^ (message_schedule_array[i - 15] >> 3);
-        typename BlueprintFieldType::integral_type s1 =
-                ((message_schedule_array[i - 2] >> 17) | ((message_schedule_array[i - 2] << (64 - 17))
-                                                          & typename BlueprintFieldType::integral_type(
-                        (typename BlueprintFieldType::value_type(2).pow(64) - 1).data))) ^
-                ((message_schedule_array[i - 2] >> 19) | ((message_schedule_array[i - 2] << (64 - 19))
-                                                          & typename BlueprintFieldType::integral_type(
-                        (typename BlueprintFieldType::value_type(2).pow(64) - 1).data)))
-                ^ (message_schedule_array[i - 2] >> 10);
-        message_schedule_array[i] = (message_schedule_array[i - 16] + s0 + s1 + message_schedule_array[i - 7]) %
-                                    typename curve_type::base_field_type::integral_type(
-                                            typename curve_type::base_field_type::value_type(2).pow(64).data);
-    }
-    typename ArithmetizationType::field_type::integral_type a = typename ArithmetizationType::field_type::integral_type(
-            public_input[0].data);
-    typename ArithmetizationType::field_type::integral_type b = typename ArithmetizationType::field_type::integral_type(
-            public_input[1].data);
-    typename ArithmetizationType::field_type::integral_type c = typename ArithmetizationType::field_type::integral_type(
-            public_input[2].data);
-    typename ArithmetizationType::field_type::integral_type d = typename ArithmetizationType::field_type::integral_type(
-            public_input[3].data);
-    typename ArithmetizationType::field_type::integral_type e = typename ArithmetizationType::field_type::integral_type(
-            public_input[4].data);
-    typename ArithmetizationType::field_type::integral_type f = typename ArithmetizationType::field_type::integral_type(
-            public_input[5].data);
-    typename ArithmetizationType::field_type::integral_type g = typename ArithmetizationType::field_type::integral_type(
-            public_input[6].data);
-    typename ArithmetizationType::field_type::integral_type h = typename ArithmetizationType::field_type::integral_type(
-            public_input[7].data);
-    for (std::size_t i = 0; i < 80; i++) {
-        typename BlueprintFieldType::integral_type S0 = ((a >> 2) | ((a << (64 - 2))
-                                                                     & typename BlueprintFieldType::integral_type(
-                (typename BlueprintFieldType::value_type(2).pow(64) - 1).data))) ^
-                                                        ((a >> 13) | ((a << (64 - 13))
-                                                                      & typename BlueprintFieldType::integral_type(
-                                                                (typename BlueprintFieldType::value_type(2).pow(64) -
-                                                                 1).data)))
-                                                        ^ ((a >> 22) | ((a << (64 - 22))
-                                                                        & typename BlueprintFieldType::integral_type(
-                (typename BlueprintFieldType::value_type(2).pow(64) - 1).data)));
-        typename BlueprintFieldType::integral_type S1 = ((e >> 6) | ((e << (64 - 6))
-                                                                     & typename BlueprintFieldType::integral_type(
-                (typename BlueprintFieldType::value_type(2).pow(64) - 1).data))) ^
-                                                        ((e >> 11) | ((e << (64 - 11))
-                                                                      & typename BlueprintFieldType::integral_type(
-                                                                (typename BlueprintFieldType::value_type(2).pow(64) -
-                                                                 1).data)))
-                                                        ^ ((e >> 25) | ((e << (64 - 25))
-                                                                        & typename BlueprintFieldType::integral_type(
-                (typename BlueprintFieldType::value_type(2).pow(64) - 1).data)));
-        typename BlueprintFieldType::integral_type maj = (a & b) ^ (a & c) ^ (b & c);
-        typename BlueprintFieldType::integral_type ch = (e & f) ^ ((~e) & g);
-        typename BlueprintFieldType::integral_type tmp1 = h + S1 + ch + round_constant[i] + message_schedule_array[i];
-        typename BlueprintFieldType::integral_type tmp2 = S0 + maj;
-        h = g;
-        g = f;
-        f = e;
-        e = (d + tmp1) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data);
-        d = c;
-        c = b;
-        b = a;
-        a = (tmp1 + tmp2) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data);
-    }
-    std::array<typename BlueprintFieldType::integral_type, 8> result_state = {
-            (a + typename ArithmetizationType::field_type::integral_type(public_input[0].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data),
-            (b + typename ArithmetizationType::field_type::integral_type(public_input[1].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data),
-            (c + typename ArithmetizationType::field_type::integral_type(public_input[2].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data),
-            (d + typename ArithmetizationType::field_type::integral_type(public_input[3].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data),
-            (e + typename ArithmetizationType::field_type::integral_type(public_input[4].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data),
-            (f + typename ArithmetizationType::field_type::integral_type(public_input[5].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data),
-            (g + typename ArithmetizationType::field_type::integral_type(public_input[6].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data),
-            (h + typename ArithmetizationType::field_type::integral_type(public_input[7].data)) %
-            typename curve_type::base_field_type::integral_type(
-                    typename curve_type::base_field_type::value_type(2).pow(64).data)};
-    auto result_check = [result_state](AssignmentType &assignment,
-                                       component_type::result_type &real_res) {
-        for (std::size_t i = 0; i < 8; i++) {
-            assert(result_state[i] == typename ArithmetizationType::field_type::integral_type(
-                    assignment.var_value(real_res.output_state[i]).data));
-        }
-    };
-    typename component_type::params_type params = {input_state_var, input_words_var};
-    test_component<component_type, BlueprintFieldType, ArithmetizationParams, hash_type, Lambda>(params, public_input,
-                                                                                                 result_check);
-}
-
-void non_native_range() {
-    using curve_type = algebra::curves::pallas;
-    using BlueprintFieldType = typename curve_type::base_field_type;
-    constexpr std::size_t WitnessColumns = 9;
-    constexpr std::size_t PublicInputColumns = 1;
-    constexpr std::size_t ConstantColumns = 0;
-    constexpr std::size_t SelectorColumns = 1;
-    using ArithmetizationParams =
-            zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
-    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
-    using AssignmentType = zk::blueprint_assignment_table<ArithmetizationType>;
-    using hash_type = nil::crypto3::hashes::keccak_1600<256>;
-    constexpr std::size_t Lambda = 1;
-
-    using var = zk::snark::plonk_variable<BlueprintFieldType>;
-
-    using component_type = zk::components::non_native_range<ArithmetizationType, curve_type, 0, 1, 2, 3,
-            4, 5, 6, 7, 8>;
-
-    std::array<var, 4> input_var = {var(0, 0, false, var::column_type::public_input),
-                                    var(0, 1, false, var::column_type::public_input),
-                                    var(0, 2, false, var::column_type::public_input),
-                                    var(0, 3, false, var::column_type::public_input)};
-
-    typename component_type::params_type params = {input_var};
-
-    std::vector<typename BlueprintFieldType::value_type> public_input = {455245345345345, 523553453454343,
-                                                                         68753453534534689, 54355345344544};
-
-    auto result_check = [](AssignmentType &assignment,
-                           component_type::result_type &real_res) {
-    };
-
-    test_component<component_type, BlueprintFieldType, ArithmetizationParams, hash_type, Lambda>(params, public_input,
-                                                                                                 result_check);
-}
-
-void fixed_base_mul() {
-    using curve_type = algebra::curves::pallas;
-    using ed25519_type = algebra::curves::ed25519;
-    using BlueprintFieldType = typename curve_type::base_field_type;
-    constexpr std::size_t WitnessColumns = 9;
-    constexpr std::size_t PublicInputColumns = 1;
-    constexpr std::size_t ConstantColumns = 1;
-    constexpr std::size_t SelectorColumns = 6;
-    using ArithmetizationParams =
-            zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
-    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
-    using AssignmentType = zk::blueprint_assignment_table<ArithmetizationType>;
-    using hash_type = nil::crypto3::hashes::keccak_1600<256>;
-    constexpr std::size_t Lambda = 1;
-
-    using var = zk::snark::plonk_variable<BlueprintFieldType>;
-
-    using component_type = zk::components::fixed_base_multiplication<ArithmetizationType, curve_type, ed25519_type, 0, 1, 2, 3,
-            4, 5, 6, 7, 8>;
-
-    var var_b = var(0, 0, false, var::column_type::public_input);
-
-    ed25519_type::scalar_field_type::value_type b = algebra::random_element<ed25519_type::scalar_field_type>();
-
-    typename component_type::params_type params = {{var_b}};
-
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type B = ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type::one();
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type P = b * B;
-    ed25519_type::base_field_type::integral_type Px = ed25519_type::base_field_type::integral_type(P.X.data);
-    ed25519_type::base_field_type::integral_type Py = ed25519_type::base_field_type::integral_type(P.Y.data);
-    typename ed25519_type::base_field_type::integral_type base = 1;
-    typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
-
-    std::vector<typename BlueprintFieldType::value_type> public_input = {
-            typename curve_type::base_field_type::integral_type(b.data)};
-
-    auto result_check = [Px, Py](AssignmentType &assignment,
-                                 component_type::result_type &real_res) {
-        typename ed25519_type::base_field_type::integral_type base = 1;
-        typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
-        for (std::size_t i = 0; i < 4; i++) {
-            assert(typename BlueprintFieldType::value_type((Px >>66*i) & mask) == assignment.var_value(real_res.output.x[i]));
-            assert(typename BlueprintFieldType::value_type((Py >>66*i) & mask) == assignment.var_value(real_res.output.y[i]));
-        }
-    };
-
-    test_component<component_type, BlueprintFieldType, ArithmetizationParams, hash_type, Lambda>(params, public_input,
-                                                                                                 result_check);
-}
-
-void complete_addidition() {
-    using curve_type = algebra::curves::pallas;
-    using ed25519_type = algebra::curves::ed25519;
-    using BlueprintFieldType = typename curve_type::base_field_type;
-    constexpr std::size_t WitnessColumns = 9;
-    constexpr std::size_t PublicInputColumns = 1;
-    constexpr std::size_t ConstantColumns = 1;
-    constexpr std::size_t SelectorColumns = 6;
-    using ArithmetizationParams =
-            zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
-    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
-    using AssignmentType = zk::blueprint_assignment_table<ArithmetizationType>;
-    using hash_type = nil::crypto3::hashes::keccak_1600<256>;
-    constexpr std::size_t Lambda = 1;
-
-    using var = zk::snark::plonk_variable<BlueprintFieldType>;
-
-    using component_type = zk::components::complete_addition<ArithmetizationType, curve_type, ed25519_type, 0, 1, 2, 3,
-            4, 5, 6, 7, 8>;
-
-    std::array<var, 4> input_var_Xa = {var(0, 0, false, var::column_type::public_input),
-                                       var(0, 1, false, var::column_type::public_input),
-                                       var(0, 2, false, var::column_type::public_input),
-                                       var(0, 3, false, var::column_type::public_input)};
-    std::array<var, 4> input_var_Xb = {var(0, 4, false, var::column_type::public_input),
-                                       var(0, 5, false, var::column_type::public_input),
-                                       var(0, 6, false, var::column_type::public_input),
-                                       var(0, 7, false, var::column_type::public_input)};
-
-    std::array<var, 4> input_var_Ya = {var(0, 8, false, var::column_type::public_input),
-                                       var(0, 9, false, var::column_type::public_input),
-                                       var(0, 10, false, var::column_type::public_input),
-                                       var(0, 11, false, var::column_type::public_input)};
-    std::array<var, 4> input_var_Yb = {var(0, 12, false, var::column_type::public_input),
-                                       var(0, 13, false, var::column_type::public_input),
-                                       var(0, 14, false, var::column_type::public_input),
-                                       var(0, 15, false, var::column_type::public_input)};
-
-    var b = var(0, 16, false, var::column_type::public_input);
-
-    typename component_type::params_type params = {{input_var_Xa, input_var_Xb},
-                                                   {input_var_Ya, input_var_Yb}};
-
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type T = algebra::random_element<ed25519_type::template g1_type<algebra::curves::coordinates::affine>>();
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type R = algebra::random_element<ed25519_type::template g1_type<algebra::curves::coordinates::affine>>();
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type P = T + R;
-    ed25519_type::base_field_type::integral_type Tx = ed25519_type::base_field_type::integral_type(T.X.data);
-    ed25519_type::base_field_type::integral_type Ty = ed25519_type::base_field_type::integral_type(T.Y.data);
-    ed25519_type::base_field_type::integral_type Rx = ed25519_type::base_field_type::integral_type(R.X.data);
-    ed25519_type::base_field_type::integral_type Ry = ed25519_type::base_field_type::integral_type(R.Y.data);
-    ed25519_type::base_field_type::integral_type Px = ed25519_type::base_field_type::integral_type(P.X.data);
-    ed25519_type::base_field_type::integral_type Py = ed25519_type::base_field_type::integral_type(P.Y.data);
-    typename ed25519_type::base_field_type::integral_type base = 1;
-    typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
-
-    std::vector<typename BlueprintFieldType::value_type> public_input = {Tx & mask, (Tx >> 66) & mask,
-                                                                         (Tx >> 132) & mask, (Tx >> 198) & mask,
-                                                                         Ty & mask, (Ty >> 66) & mask,
-                                                                         (Ty >> 132) & mask, (Ty >> 198) & mask,
-                                                                         Rx & mask, (Rx >> 66) & mask,
-                                                                         (Rx >> 132) & mask, (Rx >> 198) & mask,
-                                                                         Ry & mask, (Ry >> 66) & mask,
-                                                                         (Ry >> 132) & mask, (Ry >> 198) & mask};
-
-    auto result_check = [Px, Py](AssignmentType &assignment,
-                                 component_type::result_type &real_res) {
-        typename ed25519_type::base_field_type::integral_type base = 1;
-        typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
-        for (std::size_t i = 0; i < 4; i++) {
-            assert(typename BlueprintFieldType::value_type((Px >>66*i) & mask) == assignment.var_value(real_res.output.x[i]));
-            assert(typename BlueprintFieldType::value_type((Py >>66*i) & mask) == assignment.var_value(real_res.output.y[i]));
-        }
-    };
-
-    test_component<component_type, BlueprintFieldType, ArithmetizationParams, hash_type, Lambda>(params, public_input,
-                                                                                                 result_check);
-}
-
-void variable_base_multiplication() {
-    using curve_type = algebra::curves::pallas;
-    using ed25519_type = algebra::curves::ed25519;
-    using BlueprintFieldType = typename curve_type::base_field_type;
-    constexpr std::size_t WitnessColumns = 9;
-    constexpr std::size_t PublicInputColumns = 1;
-    constexpr std::size_t ConstantColumns = 1;
-    constexpr std::size_t SelectorColumns = 7;
-    using ArithmetizationParams =
-            zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
-    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
-    using AssignmentType = zk::blueprint_assignment_table<ArithmetizationType>;
-    using hash_type = nil::crypto3::hashes::keccak_1600<256>;
-    constexpr std::size_t Lambda = 1;
-
-    using var = zk::snark::plonk_variable<BlueprintFieldType>;
-
-    using component_type = zk::components::variable_base_multiplication<ArithmetizationType, curve_type, ed25519_type, 0, 1, 2, 3,
-            4, 5, 6, 7, 8>;
-
-    std::array<var, 4> input_var_Xa = {var(0, 0, false, var::column_type::public_input),
-                                       var(0, 1, false, var::column_type::public_input),
-                                       var(0, 2, false, var::column_type::public_input),
-                                       var(0, 3, false, var::column_type::public_input)};
-    std::array<var, 4> input_var_Xb = {var(0, 4, false, var::column_type::public_input),
-                                       var(0, 5, false, var::column_type::public_input),
-                                       var(0, 6, false, var::column_type::public_input),
-                                       var(0, 7, false, var::column_type::public_input)};
-
-    var b_var = var(0, 8, false, var::column_type::public_input);
-
-    typename component_type::params_type params = {{input_var_Xa, input_var_Xb}, b_var};
-
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type T = algebra::random_element<ed25519_type::template g1_type<algebra::curves::coordinates::affine>>();
-    ed25519_type::scalar_field_type::value_type b = algebra::random_element<ed25519_type::scalar_field_type>();
-    //ed25519_type::scalar_field_type::value_type b = 1;
-    ed25519_type::base_field_type::integral_type integral_b = ed25519_type::base_field_type::integral_type(b.data);
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type P = b * T;
-    ed25519_type::base_field_type::integral_type Tx = ed25519_type::base_field_type::integral_type(T.X.data);
-    ed25519_type::base_field_type::integral_type Ty = ed25519_type::base_field_type::integral_type(T.Y.data);
-    ed25519_type::base_field_type::integral_type Px = ed25519_type::base_field_type::integral_type(P.X.data);
-    ed25519_type::base_field_type::integral_type Py = ed25519_type::base_field_type::integral_type(P.Y.data);
-    typename ed25519_type::base_field_type::integral_type base = 1;
-    typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
-
-    std::vector<typename BlueprintFieldType::value_type> public_input = {Tx & mask, (Tx >> 66) & mask,
-                                                                         (Tx >> 132) & mask, (Tx >> 198) & mask,
-                                                                         Ty & mask, (Ty >> 66) & mask,
-                                                                         (Ty >> 132) & mask, (Ty >> 198) & mask,
-                                                                         integral_b};
-
-    auto result_check = [Px, Py](AssignmentType &assignment,
-                                 component_type::result_type &real_res) {
-        typename ed25519_type::base_field_type::integral_type base = 1;
-        typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
-        for (std::size_t i = 0; i < 4; i++) {
-            assert(typename BlueprintFieldType::value_type((Px >>66*i) & mask) == assignment.var_value(real_res.output.x[i]));
-            assert(typename BlueprintFieldType::value_type((Py >>66*i) & mask) == assignment.var_value(real_res.output.y[i]));
-        }
-    };
-
-    test_component<component_type, BlueprintFieldType, ArithmetizationParams, hash_type, Lambda>(params, public_input,
-                                                                                                 result_check);
-}
-
-void var_base_mul_per_bit() {
-    using curve_type = algebra::curves::pallas;
-    using ed25519_type = algebra::curves::ed25519;
-    using BlueprintFieldType = typename curve_type::base_field_type;
-    constexpr std::size_t WitnessColumns = 9;
-    constexpr std::size_t PublicInputColumns = 1;
-    constexpr std::size_t ConstantColumns = 1;
-    constexpr std::size_t SelectorColumns = 6;
-    using ArithmetizationParams =
-            zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
-    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
-    using AssignmentType = zk::blueprint_assignment_table<ArithmetizationType>;
-    using hash_type = nil::crypto3::hashes::keccak_1600<256>;
-    constexpr std::size_t Lambda = 1;
-
-    using var = zk::snark::plonk_variable<BlueprintFieldType>;
-
-    using component_type = zk::components::variable_base_multiplication_per_bit<ArithmetizationType, curve_type, ed25519_type, 0, 1, 2, 3,
-            4, 5, 6, 7, 8>;
-
-    std::array<var, 4> input_var_Xa = {var(0, 0, false, var::column_type::public_input),
-                                       var(0, 1, false, var::column_type::public_input),
-                                       var(0, 2, false, var::column_type::public_input),
-                                       var(0, 3, false, var::column_type::public_input)};
-    std::array<var, 4> input_var_Xb = {var(0, 4, false, var::column_type::public_input),
-                                       var(0, 5, false, var::column_type::public_input),
-                                       var(0, 6, false, var::column_type::public_input),
-                                       var(0, 7, false, var::column_type::public_input)};
-
-    std::array<var, 4> input_var_Ya = {var(0, 8, false, var::column_type::public_input),
-                                       var(0, 9, false, var::column_type::public_input),
-                                       var(0, 10, false, var::column_type::public_input),
-                                       var(0, 11, false, var::column_type::public_input)};
-    std::array<var, 4> input_var_Yb = {var(0, 12, false, var::column_type::public_input),
-                                       var(0, 13, false, var::column_type::public_input),
-                                       var(0, 14, false, var::column_type::public_input),
-                                       var(0, 15, false, var::column_type::public_input)};
-
-    var b = var(0, 16, false, var::column_type::public_input);
-
-    typename component_type::params_type params = {{input_var_Xa, input_var_Xb}, {input_var_Ya, input_var_Yb}, b};
-
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type T = algebra::random_element<ed25519_type::template g1_type<algebra::curves::coordinates::affine>>();
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type R = 2 * T;
-    ed25519_type::scalar_field_type::value_type b_val = 1;
-    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type P = 2 * R + b_val * T;
-
-    ed25519_type::base_field_type::integral_type Tx = ed25519_type::base_field_type::integral_type(T.X.data);
-    ed25519_type::base_field_type::integral_type Ty = ed25519_type::base_field_type::integral_type(T.Y.data);
-    ed25519_type::base_field_type::integral_type Rx = ed25519_type::base_field_type::integral_type(R.X.data);
-    ed25519_type::base_field_type::integral_type Ry = ed25519_type::base_field_type::integral_type(R.Y.data);
-    ed25519_type::base_field_type::integral_type Px = ed25519_type::base_field_type::integral_type(P.X.data);
-    ed25519_type::base_field_type::integral_type Py = ed25519_type::base_field_type::integral_type(P.Y.data);
-    typename ed25519_type::base_field_type::integral_type base = 1;
-    typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
-
-    std::vector<typename BlueprintFieldType::value_type> public_input = {Tx & mask, (Tx >> 66) & mask,
-                                                                         (Tx >> 132) & mask, (Tx >> 198) & mask,
-                                                                         Ty & mask, (Ty >> 66) & mask,
-                                                                         (Ty >> 132) & mask, (Ty >> 198) & mask,
-                                                                         Rx & mask, (Rx >> 66) & mask,
-                                                                         (Rx >> 132) & mask, (Rx >> 198) & mask,
-                                                                         Ry & mask, (Ry >> 66) & mask,
-                                                                         (Ry >> 132) & mask, (Ry >> 198) & mask,
-                                                                         typename ed25519_type::base_field_type::integral_type(
-                                                                                 b_val.data)};
-
-    auto result_check = [Px, Py](AssignmentType &assignment,
-                                 component_type::result_type &real_res) {
-        typename ed25519_type::base_field_type::integral_type base = 1;
-        typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
-        for (std::size_t i = 0; i < 4; i++) {
-            assert(typename BlueprintFieldType::value_type((Px >>66*i) & mask) == assignment.var_value(real_res.output.x[i]));
-            assert(typename BlueprintFieldType::value_type((Py >>66*i) & mask) == assignment.var_value(real_res.output.y[i]));
-        }
-    };
-    test_component<component_type, BlueprintFieldType, ArithmetizationParams, hash_type, Lambda>(params, public_input,
-                                                                                                 result_check);
 }
 
 #ifndef __EMSCRIPTEN__
 
-std::string proof_gen() {
+template<typename Hash, typename CurveType>
+std::string proof_gen(state_type<Hash, CurveType> state) {
 #else
 
     extern "C" {
 
 const char *proof_gen() {
 #endif
-    std::string st = "All process ends";
+    std::string st = "All process begins";
+    auto start = std::chrono::high_resolution_clock::now();
 
-    sha256_process();
-    non_native_demo();
-    sha512_process();
-    non_native_range();
-    fixed_base_mul();
-    complete_addidition();
-    variable_base_multiplication();
-    var_base_mul_per_bit();
+    using curve_type = algebra::curves::pallas;
+    using ed25519_type = algebra::curves::ed25519;
+    using BlueprintFieldType = typename curve_type::base_field_type;
+    constexpr std::size_t WitnessColumns = 9;
+    constexpr std::size_t PublicInputColumns = 1;
+    constexpr std::size_t ConstantColumns = 1;
+    constexpr std::size_t SelectorColumns = 26;
+    using ArithmetizationParams =
+            zk::snark::plonk_arithmetization_params<WitnessColumns, PublicInputColumns, ConstantColumns, SelectorColumns>;
+    using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
+    using AssignmentType = zk::blueprint_assignment_table<ArithmetizationType>;
+    using hash_type = nil::crypto3::hashes::keccak_1600<256>;
+    constexpr std::size_t Lambda = 1;
+
+    using var = zk::snark::plonk_variable<BlueprintFieldType>;
+    constexpr const std::size_t k = 1;
+    using component_type = zk::components::signatures_verification<ArithmetizationType, curve_type, ed25519_type, k, 0, 1, 2, 3,
+            4, 5, 6, 7, 8>;
+    using ed25519_component = zk::components::eddsa25519<ArithmetizationType, curve_type, ed25519_type,
+            0, 1, 2, 3, 4, 5, 6, 7, 8>;
+    using var_ec_point = typename ed25519_component::params_type::var_ec_point;
+    using signature = typename ed25519_component::params_type::signature;
+
+    ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type B =
+            ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type::one();
+
+
+    nil::marshalling::status_type status;
+    multiprecision::number<multiprecision::cpp_int_backend<256, 256>> M = pack(state.bank_hash.begin(), state.bank_hash.end(), status);
+//    M=7241224041237142308324533007573988812794551270459419968718878845258367210787
+    std::vector<typename BlueprintFieldType::value_type> public_input;
+    typename ed25519_type::base_field_type::integral_type base = 1;
+    typename ed25519_type::base_field_type::integral_type mask = (base << 66) - 1;
+    std::array<signature, k> Signatures;
+    std::array<var_ec_point, k> Public_keys;
+    std::array<ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type, k> Signatures_point;
+    std::array<ed25519_type::scalar_field_type::value_type, k> Signatures_scalar;
+    std::array<ed25519_type::template g1_type<algebra::curves::coordinates::affine>::value_type, k> Public_keys_values;
+    for(std::size_t i = 0; i < k; i++) {
+
+        ed25519_type::scalar_field_type::value_type s = state.votes[0].signature.scalar;
+        ed25519_type::base_field_type::integral_type Rx = ed25519_type::base_field_type::integral_type(
+                state.votes[0].signature.points[0]);
+        ed25519_type::base_field_type::integral_type Ry = ed25519_type::base_field_type::integral_type(
+                state.votes[0].signature.points[1]);
+        ed25519_type::base_field_type::integral_type Px = ed25519_type::base_field_type::integral_type(
+                state.votes[0].pubkey[0]);
+        ed25519_type::base_field_type::integral_type Py = ed25519_type::base_field_type::integral_type(
+                state.votes[0].pubkey[1]);
+        std::cout << "M=" << M << std::endl;
+        std::cout << "R=" << Rx << " " << Ry << std::endl;
+        std::cout << "P=" << Px << " " << Py << std::endl;
+        std::cout << "S=" << s.data << std::endl;
+
+        public_input.insert(public_input.end(), {Rx & mask, (Rx >> 66) & mask, (Rx >> 132) & mask, (Rx >> 198) & mask,
+                                                 Ry & mask, (Ry >> 66) & mask, (Ry >> 132) & mask, (Ry >> 198) & mask, typename BlueprintFieldType::integral_type(s.data),
+                                                 Px & mask, (Px >> 66) & mask, (Px >> 132) & mask, (Px >> 198) & mask,
+                                                 Py & mask, (Py >> 66) & mask, (Py >> 132) & mask, (Py >> 198) & mask});
+        std::array<var, 4> e_R_x = {var(0, i*17 + 0, false, var::column_type::public_input), var(0, i*17 + 1, false, var::column_type::public_input),
+                                    var(0, i*17 + 2, false, var::column_type::public_input), var(0, i*17 + 3, false, var::column_type::public_input)};
+        std::array<var, 4> e_R_y = {var(0, i*17 + 4, false, var::column_type::public_input), var(0, i*17 + 5, false, var::column_type::public_input),
+                                    var(0, i*17 + 6, false, var::column_type::public_input), var(0, i*17 + 7, false, var::column_type::public_input)};
+        var_ec_point R_i = {e_R_x, e_R_y};
+        var e_s = var(0, i*17 + 8, false, var::column_type::public_input);
+        Signatures[i] = {R_i, e_s};
+        std::array<var, 4> pk_x = {var(0, i*17 + 9, false, var::column_type::public_input), var(0, i*17 + 10, false, var::column_type::public_input),
+                                   var(0, i*17 + 11, false, var::column_type::public_input), var(0, i*17 + 12, false, var::column_type::public_input)};
+        std::array<var, 4> pk_y = {var(0, i*17 + 13, false, var::column_type::public_input), var(0, i*17 + 14, false, var::column_type::public_input),
+                                   var(0, i*17 + 15, false, var::column_type::public_input), var(0, i*17 + 16, false, var::column_type::public_input)};
+        Public_keys[i] = {pk_x, pk_y};
+    }
+    public_input.insert(public_input.end(), {ed25519_type::base_field_type::integral_type(M & mask), ed25519_type::base_field_type::integral_type((M >> 66) & mask)
+            , ed25519_type::base_field_type::integral_type((M >> 132) & mask), ed25519_type::base_field_type::integral_type((M >> 198) & mask)});
+
+    std::array<var, 4> M_var = {var(0, k*17, false, var::column_type::public_input), var(0, k*17 + 1, false, var::column_type::public_input),
+                                var(0, k*17 + 2, false, var::column_type::public_input), var(0, k*17 + 3, false, var::column_type::public_input)};
+
+
+    typename component_type::params_type params = {Signatures, Public_keys, M_var};
+
+    auto result_check = [](AssignmentType &assignment,
+                           component_type::result_type &real_res) {
+    };
+
+    test_component<component_type, BlueprintFieldType, ArithmetizationParams, hash_type, Lambda>(params, public_input, result_check);
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+    std::cout << "Time_execution: " << duration.count() << "ms" << std::endl;
 
 #ifndef __EMSCRIPTEN__
     return st;
@@ -1035,7 +320,7 @@ int main(int argc, char *argv[]) {
     typedef pubkey::eddsa<group_type, pubkey::eddsa_type::basic, void> signature_scheme_type;
     typedef typename pubkey::public_key<signature_scheme_type>::signature_type signature_type;
 
-    state_type<hash_type, signature_scheme_type> state;
+    state_type<hash_type, signature_curve_type> state;
     std::string string;
 
 #ifndef __EMSCRIPTEN__
@@ -1078,10 +363,9 @@ int main(int argc, char *argv[]) {
 #endif
     {
         boost::json::monotonic_resource mr;
-        state = boost::json::value_to<state_type<hash_type, signature_scheme_type>>(boost::json::parse(string, &mr));
+        state = boost::json::value_to<state_type<hash_type, signature_curve_type>>(boost::json::parse(string, &mr));
     }
-
 #ifndef __EMSCRIPTEN__
-    std::cout << proof_gen() << std::endl;
+    std::cout << proof_gen(state) << std::endl;
 #endif
 }

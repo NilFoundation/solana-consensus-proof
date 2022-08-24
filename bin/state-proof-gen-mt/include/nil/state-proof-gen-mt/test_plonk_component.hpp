@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------//
 // Copyright (c) 2021 Mikhail Komarov <nemo@nil.foundation>
 // Copyright (c) 2021 Nikita Kaskov <nbering@nil.foundation>
-// Copyright (c) 2022 Aleksei Moskvin <alalmoskvin@nil.foundation>
 //
 // MIT License
 //
@@ -32,21 +31,21 @@
 #include <fstream>
 #include <random>
 
-#include "nil/actor/zk/snark/arithmetization/plonk/params.hpp"
-#include "nil/actor/zk/snark/systems/plonk/placeholder/preprocessor.hpp"
-#include "nil/actor/zk/snark/systems/plonk/placeholder/prover.hpp"
-#include "nil/actor/zk/snark/systems/plonk/placeholder/verifier.hpp"
-#include "nil/actor/zk/snark/systems/plonk/placeholder/params.hpp"
+#include <nil/actor/zk/snark/arithmetization/plonk/params.hpp>
+#include <nil/actor/zk/snark/systems/plonk/placeholder/preprocessor.hpp>
+#include <nil/actor/zk/snark/systems/plonk/placeholder/prover.hpp>
+#include <nil/actor/zk/snark/systems/plonk/placeholder/verifier.hpp>
+#include <nil/actor/zk/snark/systems/plonk/placeholder/params.hpp>
 
-#include "nil/actor/zk/blueprint/plonk.hpp"
-#include "nil/actor/zk/assignment/plonk.hpp"
-#include "nil/actor/zk/algorithms/allocate.hpp"
-#include "nil/actor/zk/algorithms/generate_circuit.hpp"
-#include "nil/crypto3/math/algorithms/calculate_domain_set.hpp"
+#include <nil/actor/zk/blueprint/plonk.hpp>
+#include <nil/actor/zk/assignment/plonk.hpp>
+#include <nil/actor/zk/algorithms/allocate.hpp>
+#include <nil/actor/zk/algorithms/generate_circuit.hpp>
+#include <nil/crypto3/math/algorithms/calculate_domain_set.hpp>
 
-#include "nil/marshalling/status_type.hpp"
-#include "nil/marshalling/field_type.hpp"
-#include "nil/marshalling/endianness.hpp"
+#include <nil/marshalling/status_type.hpp>
+#include <nil/marshalling/field_type.hpp>
+#include <nil/marshalling/endianness.hpp>
 
 namespace nil {
     namespace actor {
@@ -103,12 +102,12 @@ namespace nil {
             using ArithmetizationType = zk::snark::plonk_constraint_system<BlueprintFieldType, ArithmetizationParams>;
             using component_type = ComponentType;
 
-            zk::snark::plonk_table_description <BlueprintFieldType, ArithmetizationParams> desc;
+            zk::snark::plonk_table_description<BlueprintFieldType, ArithmetizationParams> desc;
 
-            zk::blueprint <ArithmetizationType> bp(desc);
-            zk::blueprint_private_assignment_table <ArithmetizationType> private_assignment(desc);
-            zk::blueprint_public_assignment_table <ArithmetizationType> public_assignment(desc);
-            zk::blueprint_assignment_table <ArithmetizationType> assignment_bp(private_assignment, public_assignment);
+            zk::blueprint<ArithmetizationType> bp(desc);
+            zk::blueprint_private_assignment_table<ArithmetizationType> private_assignment(desc);
+            zk::blueprint_public_assignment_table<ArithmetizationType> public_assignment(desc);
+            zk::blueprint_assignment_table<ArithmetizationType> assignment_bp(private_assignment, public_assignment);
 
             std::size_t start_row = zk::components::allocate<component_type>(bp);
             if (public_input.size() > component_type::rows_amount) {
@@ -123,13 +122,14 @@ namespace nil {
             typename component_type::result_type component_result =
                     component_type::generate_assignments(assignment_bp, params, start_row);
 
-            auto rc = std::bind(result_check, assignment_bp, component_result);
-            rc(assignment_bp, component_result);
+            result_check(assignment_bp, component_result);
 
             assignment_bp.padding();
-            zk::snark::plonk_assignment_table <BlueprintFieldType, ArithmetizationParams> assignments(
-                    private_assignment,
-                    public_assignment);
+            std::cout << "Usable rows: " << desc.usable_rows_amount << std::endl;
+            std::cout << "Padded rows: " << desc.rows_amount << std::endl;
+
+            zk::snark::plonk_assignment_table<BlueprintFieldType, ArithmetizationParams> assignments(private_assignment,
+                                                                                                     public_assignment);
 
             using placeholder_params =
                     zk::snark::placeholder_params<BlueprintFieldType, ArithmetizationParams, Hash, Hash, Lambda>;
@@ -165,7 +165,6 @@ namespace nil {
                         typename std::iterator_traits<typename PublicInput::iterator>::value_type>::value>::type
         test_component(typename ComponentType::params_type params, const PublicInput &public_input,
                        FunctorResultCheck result_check) {
-
             using placeholder_params =
                     zk::snark::placeholder_params<BlueprintFieldType, ArithmetizationParams, Hash, Hash, Lambda>;
 
@@ -178,8 +177,12 @@ namespace nil {
 
             bool verifier_res = zk::snark::placeholder_verifier<BlueprintFieldType, placeholder_params>::process(
                     public_preprocessed_data, proof, bp, fri_params);
-            //profiling(assignments);
-            assert(verifier_res);
+
+#ifdef BLUEPRINT_PLONK_PROFILING_ENABLED
+            profiling(assignments);
+#endif
+            std::cout << "verifier_res=" << verifier_res << std::endl;
+            assert(verifier_res == true);
         }
 
         template<typename ComponentType, typename BlueprintFieldType, typename ArithmetizationParams, typename Hash,
@@ -203,10 +206,11 @@ namespace nil {
 
             bool verifier_res = zk::snark::placeholder_verifier<BlueprintFieldType, placeholder_params>::process(
                     public_preprocessed_data, proof, bp, fri_params);
-            assert(verifier_res);
+            std::cout << "verifier_res=" << verifier_res << std::endl;
+            assert(verifier_res == true);
             return std::make_tuple(proof, fri_params, public_preprocessed_data, bp);
         }
-    }    // namespace crypto3
+    }    // namespace actor
 }    // namespace nil
 
 #endif    // ACTOR_TEST_PLONK_COMPONENT_HPP

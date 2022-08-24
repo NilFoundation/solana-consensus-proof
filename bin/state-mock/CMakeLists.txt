@@ -7,7 +7,7 @@ include(CMSetupVersion)
 cm_project(state-mock WORKSPACE_NAME ${CMAKE_WORKSPACE_NAME} LANGUAGES ASM C CXX)
 
 if(NOT Boost_FOUND AND NOT CMAKE_CROSSCOMPILING)
-    cm_find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options thread system)
+    find_package(Boost COMPONENTS REQUIRED filesystem log log_setup program_options thread system)
 elseif(CMAKE_CROSSCOMPILING)
     if(NOT TARGET boost)
         include(ExternalProject)
@@ -48,6 +48,8 @@ set_target_properties(${CURRENT_PROJECT_NAME} PROPERTIES
 target_link_libraries(${CURRENT_PROJECT_NAME}
 
                       crypto3::algebra
+                      crypto3::blueprint
+                      crypto3::codec
                       crypto3::multiprecision
                       crypto3::pubkey
                       crypto3::pkpad
@@ -55,6 +57,7 @@ target_link_libraries(${CURRENT_PROJECT_NAME}
                       marshalling::core
                       marshalling::crypto3_multiprecision
                       marshalling::crypto3_algebra
+                      marshalling::crypto3_zk
 
                       ${Boost_LIBRARIES})
 

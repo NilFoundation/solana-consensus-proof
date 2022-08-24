@@ -390,7 +390,7 @@
           "custom": {
             "axisLabel": "",
             "axisPlacement": "left",
-            "axisSoftMax": 130,
+            "axisSoftMax": 200,
             "fillOpacity": 80,
             "gradientMode": "opacity",
             "hideFrom": {
@@ -656,6 +656,6 @@
   "timezone": "",
   "title": "Test stand",
   "uid": "fWDVrqzVk",
-  "version": 12,
+  "version": 14,
   "weekStart": ""
 }
