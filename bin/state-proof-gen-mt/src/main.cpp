@@ -1100,7 +1100,13 @@ struct prover {
         state = boost::json::value_to<state_type<hash_type, signature_scheme_type>>(boost::json::parse(string, &mr));
 
         (void)nil::actor::engine().when_started().then(
-            [&state]() { return proof_gen<hash_type, signature_scheme_type>(state); });
+                [&state]() {return proof_gen<hash_type, signature_scheme_type>(state);}).then_wrapped([](auto &&f) {
+            try {
+                engine().exit(0);
+            } catch (std::exception &ex) {
+                engine().exit(1);
+            }
+        });
         auto exit_code = nil::actor::engine().run();
         std::cout << exit_code << std::endl;
         nil::actor::smp::cleanup();
