@@ -65,8 +65,7 @@
 #include <nil/actor/zk/components/non_native/algebra/fields/plonk/signatures_verification.hpp>
 #include <nil/actor/zk/components/non_native/algebra/fields/plonk/ed25519.hpp>
 
-
-#include <nil/state-proof-gen-mt/test_plonk_component.hpp>
+#include <nil/state-proof-gen-mt/proof_generate.hpp>
 
 using namespace nil::actor;
 
@@ -162,7 +161,7 @@ struct state_type {
     std::size_t new_confirmed;
     digest_type bank_hash;
     std::vector<block_data<Hash, CurveType>> repl_data;
-    std::vector<vote_state<Hash, CurveType>> votes;
+    std::vector<std::vector<vote_state<Hash, CurveType>>> votes;
 };
 
 template<typename Hash, typename CurveType>
@@ -254,9 +253,12 @@ state_type<Hash, CurveType> tag_invoke(boost::json::value_to_tag<state_type<Hash
             }(o.at("repl_data")),
             .votes =
             [&](const boost::json::value &arr) {
-                std::vector<vote_state<Hash, CurveType>> ret;
+                std::vector<std::vector<vote_state<Hash, CurveType>>> ret(arr.as_array().size());
+                std::size_t i = 0;
                 for (const boost::json::value &val: arr.as_array()) {
-                    ret.emplace_back(boost::json::value_to<vote_state<Hash, CurveType>>(val));
+                    for (const boost::json::value &deep_arr: val.as_array()) {
+                        ret[i].emplace_back(boost::json::value_to<vote_state<Hash, CurveType>>(deep_arr));
+                    }
                 }
                 return ret;
             }(o.at("votes"))
@@ -306,15 +308,15 @@ void proof(const state_type<Hash, SignatureScheme> &state) {
     std::array<ed25519_type::scalar_field_type::value_type, k> Signatures_scalar;
     std::array<ed25519_type::template g1_type<nil::crypto3::algebra::curves::coordinates::affine>::value_type, k> Public_keys_values;
     for(std::size_t i = 0; i < k; i++) {
-        ed25519_type::scalar_field_type::value_type s = state.votes[i].signature.scalar;
+        ed25519_type::scalar_field_type::value_type s = state.votes[0][i].signature.scalar;
         ed25519_type::base_field_type::integral_type Rx = ed25519_type::base_field_type::integral_type(
-                state.votes[i].signature.points[0]);
+                state.votes[0][i].signature.points[0]);
         ed25519_type::base_field_type::integral_type Ry = ed25519_type::base_field_type::integral_type(
-                state.votes[i].signature.points[1]);
+                state.votes[0][i].signature.points[1]);
         ed25519_type::base_field_type::integral_type Px = ed25519_type::base_field_type::integral_type(
-                state.votes[i].pubkey[0]);
+                state.votes[0][i].pubkey[0]);
         ed25519_type::base_field_type::integral_type Py = ed25519_type::base_field_type::integral_type(
-                state.votes[i].pubkey[1]);
+                state.votes[0][i].pubkey[1]);
 
         public_input.insert(public_input.end(), {Rx & mask, (Rx >> 66) & mask, (Rx >> 132) & mask, (Rx >> 198) & mask,
                                                  Ry & mask, (Ry >> 66) & mask, (Ry >> 132) & mask, (Ry >> 198) & mask, typename BlueprintFieldType::integral_type(s.data),

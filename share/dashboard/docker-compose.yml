@@ -20,8 +20,8 @@ services:
 #      - GF_SMTP_HOST=smtp.yandex.ru:465
 #      - GF_SMTP_USER=notifications@nil.foundation
 #      - GF_SMTP_PASSWORD=XXXXXXX
-#      - GF_AUTH_ANONYMOUS_ENABLED=true
-#      - GF_AUTO_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTO_DISABLE_LOGIN_FORM=true
       - GF_SECURITY_ALLOW_EMBEDDING=true
       - GF_SMTP_FROM_ADDRESS=notifications@nil.foundation
       - GF_SMTP_FROM_NAME=Grafana

@@ -96,7 +96,7 @@ struct state_type {
     std::size_t new_confirmed;
     digest_type bank_hash;
     std::vector<block_data<Hash, CurveType>> repl_data;
-    std::vector<vote_state<Hash, CurveType>> votes;
+    std::vector<std::vector<vote_state<Hash, CurveType>>> votes;
 };
 
 template<typename Hash, typename CurveType>
@@ -550,12 +550,14 @@ int main(int argc, char *argv[]) {
             boost::filesystem::load_string_file(vm["input"].as<std::string>(), string);
         }
     }
+
+    const std::size_t k = vm["validators"].as<std::size_t>();
 #endif
 
     random_hash_generator_type hash_gen;
     status_type s;
+    constexpr const std::size_t batch_size = 13;
     state_type<hash_type, curve_type> state;
-    const std::size_t k = distrib(gen) + 1000;
 
     if (!input_state) {
         state.confirmed = static_cast<size_t>(distrib(gen));
@@ -609,14 +611,21 @@ int main(int argc, char *argv[]) {
         signatures_scalar.emplace_back(r + sha_output * c);
     }
 
-    state.votes.resize(k);
+    std::size_t all_batches = k;
+    std::size_t cur_batch = 0;
+    state.votes.resize((k - 1) / batch_size + 1);
+
     state.bank_hash = state.repl_data[state.repl_data.size() - 1].bank_hash;
-    for (std::size_t j = 0; j < k; ++j) {
-        state.votes[j].pubkey = {integral_type(public_keys_values[j].X.data), integral_type(
-                public_keys_values[j].Y.data)};
-        state.votes[j].signature = {.points = {integral_type(signatures_point[j].X.data), integral_type(
-                signatures_point[j].Y.data)}, .scalar = signatures_scalar[j]};
-        state.votes[j].weight = static_cast<size_t>(small_distrib(gen));
+    while (all_batches > 0) {
+        state.votes[cur_batch].resize(std::min(batch_size, all_batches));
+        for (std::size_t i = 0; i < batch_size && all_batches > 0; ++i, --all_batches) {
+            state.votes[cur_batch][i].pubkey = {integral_type(public_keys_values[k - all_batches].X.data), integral_type(
+                    public_keys_values[i].Y.data)};
+            state.votes[cur_batch][i].signature = {.points = {integral_type(signatures_point[k - all_batches].X.data), integral_type(
+                    signatures_point[i].Y.data)}, .scalar = signatures_scalar[k - all_batches]};
+            state.votes[cur_batch][i].weight = static_cast<size_t>(small_distrib(gen));
+        }
+        ++cur_batch;
     }
 
     boost::json::value jv = boost::json::value_from(state);

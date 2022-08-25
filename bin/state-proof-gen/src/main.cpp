@@ -50,7 +50,7 @@
 
 #include <nil/crypto3/zk/snark/arithmetization/plonk/params.hpp>
 
-#include "test_plonk_component.hpp"
+#include "proof_generate.hpp"
 #include <nil/crypto3/algebra/curves/ed25519.hpp>
 #include <nil/crypto3/algebra/fields/arithmetic_params/ed25519.hpp>
 
@@ -265,10 +265,6 @@ const char *proof_gen() {
                 state.votes[0].pubkey[0]);
         ed25519_type::base_field_type::integral_type Py = ed25519_type::base_field_type::integral_type(
                 state.votes[0].pubkey[1]);
-        std::cout << "M=" << M << std::endl;
-        std::cout << "R=" << Rx << " " << Ry << std::endl;
-        std::cout << "P=" << Px << " " << Py << std::endl;
-        std::cout << "S=" << s.data << std::endl;
 
         public_input.insert(public_input.end(), {Rx & mask, (Rx >> 66) & mask, (Rx >> 132) & mask, (Rx >> 198) & mask,
                                                  Ry & mask, (Ry >> 66) & mask, (Ry >> 132) & mask, (Ry >> 198) & mask, typename BlueprintFieldType::integral_type(s.data),

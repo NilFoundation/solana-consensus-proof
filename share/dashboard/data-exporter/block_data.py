@@ -7,8 +7,6 @@ import random
 
 url = "https://api.devnet.solana.com"
 
-last_block = 0
-
 
 class VoteState:
     pubkey = ""
@@ -99,18 +97,20 @@ def get_block(slot):
     return block_number, bank_hash, previous_bank_hash, timestamp, pubkeys
 
 
-previous_confirmed = last_block
-last_block = get_last_slot()
-blocks_to_proof = get_blocks_range(last_block, range=150)
-blocks = []
-print("Start to get blocks")
-for i in blocks_to_proof:
-    print("Block get: %d" % i)
-    block_number, bank_hash, previous_bank_hash, timestamp, pubkeys = get_block(i)
-    x = BlockData(block_number, bank_hash, previous_bank_hash, timestamp, pubkeys)
-    blocks.append(x)
+def get_data(previous_confirmed):
+    # previous_confirmed = last_block
+    last_block = get_last_slot()
+    blocks_to_proof = get_blocks_range(last_block, range=150)
+    blocks = []
+    print("Start to get blocks")
+    for i in blocks_to_proof:
+        print("Block get: %d" % i)
+        block_number, bank_hash, previous_bank_hash, timestamp, pubkeys = get_block(i)
+        x = BlockData(block_number, bank_hash, previous_bank_hash, timestamp, pubkeys)
+        blocks.append(x)
 
-state = StateType(previous_confirmed, last_block, blocks)
+    state = StateType(previous_confirmed, last_block, blocks)
 
-with open('data.json', 'w') as f:
-    print(json.dumps(state.json(), indent=2), file=f)
+    # with open('data.json', 'w') as f:
+    #     print(json.dumps(state.json(), indent=2), file=f)
+    return state, last_block

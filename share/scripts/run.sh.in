@@ -51,13 +51,13 @@ polynomial() {
   echo ${sum}'ms' >>polynomial.log
 }
 
-#TEST_NAMES=("blueprint_hashes_plonk_sha256_process_test" "blueprint_hashes_plonk_sha512_process_test" "blueprint_non_native_plonk_non_native_demo_test"
-#            "blueprint_non_native_plonk_non_native_range_test" "blueprint_non_native_plonk_fixed_base_mul_test" "blueprint_non_native_plonk_complete_addition_test"
-#            "blueprint_non_native_plonk_var_base_mul_per_bit_test" "blueprint_non_native_plonk_variable_base_multiplication_test")
+TEST_NAMES=("blueprint_hashes_plonk_sha256_process_test" "blueprint_hashes_plonk_sha512_process_test" "blueprint_non_native_plonk_non_native_demo_test"
+            "blueprint_non_native_plonk_non_native_range_test" "blueprint_non_native_plonk_fixed_base_mul_test" "blueprint_non_native_plonk_complete_addition_test"
+            "blueprint_non_native_plonk_var_base_mul_per_bit_test" "blueprint_non_native_plonk_variable_base_multiplication_test")
 
-PARALLEL_TEST_NAMES=("actor_blueprint_hashes_plonk_sha256_process_test" "actor_blueprint_hashes_plonk_sha512_process_test" "actor_blueprint_non_native_plonk_non_native_demo_test"
-                       "actor_blueprint_non_native_plonk_non_native_range_test" "actor_blueprint_non_native_plonk_fixed_base_mul_test" "actor_blueprint_non_native_plonk_complete_addition_test"
-                       "actor_blueprint_non_native_plonk_var_base_mul_per_bit_test" "actor_blueprint_non_native_plonk_variable_base_multiplication_test")
+#PARALLEL_TEST_NAMES=("actor_blueprint_hashes_plonk_sha256_process_test" "actor_blueprint_hashes_plonk_sha512_process_test" "actor_blueprint_non_native_plonk_non_native_demo_test"
+#                       "actor_blueprint_non_native_plonk_non_native_range_test" "actor_blueprint_non_native_plonk_fixed_base_mul_test" "actor_blueprint_non_native_plonk_complete_addition_test"
+#                       "actor_blueprint_non_native_plonk_var_base_mul_per_bit_test" "actor_blueprint_non_native_plonk_variable_base_multiplication_test")
 
 #if [[ -z "$1" ]]; then
 #  TEST_NAMES+=("blueprint_non_native_plonk_non_native_demo_test" "blueprint_non_native_plonk_fixed_base_mul_test" "blueprint_hashes_plonk_sha256_test")
