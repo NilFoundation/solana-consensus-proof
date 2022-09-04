@@ -285,6 +285,7 @@ void proof(const state_type<Hash, SignatureScheme> &state) {
 
     using var = zk::snark::plonk_variable<BlueprintFieldType>;
     constexpr const std::size_t k = 13;
+//    constexpr const std::size_t k = 1;
     using component_type = zk::components::signatures_verification<ArithmetizationType, curve_type, ed25519_type, k, 0, 1, 2, 3,
             4, 5, 6, 7, 8>;
     using ed25519_component = zk::components::eddsa25519<ArithmetizationType, curve_type, ed25519_type,

@@ -46,9 +46,42 @@
 #include <nil/marshalling/status_type.hpp>
 #include <nil/marshalling/field_type.hpp>
 #include <nil/marshalling/endianness.hpp>
+#include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
+
+#include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
 
 namespace nil {
     namespace actor {
+        template<typename TIter>
+        void print_hex_byteblob(std::ostream &os, TIter iter_begin, TIter iter_end, bool endl) {
+            os << "0x" << std::hex;
+            for (TIter it = iter_begin; it != iter_end; it++) {
+                os << std::setfill('0') << std::setw(2) << std::right << int(*it);
+            }
+            os << std::dec;
+            if (endl) {
+                os << std::endl;
+            }
+        }
+
+        template<typename Endianness, typename Proof>
+        void proof_print(Proof &proof) {
+            using namespace nil::crypto3::marshalling;
+
+            using TTypeBase = nil::marshalling::field_type<Endianness>;
+            using proof_marshalling_type = zk::snark::placeholder_proof<TTypeBase, Proof>;
+            auto filled_placeholder_proof = crypto3::marshalling::types::fill_placeholder_proof<Endianness, Proof>(
+                    proof);
+
+            std::vector<std::uint8_t> cv;
+            cv.resize(filled_placeholder_proof.length(), 0x00);
+            auto write_iter = cv.begin();
+            nil::marshalling::status_type status = filled_placeholder_proof.write(write_iter, cv.size());
+            std::ofstream out;
+            out.open("placeholder_proof.data");
+            print_hex_byteblob(out, cv.cbegin(), cv.cend(), false);
+        }
+
         inline std::vector<std::size_t> generate_random_step_list(const std::size_t r, const int max_step) {
             using dist_type = std::uniform_int_distribution<int>;
             static std::random_device random_engine;
@@ -178,6 +211,7 @@ namespace nil {
             bool verifier_res = zk::snark::placeholder_verifier<BlueprintFieldType, placeholder_params>::process(
                     public_preprocessed_data, proof, bp, fri_params);
 
+            proof_print<nil::marshalling::option::big_endian>(proof);
             std::cout << "verifier_res=" << verifier_res << std::endl;
             assert(verifier_res == true);
         }
@@ -203,6 +237,7 @@ namespace nil {
 
             bool verifier_res = zk::snark::placeholder_verifier<BlueprintFieldType, placeholder_params>::process(
                     public_preprocessed_data, proof, bp, fri_params);
+            proof_print<nil::marshalling::option::big_endian>(proof);
             std::cout << "verifier_res=" << verifier_res << std::endl;
             assert(verifier_res == true);
             return std::make_tuple(proof, fri_params, public_preprocessed_data, bp);
