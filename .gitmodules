@@ -62,10 +62,10 @@
 	path = libs/container
 	url = git@github.com:nilfoundation/crypto3-containers.git
 [submodule "share/state-proof-verify"]
-	path = share/state-proof-verify
+	path = share/evm-proof-verify
 	url = git@github.com:nilfoundation/evm-placeholder-verification.git
 [submodule "share/starknet-proof-verify"]
-	path = share/starknet-proof-verify
+	path = share/cairo-proof-verify
 	url = git@github.com:nilfoundation/cairo-placeholder-verification.git
 [submodule "libs/actor/blueprint"]
 	path = libs/actor/blueprint
