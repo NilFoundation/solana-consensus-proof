@@ -48,11 +48,11 @@ add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/bin")
 
 add_custom_target(verifier
                   COMMAND truffle compile
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/share/state-proof-verify)
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/share/evm-proof-verify)
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/docs/doxygen/${CMAKE_WORKSPACE_NAME}.doxyfile.in
                ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_WORKSPACE_NAME}.doxyfile @ONLY)
 
 configure_file(${CMAKE_SOURCE_DIR}/share/scripts/run.sh.in ${CMAKE_BINARY_DIR}/benchmark/run.sh @ONLY)
-configure_file(${CMAKE_SOURCE_DIR}/share/state-proof-verify/package.json ${CMAKE_BINARY_DIR}/benchmark/package.json @ONLY)
-file(COPY ${CMAKE_SOURCE_DIR}/share/state-proof-verify/src/ DESTINATION ${CMAKE_BINARY_DIR}/benchmark)
+configure_file(${CMAKE_SOURCE_DIR}/share/evm-proof-verify/package.json ${CMAKE_BINARY_DIR}/benchmark/package.json @ONLY)
+file(COPY ${CMAKE_SOURCE_DIR}/share/evm-proof-verify/src/ DESTINATION ${CMAKE_BINARY_DIR}/benchmark)
