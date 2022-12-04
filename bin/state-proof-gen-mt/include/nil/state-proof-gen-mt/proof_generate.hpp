@@ -48,8 +48,6 @@
 #include <nil/marshalling/endianness.hpp>
 #include <nil/crypto3/marshalling/zk/types/placeholder/proof.hpp>
 
-#include <nil/crypto3/zk/snark/systems/plonk/placeholder/prover.hpp>
-
 namespace nil {
     namespace actor {
         template<typename TIter>

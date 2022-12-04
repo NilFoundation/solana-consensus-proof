@@ -2,3 +2,4 @@ prometheus_client
 apscheduler==3.9.1
 psutil
 selenium
+requests

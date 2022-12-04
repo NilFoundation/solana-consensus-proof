@@ -1,3 +1,5 @@
+import time
+
 import requests
 import pprint
 from typing import List
@@ -5,7 +7,8 @@ import json
 import copy
 import random
 
-url = "https://api.devnet.solana.com"
+# url = "https://api.devnet.solana.com"
+url = "https://api.mainnet-beta.solana.com"
 
 
 class VoteState:
@@ -83,17 +86,25 @@ def get_last_slot():
 
 
 def get_block(slot):
-    res = requests.post(url=url, json={"jsonrpc": "2.0", "id": 1, "method": "getBlock", "params": [slot,
-                                                                                                   {"encoding": "json",
-                                                                                                    "transactionDetails": "none",
-                                                                                                    "rewards": True}]})
-    res = res.json()['result']
-    block_number = slot
-    bank_hash = res['blockhash']
-    previous_bank_hash = res['previousBlockhash']
-    pubkeys = [i['pubkey'] for i in res['rewards']]
-    type_r = [i['rewardType'] for i in res['rewards']]
-    timestamp = 0 if res['blockTime'] is None else res['blockTime']
+    sucess = False
+    while not sucess:
+        res = requests.post(url=url, json={"jsonrpc": "2.0", "id": 1, "method": "getBlock", "params": [slot,
+                                                                                                       {
+                                                                                                           "encoding": "json",
+                                                                                                           "transactionDetails": "none",
+                                                                                                           "rewards": True}]})
+        if 'result' in res.json():
+            res = res.json()['result']
+            block_number = slot
+            bank_hash = res['blockhash']
+            previous_bank_hash = res['previousBlockhash']
+            pubkeys = [i['pubkey'] for i in res['rewards']]
+            type_r = [i['rewardType'] for i in res['rewards']]
+            timestamp = 0 if res['blockTime'] is None else res['blockTime']
+            sucess = True
+        else:
+            print("Sleep %s seconds" % res.headers['retry-after'])
+            time.sleep(int(res.headers['retry-after']))
     return block_number, bank_hash, previous_bank_hash, timestamp, pubkeys
 
 
@@ -103,12 +114,13 @@ def get_data(previous_confirmed):
     blocks_to_proof = get_blocks_range(last_block, range=150)
     blocks = []
     print("Start to get blocks")
+    print("Block get: ", end="")
     for i in blocks_to_proof:
-        print("Block get: %d" % i)
+        print(i, " ")
         block_number, bank_hash, previous_bank_hash, timestamp, pubkeys = get_block(i)
         x = BlockData(block_number, bank_hash, previous_bank_hash, timestamp, pubkeys)
         blocks.append(x)
-
+    print("End to get blocks")
     state = StateType(previous_confirmed, last_block, blocks)
 
     # with open('data.json', 'w') as f:
