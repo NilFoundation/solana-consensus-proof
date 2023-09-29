@@ -41,7 +41,7 @@
             ]);
             nativeBuildInputs = [
               cmake
-              fmt_8
+              (pkgs.callPackage ./fmt.nix {}).fmt_6
               protobuf
               c-ares
               boost177
