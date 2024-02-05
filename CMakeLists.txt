@@ -42,7 +42,6 @@ option(BUILD_TESTS "Build unit tests" TRUE)
 
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs")
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs/marshalling")
-add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs/actor/shim")
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs/actor")
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/bin")
 
