@@ -39,6 +39,7 @@ macro(cm_find_package NAME)
 endmacro()
 
 option(BUILD_TESTS "Build unit tests" TRUE)
+option(BUILD_BENCH_TESTS "Build performance benchmark tests" FALSE)
 
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs")
 add_subdirectories("${CMAKE_CURRENT_LIST_DIR}/libs/marshalling")
